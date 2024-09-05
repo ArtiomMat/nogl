@@ -43,8 +43,8 @@ namespace nogl
 
     using EventHandlerCallback = void (*) (Context&, const Event&);
 
-    // To use the Context you still need to call MakeCurrent().
-    // Can throw a SystemException, with a code from the system.
+    // To use the `Context` you still need to call `MakeCurrent()`.
+    // Can throw a `SystemException`, with a code from the system.
     Context(unsigned width, unsigned height);
     ~Context();
 
@@ -52,10 +52,10 @@ namespace nogl
 
     // Draws the `data` on the screen. Success gives true.
     bool Refresh() const noexcept;
-    // Handles queued up input and pipes to event_handler.
+    // Handles queued up input and pipes to `event_handler`.
     void HandleEvents() noexcept;
 
-    // nullptr allowed, means that DefaultEventHandler() will be used.
+    // `nullptr` allowed, means that `DefaultEventHandler()` will be used.
     inline void set_event_handler(EventHandlerCallback cb) noexcept
     {
       event_handler = (cb == nullptr ? DefaultEventHandler : cb);
@@ -88,13 +88,13 @@ namespace nogl
 
     unsigned m_width, m_height;
     Event event;
-    // See data()
+    // See `data()`.
     uint8_t* m_data;
 
-    // Cannot logically be nullptr
+    // Cannot logically be `nullptr`.
     void (*event_handler) (Context&, const Event&) = DefaultEventHandler;
 
-    // Handles the event variable after it is written
+    // Handles the event variable after it is written.
     void HandleEvent() noexcept;
   };
 }

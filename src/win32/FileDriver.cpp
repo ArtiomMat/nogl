@@ -10,6 +10,11 @@ namespace nogl
     // Copy the full EXE file path and remember where it ended
     exe_path_end = GetModuleFileNameA(NULL, exe_path, PATH_SIZE) - 1;
 
+    // if (!exe_path_end)
+    // {
+
+    // }
+
     // bool found_slash = 0;
     while (true)
     {

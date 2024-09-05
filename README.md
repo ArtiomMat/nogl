@@ -9,8 +9,6 @@ It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths wit
   - [x] Setting up the basics.
   - [x] Basic loop.
   - [ ] TODO
-- [ ] Advanced multi-source lighting.
-- [ ] Camera for viewing.
 - [ ] Advanced shading to prepare for next step.
   - [ ] Specular highlighting.
   - [ ] Metallic shaders.

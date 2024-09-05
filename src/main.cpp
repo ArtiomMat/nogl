@@ -11,6 +11,28 @@
 
 #include "nogl.hpp"
 
+// struct Vec4
+// {
+//   alignas(16) float v[4];
+
+//   // Vec4(float all)
+//   // {
+//   //   _mm_store_ps(v, _mm_set1_ps(all));
+//   // }
+//   // Vec4(float v[4])
+//   // {
+//   //   _mm_store_ps(this->v, _mm_load_ps(v));
+//   // }
+
+//   // Vec4& operator *=(const Vec4& other)
+//   // {
+//   //   __m128 a = _mm_load_ps(v);
+//   //   __m128 b = _mm_load_ps(other.v);
+//   //   _mm_store_ps(v, _mm_mul_ps(a, b));
+//   //   return *this;
+//   // }
+// };
+
 static bool run_loop = true;
 
 static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
@@ -27,12 +49,6 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
     default:
     break;
   }
-}
-
-// The whole rendering routine here
-static inline void RenderBackBuffer()
-{
-
 }
 
 static int StartTestThread(int* i)
@@ -59,12 +75,13 @@ int main()
 
   std::cout << "Return: " << thr.Join() << '\n';
 
+  clock_driver.Reset();
   while (run_loop)
   {
     ctx.HandleEvents();
 
     ctx.Clear();
-    // Rendering.
+    // *Rendering*
     ctx.Refresh();
 
     clock_driver.SleepRemainder();
