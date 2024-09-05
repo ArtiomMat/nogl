@@ -8,6 +8,7 @@
 
 #include "Exception.hpp"
 
+#include <sstream>
 #include <memory>
 
 namespace nogl
@@ -18,31 +19,30 @@ namespace nogl
   class Thread
   {
     public:
-    using StartCallback = void (*)(I* i);
+    using StartCallback = int (*)(I* i);
 
-    // Copies the input to an internally managed buffer
+    // Copies the input to an internally managed buffer.
     Thread(StartCallback start, I& i);
     ~Thread();
 
-    // Wait for the thread to end if its destructor is called, this is on by default because losing the thread is not ideal, and it's very bad to close it forcefully.
-    inline void set_join_on_destruct(bool yes) noexcept { join_on_destruct = yes; }
-
-    void Join();
-    // Can cause resource leaks, depending on whether or not you allocate anything on the heap.
+    // Wait for thread to finish. Returns return code returned by the start function.
+    int Join();
+    // Can cause resource leaks, depending on whether or not you allocate anything on the heap. Consider Join() instead.
     void Close();
+
+    bool has_closed() noexcept;
 
     private:
     #ifdef _WIN32
       HANDLE hthread;
     #endif
-    bool join_on_destruct = true;
     std::unique_ptr<I> input = std::unique_ptr<I>(new I);
   };
 
   template <typename I>
   Thread<I>::~Thread()
   {
-    Close();
+    Join();
   }
 
   #ifdef _WIN32
@@ -73,9 +73,27 @@ namespace nogl
   }
 
   template <typename I>
-  void Thread<I>::Join()
+  bool Thread<I>::has_closed() noexcept
   {
-    WaitForSingleObject(hthread, INFINITE);
+    if (WaitForSingleObject(hthread, 0) == WAIT_OBJECT_0)
+    {
+      return true;
+    }
+    return false;
+  }
+
+  template <typename I>
+  int Thread<I>::Join()
+  {
+    DWORD code;
+    if (WaitForSingleObject(hthread, INFINITE) != WAIT_OBJECT_0)
+    {
+      auto msg = (std::stringstream() << "Could not wait for the thread " << hthread << " to finish.").str();
+      throw SystemException(msg.c_str());
+    }
+    // Must have closed
+    GetExitCodeThread(hthread, &code);
+    return static_cast<int>(code);
   }
   #endif
 }

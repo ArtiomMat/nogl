@@ -35,14 +35,18 @@ static inline void RenderBackBuffer()
 
 }
 
-static void StartTestThread(int* i)
+static int StartTestThread(int* i)
 {
   (*i)++;
   std::cout << i << ' ' << *i << '\n';
+
+  return 10;
 }
 
 int main()
 {
+  // Need 64 bit system...
+
   auto& clock_driver = nogl::ClockDriver::instance();
   auto& file_driver = nogl::FileDriver::instance();
 
@@ -52,6 +56,8 @@ int main()
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
+
+  std::cout << "Return: " << thr.Join() << '\n';
 
   while (run_loop)
   {
