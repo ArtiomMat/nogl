@@ -1,6 +1,6 @@
 #include "Font.hpp"
 #include "Exception.hpp"
-#include "Endian.hpp"
+#include "endian.hpp"
 
 #include <cstdint>
 #include <sstream>

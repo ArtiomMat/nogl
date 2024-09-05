@@ -20,7 +20,7 @@ list(APPEND SOURCES ${PLATFORM_SOURCES})
 # Add an executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra ${PLATFORM_FLAGS})
+target_compile_options(${PROJECT_NAME} PRIVATE -march=native -mtune=native -msse4 -mavx2 -Wall -Wextra ${PLATFORM_FLAGS})
 
 target_link_options(${PROJECT_NAME} PRIVATE ${PLATFORM_LINKS})
 

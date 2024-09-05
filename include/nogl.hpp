@@ -5,3 +5,4 @@
 #include "FileDriver.hpp"
 #include "Context.hpp"
 #include "Font.hpp"
+#include "Thread.hpp"

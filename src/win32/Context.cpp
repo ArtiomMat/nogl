@@ -10,13 +10,16 @@ namespace nogl
 {
   Context::Context(unsigned _width, unsigned _height) : m_width(_width), m_height(_height)
   {
+    HINSTANCE hinstance = GetModuleHandle(nullptr);
+
     constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
     constexpr wchar_t CLASS_NAME[] = L"OMGL CLASS";
     WNDCLASSW wc = { };
     wc.lpfnWndProc = DefWindowProcW;
-    wc.hInstance = GetModuleHandle(nullptr);
+    wc.hInstance = hinstance;
     wc.lpszClassName = CLASS_NAME;
+    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 
     if (!RegisterClassW(&wc))
     {
@@ -45,7 +48,7 @@ namespace nogl
 
       nullptr,
       nullptr,
-      GetModuleHandle(nullptr),
+      hinstance,
       nullptr
     );
     if (hwnd == nullptr)
@@ -89,6 +92,17 @@ namespace nogl
     ShowWindow(hwnd, SW_SHOWNORMAL);
   }
 
+  Context::~Context()
+  {
+    SelectObject(bitmap_hdc, old_hbitmap);
+    DeleteDC(bitmap_hdc);
+
+    DeleteObject(hbitmap);
+
+    ReleaseDC(hwnd, hdc);
+    DestroyWindow(hwnd);
+  }
+
   void Context::DefaultEventHandler(Context&, const Context::Event& e)
   {
     switch (e.type)
@@ -107,17 +121,9 @@ namespace nogl
   {
     if (event.type != Event::Type::_Null)
     {
-      if (event_handler != nullptr)
-      {
-        event_handler(*this, event);
-      }
-      else
-      {
-        DefaultEventHandler(*this, event);
-      }
+      event_handler(*this, event);
     }
   }
-
   void Context::HandleEvents() noexcept
   {
     event.type = Event::Type::_Null;
@@ -154,19 +160,31 @@ namespace nogl
     }
   }
 
+  void Context::Clear() noexcept
+  {
+    __m256i loaded_clear_color = _mm256_load_si256(reinterpret_cast<__m256i*>(clear_color_im));
+    
+    uint8_t* end = data() + (width() * height()) * 4;
+
+    for (uint8_t* ptr = data(); ptr < end; ptr+=sizeof(clear_color_im))
+    {
+      // Unaligned store because as of now I am unsure how to properly ensure alignment other than literally throw an exception if windows gives a buffer that isn't 32 byte aligned.
+      _mm256_storeu_si256(reinterpret_cast<__m256i*>(ptr), loaded_clear_color);
+    }
+  }
+  void Context::set_clear_color(uint8_t b, uint8_t g, uint8_t r) noexcept
+  {
+    for (unsigned i = 0; i < sizeof(clear_color_im); i+=4)
+    {
+      clear_color_im[i + 0] = b;
+      clear_color_im[i + 1] = g;
+      clear_color_im[i + 2] = r;
+      clear_color_im[i + 3] = 0;
+    }
+  }
+
   bool Context::Refresh() const noexcept
   {
     return BitBlt(hdc, 0, 0, m_width, m_height, bitmap_hdc, 0, 0, SRCCOPY);
-  }
-
-  Context::~Context()
-  {
-    SelectObject(bitmap_hdc, old_hbitmap);
-    DeleteDC(bitmap_hdc);
-
-    DeleteObject(hbitmap);
-
-    ReleaseDC(hwnd, hdc);
-    DestroyWindow(hwnd);
   }
 }

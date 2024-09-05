@@ -14,6 +14,7 @@ namespace nogl
   class Context
   {
     public:
+
     struct Event
     {
       enum class Type : uint8_t
@@ -40,7 +41,7 @@ namespace nogl
       };
     };
 
-    void (*event_handler) (Context&, const Event&) = DefaultEventHandler;
+    using EventHandlerCallback = void (*) (Context&, const Event&);
 
     // To use the Context you still need to call MakeCurrent().
     // Can throw a SystemException, with a code from the system.
@@ -51,18 +52,30 @@ namespace nogl
 
     // Draws the `data` on the screen. Success gives true.
     bool Refresh() const noexcept;
-
     // Handles queued up input and pipes to event_handler.
     void HandleEvents() noexcept;
 
-    // Returns a pointer to the data.
-    // A flat array of RGBX components(X being reserved for 32-bit padding), it's essentially the back buffer.
-    inline unsigned char* data() { return m_data; }
+    // nullptr allowed, means that DefaultEventHandler() will be used.
+    inline void set_event_handler(EventHandlerCallback cb) noexcept
+    {
+      event_handler = (cb == nullptr ? DefaultEventHandler : cb);
+    }
 
-    inline unsigned width() { return m_width; }
-    inline unsigned height() { return m_height; }
+    // Clear the screen with the clear color.
+    void Clear() noexcept;
+    void set_clear_color(uint8_t b, uint8_t g, uint8_t r) noexcept;
+
+    // Returns a pointer to the data.
+    // A flat array of BGRX components(X being reserved for 32-bit padding), it's essentially the back buffer.
+    inline uint8_t* data() const { return m_data; }
+
+    inline unsigned width() const { return m_width; }
+    inline unsigned height() const { return m_height; }
 
     private:
+    // Essentially has 4 copies in BGRX format.
+    alignas(32) uint8_t clear_color_im[32];
+
     #ifdef _WIN32
       HWND hwnd = nullptr;
       HDC hdc = nullptr;
@@ -76,7 +89,10 @@ namespace nogl
     unsigned m_width, m_height;
     Event event;
     // See data()
-    unsigned char* m_data;
+    uint8_t* m_data;
+
+    // Cannot logically be nullptr
+    void (*event_handler) (Context&, const Event&) = DefaultEventHandler;
 
     // Handles the event variable after it is written
     void HandleEvent() noexcept;
