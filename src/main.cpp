@@ -37,7 +37,7 @@ static inline void RenderBackBuffer()
 
 static void StartTestThread(int* i)
 {
-  *i++;
+  (*i)++;
   std::cout << i << ' ' << *i << '\n';
 }
 

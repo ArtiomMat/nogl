@@ -49,10 +49,11 @@ namespace nogl
   template <typename I>
   Thread<I>::Thread(StartCallback start, I& i)
   {
-    *input.get() = i; // Copy
+    *input = i; // Copy
     
     hthread = CreateThread(
-      nullptr, 0, 
+      nullptr,
+      0, 
       reinterpret_cast<LPTHREAD_START_ROUTINE>(start), 
       input.get(), 
       0, 
