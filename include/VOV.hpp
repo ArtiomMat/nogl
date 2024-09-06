@@ -57,6 +57,14 @@ namespace nogl
         _mm_store_ps(p_, _mm_sub_ps(a, b));
       }
 
+      void Normalize()
+      {
+        
+        // __m128 t1 = _mm_hadd_ps(sq,sq);
+        // __m128 t2 = _mm_hadd_ps(t1,t1);
+        // float inv_mag = _mm_cvtss_f32(t2);
+      }
+
       private:
       V4(float* p) : p_(p) {}
       // It's aligned to 16, since the underlying buffer it comes from also is.
