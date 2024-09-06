@@ -51,29 +51,26 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
-static int StartTestThread(int* i)
-{
-  (*i)++;
-  std::cout << i << ' ' << *i << '\n';
+// static int StartTestThread(int* i)
+// {
+//   (*i)++;
+//   std::cout << i << ' ' << *i << '\n';
 
-  return 10;
-}
+//   return 10;
+// }
 
 int main()
 {
-  // Need 64 bit system...
-
   auto& clock_driver = nogl::ClockDriver::instance();
   auto& file_driver = nogl::FileDriver::instance();
-
-  int i = 0;
-  nogl::Thread<int> thr(StartTestThread, i);
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  std::cout << "Return: " << thr.Join() << '\n';
+  nogl::VOV4 vov(4);
+  vov.SetAll(69.1f);
+  std::cout << vov.v(3)[0] << ' ' << vov.v(3)[1] << ' ' << vov.v(3)[2] << '\n';
 
   clock_driver.Reset();
   while (run_loop)
