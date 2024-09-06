@@ -34,9 +34,9 @@ namespace nogl
 
     private:
     #ifdef _WIN32
-      HANDLE hthread;
+      HANDLE hthread_;
     #endif
-    std::unique_ptr<I> input = std::unique_ptr<I>(new I);
+    std::unique_ptr<I> input_ = std::unique_ptr<I>(new I);
   };
 
   template <typename I>
@@ -49,18 +49,18 @@ namespace nogl
   template <typename I>
   Thread<I>::Thread(StartCallback start, I& i)
   {
-    *input = i; // Copy
+    *input_ = i; // Copy
     
-    hthread = CreateThread(
+    hthread_ = CreateThread(
       nullptr,
       0, 
       reinterpret_cast<LPTHREAD_START_ROUTINE>(start), 
-      input.get(), 
+      input_.get(), 
       0, 
       nullptr
     );
 
-    if (hthread == nullptr)
+    if (hthread_ == nullptr)
     {
       throw SystemException("Creating a thread.");
     }
@@ -69,13 +69,13 @@ namespace nogl
   template <typename I>
   void Thread<I>::Close()
   {
-    CloseHandle(hthread);
+    CloseHandle(hthread_);
   }
 
   template <typename I>
   bool Thread<I>::has_closed() noexcept
   {
-    if (WaitForSingleObject(hthread, 0) == WAIT_OBJECT_0)
+    if (WaitForSingleObject(hthread_, 0) == WAIT_OBJECT_0)
     {
       return true;
     }
@@ -86,13 +86,13 @@ namespace nogl
   int Thread<I>::Join()
   {
     DWORD code;
-    if (WaitForSingleObject(hthread, INFINITE) != WAIT_OBJECT_0)
+    if (WaitForSingleObject(hthread_, INFINITE) != WAIT_OBJECT_0)
     {
-      auto msg = (std::stringstream() << "Could not wait for the thread " << hthread << " to finish.").str();
+      auto msg = (std::stringstream() << "Could not wait for the thread " << hthread_ << " to finish.").str();
       throw SystemException(msg.c_str());
     }
     // Must have closed
-    GetExitCodeThread(hthread, &code);
+    GetExitCodeThread(hthread_, &code);
     return static_cast<int>(code);
   }
   #endif

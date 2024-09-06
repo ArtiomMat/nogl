@@ -69,8 +69,9 @@ int main()
   ctx.set_event_handler(EventHandler);
 
   nogl::VOV4 vov(4);
-  vov.SetAll(69.1f);
-  std::cout << vov.v(3)[0] << ' ' << vov.v(3)[1] << ' ' << vov.v(3)[2] << '\n';
+  vov.SetAll(1);
+  std::cout << vov.v(0).magnitude3() << '\n';
+  std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2] << '\n';
 
   clock_driver.Reset();
   while (run_loop)

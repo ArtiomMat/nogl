@@ -57,12 +57,66 @@ namespace nogl
         _mm_store_ps(p_, _mm_sub_ps(a, b));
       }
 
+      void Negate()
+      {
+        __m128 vec_128 = _mm_sub_ps(_mm_set1_ps(0), _mm_load_ps(p_));
+        _mm_store_ps(p_, vec_128);
+      }
+
+      // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`.
       void Normalize()
       {
+        // Load the vector to begin calculating the inverse magnitude
+        __m128 vec_128 = _mm_load_ps(p_);
+        __m128 inv_mag_128;
+
+        // XXX: _mm_dp_ps() computes dot product, below line can be faster. But there seem to be "caveats", and it may not be as fast.
+        inv_mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
         
-        // __m128 t1 = _mm_hadd_ps(sq,sq);
-        // __m128 t2 = _mm_hadd_ps(t1,t1);
-        // float inv_mag = _mm_cvtss_f32(t2);
+        // Sum of squares into the least-significant component
+        // inv_mag_128 = _mm_mul_ps(vec_128, vec_128);
+        // inv_mag_128 = _mm_hadd_ps(inv_mag_128, inv_mag_128);
+        // inv_mag_128 = _mm_hadd_ps(inv_mag_128, inv_mag_128);
+
+        // Apply inverse square root and retrieve, don't care about the rest of the component
+        inv_mag_128 = _mm_rsqrt_ps(inv_mag_128);
+        float inv_mag = _mm_cvtss_f32(inv_mag_128);
+        // Reload it into the register but this time for all its components.
+        inv_mag_128 = _mm_set1_ps(inv_mag);
+        // Finally the moment we were all waiting for
+        vec_128 = _mm_mul_ps(vec_128, inv_mag_128);
+        _mm_store_ps(p_, vec_128);
+      }
+
+      // Please not that the w component(3rd index) is discarded during this operation.
+      // If you want it then use `Normalize()`
+      void Normalize3()
+      {
+        float tmp = p_[3];
+        p_[3] = 0;
+        Normalize();
+        p_[3] = tmp;
+      }
+
+      // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3.
+      float magnitude()
+      {
+        __m128 vec_128 = _mm_load_ps(p_);
+        // Load the vector to begin calculating the inverse magnitude
+        __m128 mag_128;
+
+        mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
+
+        return _mm_cvtss_f32(mag_128);
+      }
+
+      float magnitude3()
+      {
+        float tmp = p_[3];
+        p_[3] = 0;
+        float mag = magnitude();
+        p_[3] = tmp;
+        return mag;
       }
 
       private:
@@ -93,9 +147,10 @@ namespace nogl
       return VOV4(n_);
     }
 
+    // A compatible VOV is one that has *at least* as much vector capacity as this one.
     bool IsCompatible(VOV4& vov4) const
     {
-      if (n_ == vov4.n_)
+      if (n_ <= vov4.n_)
       {
         return true;
       }
@@ -114,10 +169,10 @@ namespace nogl
       }
     }
 
-    // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`
+    // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
     void MultiplyAll(M4x4& matrix, VOV4& to)
     {
-
+      
     }
 
     // Returns a pointer to a pointer to a vector at the index `i`.
@@ -128,6 +183,7 @@ namespace nogl
     }
 
     private:
+    // The number of vectors, not bytes, not floats, remember that before you refer to it as something else.
     unsigned n_;
     // MUST BE ALIGNED TO `ALIGN`
     std::unique_ptr<float[]> buffer_;

@@ -3,14 +3,14 @@ Idk really if it will be a library or a standalone.\
 It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths with it and replace it with NO GRAPHICS LIBRARY!
 
 # Roadmap(TODO)
-- [ ] Basics.
+- [x] Basics.
   - [x] Pushing the project.(I want something to be ticked lol)
   - [x] Set up a performant Window.
   - [x] Setting up the basics.
   - [x] Basic loop.
 - [ ] Math utilities.
   - [x] Understand SIMD enough to use it.
-  - [ ] Play around with SIMD and prototype stuff for the below step.
+  - [x] Play around with SIMD and prototype stuff for the below step.
   - [ ] Vector math, using SIMD and bulk computation of vectors. The idea is a VOV(Vector Of Vectors) object.
   - [ ] Various vector arithmetic using SIMD: normalization, dot, cross, etc.
   - [ ] Matrix math for perspective projection.
