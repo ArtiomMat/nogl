@@ -10,20 +10,15 @@
 
 namespace nogl
 {
-  struct M4x4
+  class VOV4;
+  class V4;
+
+  class alignas(32) M4x4
   {
-    // First dimension is the columns(x), second is the individual rows(y). It does wonders to SIMD.
-    alignas(32) float v[4][4];
+    friend VOV4;
+    friend V4;
 
-    // Note that since the array is flattened in x,y mapping works differently.
-    // Each quad of floats in the array correspond to a column, not a row.
-    // So the first 4 floats are actually the first column(x=0), then the second are the second column(x=1), etc.
-    // M4x4(const float m[4*4])
-    // {
-    //   _mm256_store_ps(v[0], _mm256_loadu_ps(m+ 0));
-    //   _mm256_store_ps(v[2], _mm256_loadu_ps(m+ 8));
-    // }
-
+    public:
     // While the construction is intuitive, the array is just a flattened array of the matrix,
     // the actual storage is different from the input array, for performance reasons,
     // The columns are actually on y axis in `v`, and the the rows become the x axis, so instead of [row][col] access it's [col][row] access.
@@ -33,13 +28,17 @@ namespace nogl
       {
         for (unsigned y = 0; y < 4; y++)
         {
-          v[x][y] = m[x + y*4];
+          p[x][y] = m[x + y*4];
         }
       }
     }
-  };
 
-  class VOV4;
+    float* operator [](unsigned i) { return p[i]; }
+
+    private:
+    // First dimension is the columns(x), second is the individual rows(y). It does wonders to SIMD.
+    alignas(32) float p[4][4];
+  };
 
   // Meant to be an easy way to do opeartions on individual vectors.
   class alignas(__m128) V4
@@ -106,7 +105,7 @@ namespace nogl
         // Load the i-th component into all SSE components
         __m128 comp128 = _mm_set1_ps(p_[i]);
         // Now load the matrix column
-        __m128 col = _mm_load_ps(m.v[i]);
+        __m128 col = _mm_load_ps(m.p[i]);
         // Multiply the i-th component by the matrix column.
         // Equivalent to by-hand, since it's the component multiplied by each column.
         // X*[A,C] + Y*[B,D] = [AX,AC] + [BY,DY] = [AX+BY,CX+DY]
@@ -259,7 +258,7 @@ namespace nogl
       {
         for (unsigned i = 0; i < 4; i++)
         {
-          __m128 col = _mm_load_ps(m.v[i]);
+          __m128 col = _mm_load_ps(m.p[i]);
           __m256 cols = reinterpret_cast<__m256>(
             _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
           );
@@ -275,16 +274,16 @@ namespace nogl
       // // XXX: Multiplying multiple VOVs by th same matrix may cause redundant calls, so idk how to deal with that...
       // // Load all the columns, and copy them into both the upper and lower parts of the YMM registers.
       // r[0] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.v[0])
+      //   reinterpret_cast<__m128*>(matrix.p[0])
       // );
       // r[1] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.v[1])
+      //   reinterpret_cast<__m128*>(matrix.p[1])
       // );
       // r[2] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.v[2])
+      //   reinterpret_cast<__m128*>(matrix.p[2])
       // );
       // r[3] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.v[3])
+      //   reinterpret_cast<__m128*>(matrix.p[3])
       // );
 
       // // Used to do multiplication.
