@@ -19,12 +19,11 @@ namespace nogl
     }
     static constexpr std::uint32_t BigE(std::uint32_t _x)
     {
-      return ((_x & 0x000000FF) << 24) & ((_x & 0x0000FF00) << 8) & ((_x & 0xFF000000) >> 24) & ((_x & 0x00FF0000) >> 8);
+      return __builtin_bswap32(_x);
     }
     static constexpr std::uint64_t BigE(std::uint64_t _x)
     {
-      return ((_x & 0x00000000000000FF) << 56) & ((_x & 0x000000000000FF00) << 40) & ((_x & 0x0000000000FF0000) << 24) & ((_x & 0x00000000FF000000) << 8) &
-      ((_x & 0xFF00000000000000) >> 56) & ((_x & 0x00FF000000000000) >> 40) & ((_x & 0x0000FF0000000000) >> 24) & ((_x & 0x000000FF00000000) >> 8);
+      return __builtin_bswap64(_x);
     }
 
     static inline std::uint16_t LilE(std::uint16_t _x)
@@ -48,12 +47,11 @@ namespace nogl
     }
     static constexpr std::uint32_t LilE(std::uint32_t _x)
     {
-      return ((_x & 0x000000FF) << 24) & ((_x & 0x0000FF00) << 8) & ((_x & 0xFF000000) >> 24) & ((_x & 0x00FF0000) >> 8);
+      return __builtin_bswap32(_x);
     }
     static constexpr std::uint64_t LilE(std::uint64_t _x)
     {
-      return ((_x & 0x00000000000000FF) << 56) & ((_x & 0x000000000000FF00) << 40) & ((_x & 0x0000000000FF0000) << 24) & ((_x & 0x00000000FF000000) << 8) &
-      ((_x & 0xFF00000000000000) >> 56) & ((_x & 0x00FF000000000000) >> 40) & ((_x & 0x0000FF0000000000) >> 24) & ((_x & 0x000000FF00000000) >> 8);
+      return __builtin_bswap64(_x);
     }
 
     static inline std::uint16_t BigE(std::uint16_t _x)
