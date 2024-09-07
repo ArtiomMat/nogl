@@ -58,7 +58,7 @@ namespace nogl
     // `nullptr` allowed, means that `DefaultEventHandler()` will be used.
     inline void set_event_handler(EventHandlerCallback cb) noexcept
     {
-      event_handler = (cb == nullptr ? DefaultEventHandler : cb);
+      event_handler_ = (cb == nullptr ? DefaultEventHandler : cb);
     }
 
     // Clear the screen with the clear color.
@@ -67,32 +67,32 @@ namespace nogl
 
     // Returns a pointer to the data.
     // A flat array of BGRX components(X being reserved for 32-bit padding), it's essentially the back buffer.
-    inline uint8_t* data() const { return m_data; }
+    inline uint8_t* data() const { return data_; }
 
-    inline unsigned width() const { return m_width; }
-    inline unsigned height() const { return m_height; }
+    inline unsigned width() const { return width_; }
+    inline unsigned height() const { return height_; }
 
     private:
-    // Essentially has 4 copies in BGRX format.
-    alignas(32) uint8_t clear_color_im[32];
+    // Essentially has 4 copies in BGRX format. Cached.
+    alignas(32) uint8_t clear_color_c256_[32];
 
     #ifdef _WIN32
-      HWND hwnd = nullptr;
-      HDC hdc = nullptr;
-      HBITMAP hbitmap = nullptr;
-      HDC bitmap_hdc = nullptr;
-      HGDIOBJ old_hbitmap = nullptr;
+      HWND hwnd_ = nullptr;
+      HDC hdc_ = nullptr;
+      HBITMAP hbitmap_ = nullptr;
+      HDC bitmap_hdc_ = nullptr;
+      HGDIOBJ old_hbitmap_ = nullptr;
 
-      MSG msg;
+      MSG msg_;
     #endif
 
-    unsigned m_width, m_height;
-    Event event;
+    unsigned width_, height_;
+    Event event_;
     // See `data()`.
-    uint8_t* m_data;
+    uint8_t* data_;
 
     // Cannot logically be `nullptr`.
-    void (*event_handler) (Context&, const Event&) = DefaultEventHandler;
+    void (*event_handler_) (Context&, const Event&) = DefaultEventHandler;
 
     // Handles the event variable after it is written.
     void HandleEvent() noexcept;

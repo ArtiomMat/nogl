@@ -10,7 +10,7 @@ namespace nogl
 {
   struct M4x4
   {
-    // First dimension is the rows(y), second is the individual columns(x). It just makes it more idiomatic to do multiplication.
+    // First dimension is the rows(y), second is the individual columns(x). It does wonders to SIMD.
     alignas(32) float v[4][4];
   };
 
@@ -55,6 +55,26 @@ namespace nogl
         __m128 a = _mm_load_ps(p_);
         __m128 b = _mm_load_ps(other.p_);
         _mm_store_ps(p_, _mm_sub_ps(a, b));
+      }
+
+      void operator *=(const M4x4& m)
+      {
+        alignas(16) float tmp_f[4]; // For temporary vector storage, intemidiete operations, etc.
+        V4 tmp(tmp_f);
+        for (unsigned i = 0; i < 4; i++)
+        {
+          V4 row(const_cast<float*>(m.v[i]));
+        }
+        
+      }
+
+      float sum()
+      {
+        // __m128 vec_128 = _mm_load_ps(p_);
+        // vec_128 = _mm_hadd_ps(vec_128, vec_128);
+        // vec_128 = _mm_hadd_ps(vec_128, vec_128);
+        // return _mm_cvtss_f32(vec_128);
+        return p_[0] + p_[1] + p_[2] + p_[3];
       }
 
       void Negate()
@@ -158,26 +178,67 @@ namespace nogl
     }
 
     // Set every single vector, and every one of its components to `f`.
-    void SetAll(float f)
+    void SetAll(float f) noexcept
     {
       __m256 filler = _mm256_set1_ps(f);
-      float* ptr = buffer_.get();
-      float* end = ptr + n_*4;
-      for (; ptr < end; ptr += (ALIGN / sizeof(float)))
+      for (float* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(float)))
       {
         _mm256_store_ps(ptr, filler);
       }
     }
 
     // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
-    void MultiplyAll(M4x4& matrix, VOV4& to)
+    void MultiplyAll(M4x4& matrix, VOV4& to) noexcept
     {
-      
+      __m256 r[4];
+      // XXX: Multiplying multiple VOVs by th same matrix may cause redundant calls, so idk how to deal with that...
+      // Load all the columns, and copy them into both the upper and lower parts of the YMM registers.
+      r[0] = _mm256_broadcast_ps(
+        reinterpret_cast<__m128*>(matrix.v[0])
+      );
+      r[1] = _mm256_broadcast_ps(
+        reinterpret_cast<__m128*>(matrix.v[1])
+      );
+      r[2] = _mm256_broadcast_ps(
+        reinterpret_cast<__m128*>(matrix.v[2])
+      );
+      r[3] = _mm256_broadcast_ps(
+        reinterpret_cast<__m128*>(matrix.v[3])
+      );
+
+      // Used to do multiplication.
+      __m256 loaded;
+      // Then these results with loaded are added here.
+      __m256 result;
+      // result = _mm256_xor_ps(result, result);
+
+      // float* ptr = buffer_.get();
+      // float* end = ptr + n_*4;
+      for (float* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(float)))
+      {
+        loaded = _mm256_load_ps(ptr);
+        
+        result = _mm256_mul_ps(loaded, r[0]);
+
+        for (unsigned i = 1; i < 4; i++)
+        {
+          
+        }
+      }
     }
 
-    // Returns a pointer to a pointer to a vector at the index `i`.
-    // Your domain is the first 4 indices of that returned vector, beyond [3] or below before [0] is not your concern.
-    V4 v(unsigned i) const
+    float* begin() const noexcept
+    {
+      return buffer_.get();
+    }
+    float* end() const noexcept
+    {
+      return buffer_.get() + n_*4;
+    }
+
+    // Returns a zero-cost wrapper object to the vector at index `i`.
+    // NOTE: The object returned directly references the actual vector from this VOV, so any operation you do on the V4 object affects that vector here. 
+    V4 v(unsigned i) const noexcept
     {
       return V4(buffer_.get() + i*4);
     }
