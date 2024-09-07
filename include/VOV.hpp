@@ -73,11 +73,7 @@ namespace nogl
 
       void operator *=(const M4x4& m)
       {
-        __m128 res;
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wuninitialized"
-          res = _mm_xor_ps(res, res);
-        #pragma GCC diagnostic pop
+        __m128 res = _mm_setzero_ps();
         
         for (unsigned i = 0; i < 4; i++)
         {
@@ -215,8 +211,26 @@ namespace nogl
     }
 
     // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
-    void MultiplyAll(M4x4& matrix, VOV4& to) noexcept
+    void MultiplyAll(M4x4& m) noexcept
     {
+      // We do the same thing in V4 but 2 for 1 essentially
+
+      for (float* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(float)))
+      {
+        for (unsigned i = 0; i < 4; i++)
+        {
+          __m128 col = _mm_load_ps(m.v[i]);
+          __m256 cols = reinterpret_cast<__m256>(
+            _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
+          );
+
+          // TODO: Gotta figure out ordering of all this stuff, what HIGH means, what LOW means, and how it's then stored back.
+          // _mm256_loadu2_m128
+        }
+      }
+      // _mm256_broadcastsi128_si256()
+      // _mm256_broadcastss_ps
+
       // __m256 r[4];
       // // XXX: Multiplying multiple VOVs by th same matrix may cause redundant calls, so idk how to deal with that...
       // // Load all the columns, and copy them into both the upper and lower parts of the YMM registers.
