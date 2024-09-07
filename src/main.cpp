@@ -69,8 +69,8 @@ int main()
   ctx.set_event_handler(EventHandler);
 
   nogl::M4x4 matrix((const float[]){
-    0,2,0,4,
-    0,0,0,4,
+    0,2,0,1,
+    0,0,0,2,
     1,0,0,4,
     0,0,0,0,
   });

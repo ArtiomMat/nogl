@@ -6,19 +6,22 @@
 #include <new>
 #include <memory>
 
+// BUG: I think that the vector structure MIGHT be flipped, due to how SSE and AVX handle stuff, but still check it.
+
 namespace nogl
 {
   struct M4x4
   {
-    // First dimension is the rows(y), second is the individual columns(x). It does wonders to SIMD.
+    // First dimension is the columns(x), second is the individual rows(y). It does wonders to SIMD.
     alignas(32) float v[4][4];
 
+    // Note that since the array is flattened in x,y mapping works differently.
+    // Each quad of floats in the array correspond to a column, not a row.
+    // So the first 4 floats are actually the first column(x=0), then the second are the second column(x=1), etc.
     M4x4(const float m[4*4])
     {
-      _mm_store_ps(v[0], _mm_loadu_ps(m+ 0));
-      _mm_store_ps(v[1], _mm_loadu_ps(m+ 4));
-      _mm_store_ps(v[2], _mm_loadu_ps(m+ 8));
-      _mm_store_ps(v[3], _mm_loadu_ps(m+12));
+      _mm256_store_ps(v[0], _mm256_loadu_ps(m+ 0));
+      _mm256_store_ps(v[2], _mm256_loadu_ps(m+ 8));
     }
   };
 
@@ -70,36 +73,23 @@ namespace nogl
 
       void operator *=(const M4x4& m)
       {
-        __m128 res, row, vec_128;
-        float component;
-
-        res = _mm_set1_ps(0);
-        // res = _mm_xor_ps(res, res);
-        vec_128 = _mm_load_ps(p_);
+        __m128 res;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wuninitialized"
+          res = _mm_xor_ps(res, res);
+        #pragma GCC diagnostic pop
         
         for (unsigned i = 0; i < 4; i++)
         {
-          row = _mm_load_ps(m.v[i]);
-          // Multiply the i-th row by all the vector components
-          row = _mm_mul_ps(row, vec_128);
-
-          // Sum up all the components(that per component sum in matrix mul)
-          row = _mm_hadd_ps(row, row);
-          row = _mm_hadd_ps(row, row);
-          // Effectively set the components to 0 except the lowest one that we care about
-          component = _mm_cvtss_f32(row);
-          row = _mm_set_ss(component); // NOTE: For some reason loads into upper component
-
-          // Now shift that component into the respective place and OR into res.
-          // row = reinterpret_cast<__m128>(
-          //   _mm_slli_si128(
-          //     reinterpret_cast<__m128i>(row), 
-          //     (3-i) * sizeof(float)
-          //   )
-          // );
-          row = _mm_insert_ps(row, row, _MM_MK_INSERTPS_NDX(0, 3-i, 0));
-
-          res = _mm_or_ps(res, row);
+          // Load the i-th component into all SSE components
+          __m128 comp128 = _mm_set1_ps(p_[i]);
+          // Now load the matrix column
+          __m128 col = _mm_load_ps(m.v[i]);
+          // Multiply the i-th component by the matrix column.
+          // Equivalent to by-hand, since it's the component multiplied by each column.
+          // X*[A,C] + Y*[B,D] = [AX,AC] + [BY,DY] = [AX+BY,CX+DY]
+          comp128 = _mm_mul_ps(comp128, col);
+          res = _mm_add_ps(res, comp128);
         }
 
         _mm_store_ps(p_, res);
