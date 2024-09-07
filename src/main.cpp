@@ -68,10 +68,18 @@ int main()
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
+  nogl::M4x4 matrix((const float[]){
+    0,2,0,4,
+    0,0,0,4,
+    1,0,0,4,
+    0,0,0,0,
+  });
+
   nogl::VOV4 vov(4);
   vov.SetAll(1);
+  vov.v(0) *= matrix;
   std::cout << vov.v(0).magnitude3() << '\n';
-  std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2] << '\n';
+  std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << '\n';
 
   clock_driver.Reset();
   while (run_loop)

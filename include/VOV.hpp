@@ -12,6 +12,14 @@ namespace nogl
   {
     // First dimension is the rows(y), second is the individual columns(x). It does wonders to SIMD.
     alignas(32) float v[4][4];
+
+    M4x4(const float m[4*4])
+    {
+      _mm_store_ps(v[0], _mm_loadu_ps(m+ 0));
+      _mm_store_ps(v[1], _mm_loadu_ps(m+ 4));
+      _mm_store_ps(v[2], _mm_loadu_ps(m+ 8));
+      _mm_store_ps(v[3], _mm_loadu_ps(m+12));
+    }
   };
 
   // Vector Of Vectors(4 dimensional)
@@ -24,6 +32,9 @@ namespace nogl
       friend VOV4;
 
       public:
+      V4() = delete;
+      ~V4() = default;
+
       // Make sure it's [0]-[3] and not above!
       float& operator[](unsigned i) const { return p_[i]; }
 
@@ -59,13 +70,39 @@ namespace nogl
 
       void operator *=(const M4x4& m)
       {
-        alignas(16) float tmp_f[4]; // For temporary vector storage, intemidiete operations, etc.
-        V4 tmp(tmp_f);
+        __m128 res, row, vec_128;
+        float component;
+
+        res = _mm_set1_ps(0);
+        // res = _mm_xor_ps(res, res);
+        vec_128 = _mm_load_ps(p_);
+        
         for (unsigned i = 0; i < 4; i++)
         {
-          V4 row(const_cast<float*>(m.v[i]));
+          row = _mm_load_ps(m.v[i]);
+          // Multiply the i-th row by all the vector components
+          row = _mm_mul_ps(row, vec_128);
+
+          // Sum up all the components(that per component sum in matrix mul)
+          row = _mm_hadd_ps(row, row);
+          row = _mm_hadd_ps(row, row);
+          // Effectively set the components to 0 except the lowest one that we care about
+          component = _mm_cvtss_f32(row);
+          row = _mm_set_ss(component); // NOTE: For some reason loads into upper component
+
+          // Now shift that component into the respective place and OR into res.
+          // row = reinterpret_cast<__m128>(
+          //   _mm_slli_si128(
+          //     reinterpret_cast<__m128i>(row), 
+          //     (3-i) * sizeof(float)
+          //   )
+          // );
+          row = _mm_insert_ps(row, row, _MM_MK_INSERTPS_NDX(0, 3-i, 0));
+
+          res = _mm_or_ps(res, row);
         }
-        
+
+        _mm_store_ps(p_, res);
       }
 
       float sum()
@@ -127,7 +164,7 @@ namespace nogl
 
         mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
 
-        return _mm_cvtss_f32(mag_128);
+        return __builtin_sqrtf(_mm_cvtss_f32(mag_128));
       }
 
       float magnitude3()
@@ -190,41 +227,41 @@ namespace nogl
     // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
     void MultiplyAll(M4x4& matrix, VOV4& to) noexcept
     {
-      __m256 r[4];
-      // XXX: Multiplying multiple VOVs by th same matrix may cause redundant calls, so idk how to deal with that...
-      // Load all the columns, and copy them into both the upper and lower parts of the YMM registers.
-      r[0] = _mm256_broadcast_ps(
-        reinterpret_cast<__m128*>(matrix.v[0])
-      );
-      r[1] = _mm256_broadcast_ps(
-        reinterpret_cast<__m128*>(matrix.v[1])
-      );
-      r[2] = _mm256_broadcast_ps(
-        reinterpret_cast<__m128*>(matrix.v[2])
-      );
-      r[3] = _mm256_broadcast_ps(
-        reinterpret_cast<__m128*>(matrix.v[3])
-      );
+      // __m256 r[4];
+      // // XXX: Multiplying multiple VOVs by th same matrix may cause redundant calls, so idk how to deal with that...
+      // // Load all the columns, and copy them into both the upper and lower parts of the YMM registers.
+      // r[0] = _mm256_broadcast_ps(
+      //   reinterpret_cast<__m128*>(matrix.v[0])
+      // );
+      // r[1] = _mm256_broadcast_ps(
+      //   reinterpret_cast<__m128*>(matrix.v[1])
+      // );
+      // r[2] = _mm256_broadcast_ps(
+      //   reinterpret_cast<__m128*>(matrix.v[2])
+      // );
+      // r[3] = _mm256_broadcast_ps(
+      //   reinterpret_cast<__m128*>(matrix.v[3])
+      // );
 
-      // Used to do multiplication.
-      __m256 loaded;
-      // Then these results with loaded are added here.
-      __m256 result;
-      // result = _mm256_xor_ps(result, result);
+      // // Used to do multiplication.
+      // __m256 loaded;
+      // // Then these results with loaded are added here.
+      // __m256 result;
+      // // result = _mm256_xor_ps(result, result);
 
-      // float* ptr = buffer_.get();
-      // float* end = ptr + n_*4;
-      for (float* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(float)))
-      {
-        loaded = _mm256_load_ps(ptr);
+      // // float* ptr = buffer_.get();
+      // // float* end = ptr + n_*4;
+      // for (float* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(float)))
+      // {
+      //   loaded = _mm256_load_ps(ptr);
         
-        result = _mm256_mul_ps(loaded, r[0]);
+      //   result = _mm256_mul_ps(loaded, r[0]);
 
-        for (unsigned i = 1; i < 4; i++)
-        {
+      //   for (unsigned i = 1; i < 4; i++)
+      //   {
           
-        }
-      }
+      //   }
+      // }
     }
 
     float* begin() const noexcept
