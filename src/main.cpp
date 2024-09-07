@@ -69,17 +69,20 @@ int main()
   ctx.set_event_handler(EventHandler);
 
   nogl::M4x4 matrix((const float[]){
-    0,2,0,1,
-    0,0,0,2,
-    1,0,0,4,
-    0,0,0,0,
+    4,0,0,0,
+    0,4,0,0,
+    0,0,4,0,
+    0,0,0,4,
   });
 
   nogl::VOV4 vov(4);
-  vov.SetAll(1);
-  vov.v(0) *= matrix;
-  std::cout << vov.v(0).magnitude3() << '\n';
-  std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << '\n';
+  nogl::V4& v = vov.v(0);
+
+  vov.SetAll(nogl::V4((const float[]) { 1, 2, 3, 0 } ));
+  std::cout << v[0] << ' ' << v[1] << ' ' << v[2]  << ' ' << vov.v(0)[3] << '\n';
+  v *= matrix;
+  std::cout << v.magnitude3() << '\n';
+  std::cout << v[0] << ' ' << v[1] << ' ' << v[2]  << ' ' << vov.v(0)[3] << '\n';
 
   clock_driver.Reset();
   while (run_loop)
