@@ -188,7 +188,7 @@ namespace nogl
     }
 
     private:
-    float p_[4];
+    alignas(16) float p_[4];
   };
 
   // Vector Of Vectors(4 dimensional)
