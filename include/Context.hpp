@@ -6,7 +6,10 @@
   #error Not yet
 #endif
 
+#include <immintrin.h>
+#include <memory>
 #include <cstdint>
+
 #include "Exception.hpp"
 
 namespace nogl
@@ -23,8 +26,8 @@ namespace nogl
 
         kClose,
         // Includes mouse keys
-        kPress, Release,
-        MouseMove, // Moving the mouse
+        kPress, kRelease,
+        kMouseMove, // Moving the mouse
       };
 
       Type type;
@@ -64,17 +67,21 @@ namespace nogl
     // Clear the screen with the clear color.
     void Clear() noexcept;
     void set_clear_color(uint8_t b, uint8_t g, uint8_t r) noexcept;
+    // Sets the z buffer to 1!
+    void ClearZ() noexcept;
 
     // Returns a pointer to the data.
     // A flat array of BGRX components(X being reserved for 32-bit padding), it's essentially the back buffer.
     inline uint8_t* data() const { return data_; }
+    // z-buffer, `0` means as front as it can get, and `1` means farthest it can be.
+    inline float* zdata() const { return zdata_.get(); }
 
     inline unsigned width() const { return width_; }
     inline unsigned height() const { return height_; }
 
     private:
     // Essentially has 4 copies in BGRX format. Cached.
-    alignas(32) uint8_t clear_color_c256_[32];
+    alignas(__m256i) uint8_t clear_color_c256_[32];
 
     #ifdef _WIN32
       HWND hwnd_ = nullptr;
@@ -90,6 +97,8 @@ namespace nogl
     Event event_;
     // See `data()`.
     uint8_t* data_;
+    // See `zdata()`.
+    std::unique_ptr<float[]> zdata_;
 
     // Cannot logically be `nullptr`.
     void (*event_handler_) (Context&, const Event&) = DefaultEventHandler;

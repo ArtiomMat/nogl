@@ -174,7 +174,7 @@ namespace nogl
       unsigned extras = n % (kAlign / sizeof (V4));
       
       buffer_ = std::unique_ptr<V4[]>(
-        new (std::align_val_t(kAlign)) V4[(n + extras)]
+        new (std::align_val_t(kAlign)) V4[n + extras]
       );
     }
     VOV4(const VOV4& other) : VOV4(other.n_)
@@ -183,6 +183,15 @@ namespace nogl
     }
 
     ~VOV4() = default;
+
+    // Assume f is the size of `4*n()`, so it contains all the vectors necessary flattened into an array.
+    void operator =(float* f) noexcept
+    {
+      for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
+      {
+        _mm256_store_ps(ptr->p_, _mm256_load_ps(f));
+      }
+    }
 
     // Set every single vector, and every one of its components to `f`.
     void operator =(float f) noexcept
@@ -218,6 +227,7 @@ namespace nogl
     // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
     void operator *=(const M4x4& m) noexcept;
 
+    unsigned n() const noexcept { return n_; }
     V4* begin() const noexcept { return buffer_.get(); }
     V4* end() const noexcept { return buffer_.get() + n_; }
 

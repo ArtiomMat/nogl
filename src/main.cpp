@@ -32,7 +32,7 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
 static int StartTestThread(int& i)
 {
   i++;
-  std::cout << i << ' ' << i << '\n';
+  std::cout << i << '\n';
 
   return 10;
 }

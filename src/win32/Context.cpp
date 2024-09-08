@@ -5,6 +5,8 @@
 #include "windows.hpp"
 #include "Context.hpp"
 #include <iostream>
+#include <new>
+#include <memory>
 
 namespace nogl
 {
@@ -67,7 +69,7 @@ namespace nogl
       .biPlanes = 1, // "This value must be set to 1." -Microsoft
       .biBitCount = 32,
       .biCompression = BI_RGB,
-      .biSizeImage = 0,
+      .biSizeImage = 0, // Can be set 0 for BI_RGB
       .biXPelsPerMeter = 0, // From what I know these two are useless to GDI
       .biYPelsPerMeter = 0,
       .biClrUsed = 0,
@@ -91,6 +93,11 @@ namespace nogl
     old_hbitmap_ = SelectObject(bitmap_hdc_, hbitmap_);
 
     ShowWindow(hwnd_, SW_SHOWNORMAL);
+
+    // Allocate aligned to __m256
+    zdata_ = std::unique_ptr<float[]>(
+      new (std::align_val_t(sizeof (__m256))) float[width_ * height_]
+    );
   }
 
   Context::~Context()
@@ -158,29 +165,6 @@ namespace nogl
         DispatchMessageW(&msg_);
         return; // Because we dispatch in another case
       }
-    }
-  }
-
-  void Context::Clear() noexcept
-  {
-    __m256i loaded_clear_color = _mm256_load_si256(reinterpret_cast<__m256i*>(clear_color_c256_));
-    
-    uint8_t* end = data() + (width() * height()) * 4;
-
-    for (uint8_t* ptr = data(); ptr < end; ptr+=sizeof(clear_color_c256_))
-    {
-      // Unaligned store because as of now I am unsure how to properly ensure alignment other than literally throw an exception if windows gives a buffer that isn't 32 byte aligned.
-      _mm256_storeu_si256(reinterpret_cast<__m256i*>(ptr), loaded_clear_color);
-    }
-  }
-  void Context::set_clear_color(uint8_t b, uint8_t g, uint8_t r) noexcept
-  {
-    for (unsigned i = 0; i < sizeof(clear_color_c256_); i+=4)
-    {
-      clear_color_c256_[i + 0] = b;
-      clear_color_c256_[i + 1] = g;
-      clear_color_c256_[i + 2] = r;
-      clear_color_c256_[i + 3] = 0;
     }
   }
 

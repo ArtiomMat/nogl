@@ -7,11 +7,11 @@ namespace nogl
 {
   // Little endian
   #ifdef __x86_64__
-    constexpr bool LIL_E = true;
+    constexpr bool kLilE = true;
 
     static constexpr std::uint16_t BigE(std::uint16_t _x)
     {
-      if (LIL_E)
+      if (kLilE)
       {
         return (_x >> 8) | (_x << 8);
       }
@@ -39,7 +39,7 @@ namespace nogl
       return _x;
     }
   #elif __arm__
-    constexpr bool LIL_E = true;
+    constexpr bool kLilE = true;
 
     static constexpr std::uint16_t LilE(std::uint16_t _x)
     {
