@@ -10,7 +10,7 @@ namespace nogl
     __m128 vec_128 = _mm_load_ps(p_);
     __m128 inv_mag_128;
 
-    // XXX: _mm_dp_ps() computes dot product, below line can be faster. But there seem to be "caveats", and it may not be as fast.
+    // XXX: _mm_dp_ps() computes dot product, this line can be faster than commented below. But there seem to be "caveats", and it may not be as fast.
     inv_mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
     
     // Sum of squares into the least-significant component
@@ -44,10 +44,9 @@ namespace nogl
           _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
         );
 
-        // a is the i-th components COPIED all over from ptr[0] and b is same but for ptr[1]
-        __m128 a = _mm_load1_ps(&ptr[0].p_[i]);
-        __m128 b = _mm_load1_ps(&ptr[1].p_[i]);
-        __m256 ab = _mm256_set_m128(b, a);
+        // Copy i-th component from both the first vector and second, into the two parts of ab, for example [X1,X1,X1,X1 , X0,X0,X0,X0]
+        // Idk if faster than 2 loads, then set_m128, cuz alignment not required.
+        __m256 ab = _mm256_loadu2_m128(&ptr[1].p_[i], &ptr[0].p_[i]);
 
         ab = _mm256_mul_ps(ab, cols);
         res = _mm256_add_ps(res, ab);
