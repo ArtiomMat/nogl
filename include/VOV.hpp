@@ -28,16 +28,16 @@ namespace nogl
       {
         for (unsigned y = 0; y < 4; y++)
         {
-          p[x][y] = m[x + y*4];
+          p_[x][y] = m[x + y*4];
         }
       }
     }
 
-    float* operator [](unsigned i) { return p[i]; }
+    float* operator [](unsigned i) { return p_[i]; }
 
     private:
     // First dimension is the columns(x), second is the individual rows(y). It does wonders to SIMD.
-    alignas(32) float p[4][4];
+    alignas(32) float p_[4][4];
   };
 
   // Meant to be an easy way to do opeartions on individual vectors.
@@ -105,7 +105,7 @@ namespace nogl
         // Load the i-th component into all SSE components
         __m128 comp128 = _mm_set1_ps(p_[i]);
         // Now load the matrix column
-        __m128 col = _mm_load_ps(m.p[i]);
+        __m128 col = _mm_load_ps(m.p_[i]);
         // Multiply the i-th component by the matrix column.
         // Equivalent to by-hand, since it's the component multiplied by each column.
         // X*[A,C] + Y*[B,D] = [AX,AC] + [BY,DY] = [AX+BY,CX+DY]
@@ -250,61 +250,33 @@ namespace nogl
     }
 
     // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
-    void MultiplyAll(M4x4& m) noexcept
+    void MultiplyAll(const M4x4& m) noexcept
     {
       // We do the same thing in V4 but 2 for 1 essentially
-
+      // NOTE: We jump 2 vectors ofc, not 1, but just hu.
       for (V4* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(V4)))
       {
+        __m256 res = _mm256_setzero_ps();
+
         for (unsigned i = 0; i < 4; i++)
         {
-          __m128 col = _mm_load_ps(m.p[i]);
+          // Load the matrix column into both 128 parts of the AVX
+          __m128 col = _mm_load_ps(m.p_[i]);
           __m256 cols = reinterpret_cast<__m256>(
             _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
           );
 
-          // TODO: Gotta figure out ordering of all this stuff, what HIGH means, what LOW means, and how it's then stored back.
-          // _mm256_loadu2_m128
+          // a is the i-th components COPIED all over from ptr[0] and b is same but for ptr[1]
+          __m128 a = _mm_load1_ps(&ptr[0].p_[i]);
+          __m128 b = _mm_load1_ps(&ptr[1].p_[i]);
+          __m256 ab = _mm256_set_m128(b, a);
+
+          ab = _mm256_mul_ps(ab, cols);
+          res = _mm256_add_ps(res, ab);
         }
+
+        _mm256_store_ps(ptr->p_, res);
       }
-      // _mm256_broadcastsi128_si256()
-      // _mm256_broadcastss_ps
-
-      // __m256 r[4];
-      // // XXX: Multiplying multiple VOVs by th same matrix may cause redundant calls, so idk how to deal with that...
-      // // Load all the columns, and copy them into both the upper and lower parts of the YMM registers.
-      // r[0] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.p[0])
-      // );
-      // r[1] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.p[1])
-      // );
-      // r[2] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.p[2])
-      // );
-      // r[3] = _mm256_broadcast_ps(
-      //   reinterpret_cast<__m128*>(matrix.p[3])
-      // );
-
-      // // Used to do multiplication.
-      // __m256 loaded;
-      // // Then these results with loaded are added here.
-      // __m256 result;
-      // // result = _mm256_xor_ps(result, result);
-
-      // // float* ptr = buffer_.get();
-      // // float* end = ptr + n_*4;
-      // for (float* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(float)))
-      // {
-      //   loaded = _mm256_load_ps(ptr);
-        
-      //   result = _mm256_mul_ps(loaded, r[0]);
-
-      //   for (unsigned i = 1; i < 4; i++)
-      //   {
-          
-      //   }
-      // }
     }
 
     V4* begin() const noexcept

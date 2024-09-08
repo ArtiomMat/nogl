@@ -75,14 +75,20 @@ int main()
     0,0,0,4,
   });
 
-  nogl::VOV4 vov(4);
-  nogl::V4& v = vov.v(0);
+  nogl::VOV4 vov(5);
+  vov.SetAll(nogl::V4((const float[]) { 1, 2, 3, 4 } ));
 
-  vov.SetAll(nogl::V4((const float[]) { 1, 2, 3, 0 } ));
-  std::cout << v[0] << ' ' << v[1] << ' ' << v[2]  << ' ' << vov.v(0)[3] << '\n';
+  nogl::V4& v = vov.v(2);
+  v = nogl::V4((const float[]) { 1, 1, 1, 0 } );
+
+  vov.MultiplyAll(matrix);
+
+  std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << '\n';
+  std::cout << vov.v(1)[0] << ' ' << vov.v(1)[1] << ' ' << vov.v(1)[2]  << ' ' << vov.v(1)[3] << '\n';
+  std::cout << vov.v(2)[0] << ' ' << vov.v(2)[1] << ' ' << vov.v(2)[2]  << ' ' << vov.v(2)[3] << '\n';
+  std::cout << vov.v(3)[0] << ' ' << vov.v(3)[1] << ' ' << vov.v(3)[2]  << ' ' << vov.v(3)[3] << '\n';
+  std::cout << vov.v(4)[0] << ' ' << vov.v(4)[1] << ' ' << vov.v(4)[2]  << ' ' << vov.v(4)[3] << '\n';
   v *= matrix;
-  std::cout << v.magnitude3() << '\n';
-  std::cout << v[0] << ' ' << v[1] << ' ' << v[2]  << ' ' << vov.v(0)[3] << '\n';
 
   clock_driver.Reset();
   while (run_loop)
