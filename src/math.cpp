@@ -1,10 +1,8 @@
-#pragma once
-
 #include "math.hpp"
 
 namespace nogl
 {
-  void V4::Normalize()
+  void V4::Normalize() noexcept
   {
     // Load the vector to begin calculating the inverse magnitude
     __m128 vec_128 = _mm_load_ps(p_);

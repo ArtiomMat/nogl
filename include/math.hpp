@@ -47,10 +47,7 @@ namespace nogl
     public:
 
     V4(float f) { _mm_store_ps(p_, _mm_set1_ps(f)); }
-
-    V4(const float p[4]) { _mm_store_ps(p_, _mm_loadu_ps(p));
-    }
-
+    V4(const float p[4]) { *this = p; }
     V4(const V4& other) { _mm_store_ps(p_, _mm_load_ps(other.p_)); }
 
     V4() = default;
@@ -58,6 +55,11 @@ namespace nogl
 
     // Make sure it's [0]-[3] and not above!
     float& operator[](unsigned i) noexcept { return p_[i]; }
+    
+    void operator =(const float p[4]) noexcept
+    {
+      _mm_store_ps(p_, _mm_loadu_ps(p));
+    }
 
     void operator *=(const V4& other) noexcept
     {

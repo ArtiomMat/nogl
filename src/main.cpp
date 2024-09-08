@@ -29,10 +29,10 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
-static int StartTestThread(std::unique_ptr<int> i)
+static int StartTestThread(int& i)
 {
-  (*i)++;
-  std::cout << i << ' ' << *i << '\n';
+  i++;
+  std::cout << i << ' ' << i << '\n';
 
   return 10;
 }
@@ -41,6 +41,8 @@ int main()
 {
   auto& clock_driver = nogl::ClockDriver::instance();
   auto& file_driver = nogl::FileDriver::instance();
+
+  nogl::Thread t(StartTestThread, 1);
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
@@ -57,7 +59,7 @@ int main()
   vov = nogl::V4((const float[]) { 1, 2, 3, 4 });
 
   nogl::V4& v = vov.v(2);
-  v = nogl::V4((const float[]) { 1, 1, 1, 0 } );
+  v = (const float[]) { 1, 1, 1, 0 };
 
   vov *= matrix;
 

@@ -13,16 +13,47 @@
 
 namespace nogl
 {
-  // Quick time mutex, I like to say QuteMutex :)
-  // The idea is to make a beast when it comes to quick access of variables, it still performs good in big objects
-  template <typename I>
+  // This thread took a lot of thinking to make it not a fully templated class...
   class Thread
   {
+    private:
+    // This is what is actually fed to the lambda expression in the Thread().
+    template <typename I>
+    struct FullLambdaInput
+    {
+      I i;
+      int (*start)(I& i);
+    };
     public:
-    using StartCallback = int (*)(I* i);
+    // Copies `i` to an internally managed buffer.
+    template <typename I>
+    Thread(int (*start)(I& i), const I& i)
+    {
+      // Allocate and copy the stuff.
+      auto* lambda_input = new FullLambdaInput<I>;
+      lambda_input->start = start;
+      lambda_input->i = i;
 
-    // Copies the input to an internally managed buffer.
-    Thread(StartCallback start, I& i);
+      hthread_ = CreateThread(
+        nullptr,
+        0, 
+        [](void* _lambda_input) {
+          auto* lambda_input = reinterpret_cast<FullLambdaInput<I>*>(_lambda_input);
+          lambda_input->start(lambda_input->i);
+          delete lambda_input; // We know for sure that it's from new
+
+          return (DWORD)0;
+        }, 
+        lambda_input, 
+        0, 
+        nullptr
+      );
+
+      if (hthread_ == nullptr)
+      {
+        throw SystemException("Creating a thread.");
+      }
+    }
     ~Thread();
 
     // Wait for thread to finish. Returns return code returned by the start function.
@@ -36,44 +67,20 @@ namespace nogl
     #ifdef _WIN32
       HANDLE hthread_;
     #endif
-    std::unique_ptr<I> input_ = std::unique_ptr<I>(new I);
   };
 
-  template <typename I>
-  Thread<I>::~Thread()
+  Thread::~Thread()
   {
     Join();
   }
 
   #ifdef _WIN32
-  template <typename I>
-  Thread<I>::Thread(StartCallback start, I& i)
-  {
-    *input_ = i; // Copy
-    
-    hthread_ = CreateThread(
-      nullptr,
-      0, 
-      reinterpret_cast<LPTHREAD_START_ROUTINE>(start), 
-      input_.get(), 
-      0, 
-      nullptr
-    );
-
-    if (hthread_ == nullptr)
-    {
-      throw SystemException("Creating a thread.");
-    }
-  }
-
-  template <typename I>
-  void Thread<I>::Close()
+  void Thread::Close()
   {
     CloseHandle(hthread_);
   }
 
-  template <typename I>
-  bool Thread<I>::has_closed() noexcept
+  bool Thread::has_closed() noexcept
   {
     if (WaitForSingleObject(hthread_, 0) == WAIT_OBJECT_0)
     {
@@ -82,8 +89,7 @@ namespace nogl
     return false;
   }
 
-  template <typename I>
-  int Thread<I>::Join()
+  int Thread::Join()
   {
     DWORD code;
     if (WaitForSingleObject(hthread_, INFINITE) != WAIT_OBJECT_0)
