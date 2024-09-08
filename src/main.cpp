@@ -76,12 +76,12 @@ int main()
   });
 
   nogl::VOV4 vov(5);
-  vov.SetAll(nogl::V4((const float[]) { 1, 2, 3, 4 } ));
+  vov = nogl::V4((const float[]) { 1, 2, 3, 4 });
 
   nogl::V4& v = vov.v(2);
   v = nogl::V4((const float[]) { 1, 1, 1, 0 } );
 
-  vov.MultiplyAll(matrix);
+  vov *= matrix;
 
   std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << '\n';
   std::cout << vov.v(1)[0] << ' ' << vov.v(1)[1] << ' ' << vov.v(1)[2]  << ' ' << vov.v(1)[3] << '\n';

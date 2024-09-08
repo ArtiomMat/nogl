@@ -48,7 +48,7 @@ Your usual:
 ```sh
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
@@ -57,6 +57,6 @@ use `cmake` with the `toolchains/unix-win32.cmake` toolchain. In a nutshell:
 ```sh
 mkdir build
 cd build
-cmake -DCMAKE_TOOLCHAIN_FILE=toolchains/unix-win32.cmake ..
+cmake -DCMAKE_TOOLCHAIN_FILE=toolchains/unix-win32.cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```

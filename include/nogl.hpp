@@ -6,7 +6,8 @@
 #include "Context.hpp"
 #include "Font.hpp"
 #include "Thread.hpp"
-#include "VOV.hpp"
+
+#include "math.hpp"
 
 #ifndef __x86_64__
   #error Need x86_64 architecture.

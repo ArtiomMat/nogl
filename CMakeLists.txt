@@ -9,18 +9,22 @@ file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 # Add the platform source files and append them
 if(WIN32)
-    set(LIBRARIES -lopengl32 -lws2_32 -lole32 -lcomctl32 -lgdi32)
-    file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/win32/*.cpp")
+  set(LIBRARIES -lopengl32 -lws2_32 -lole32 -lcomctl32 -lgdi32)
+  file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/win32/*.cpp")
 elseif(UNIX)
-    set(LIBRARIES -lGL)
-    file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/unix/*.cpp")
+  set(LIBRARIES -lGL)
+  file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/unix/*.cpp")
 endif()
 list(APPEND SOURCES ${PLATFORM_SOURCES})
 
 # Add an executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_compile_options(${PROJECT_NAME} PRIVATE -march=native -mtune=native -msse4 -mavx2 -Wall -Wextra ${PLATFORM_FLAGS})
+target_compile_options(${PROJECT_NAME} PRIVATE 
+  -Wall -Wextra
+  $<$<CONFIG:Release>:-march=native -mtune=native -msse4 -mavx2 -flto>
+  $<$<CONFIG:Debug>:-ggdb>
+  ${PLATFORM_FLAGS})
 
 target_link_options(${PROJECT_NAME} PRIVATE ${PLATFORM_LINKS})
 
