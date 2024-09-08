@@ -11,39 +11,17 @@
 
 #include "nogl.hpp"
 
-// struct Vec4
-// {
-//   alignas(16) float v[4];
-
-//   // Vec4(float all)
-//   // {
-//   //   _mm_store_ps(v, _mm_set1_ps(all));
-//   // }
-//   // Vec4(float v[4])
-//   // {
-//   //   _mm_store_ps(this->v, _mm_load_ps(v));
-//   // }
-
-//   // Vec4& operator *=(const Vec4& other)
-//   // {
-//   //   __m128 a = _mm_load_ps(v);
-//   //   __m128 b = _mm_load_ps(other.v);
-//   //   _mm_store_ps(v, _mm_mul_ps(a, b));
-//   //   return *this;
-//   // }
-// };
-
 static bool run_loop = true;
 
 static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
 {
   switch (e.type)
   {
-    case nogl::Context::Event::Type::Close:
+    case nogl::Context::Event::Type::kClose:
     run_loop = false;
     break;
 
-    case nogl::Context::Event::Type::Press:
+    case nogl::Context::Event::Type::kPress:
     break;
 
     default:
@@ -51,13 +29,13 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
-// static int StartTestThread(int* i)
-// {
-//   (*i)++;
-//   std::cout << i << ' ' << *i << '\n';
+static int StartTestThread(std::unique_ptr<int> i)
+{
+  (*i)++;
+  std::cout << i << ' ' << *i << '\n';
 
-//   return 10;
-// }
+  return 10;
+}
 
 int main()
 {

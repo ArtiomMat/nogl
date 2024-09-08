@@ -8,17 +8,18 @@
 
 namespace nogl
 {
+  constexpr wchar_t kClassName[] = L"OMGL CLASS";
+
   Context::Context(unsigned _width, unsigned _height) : width_(_width), height_(_height)
   {
     HINSTANCE hinstance = GetModuleHandle(nullptr);
 
-    constexpr DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+    constexpr DWORD kStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
-    constexpr wchar_t CLASS_NAME[] = L"OMGL CLASS";
     WNDCLASSW wc = { };
     wc.lpfnWndProc = DefWindowProcW;
     wc.hInstance = hinstance;
-    wc.lpszClassName = CLASS_NAME;
+    wc.lpszClassName = kClassName;
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
 
     if (!RegisterClassW(&wc))
@@ -33,15 +34,15 @@ namespace nogl
       .right = static_cast<LONG>(width_),
       .bottom = static_cast<LONG>(height_),
     };
-    AdjustWindowRect(&rect, style, false);
+    AdjustWindowRect(&rect, kStyle, false);
     unsigned real_width = rect.right - rect.left;
     unsigned real_height = rect.bottom - rect.top;
 
     hwnd_ = CreateWindowExW(
       0,
-      CLASS_NAME,
+      kClassName,
       L"OMGL",
-      style,
+      kStyle,
 
       CW_USEDEFAULT, CW_USEDEFAULT,
       real_width, real_height,
@@ -107,7 +108,7 @@ namespace nogl
   {
     switch (e.type)
     {
-      case Context::Event::Type::Close:
+      case Context::Event::Type::kClose:
       std::cout << "Close event, exitting...\n";
       exit(0);
       break;
@@ -119,14 +120,14 @@ namespace nogl
 
   void Context::HandleEvent() noexcept
   {
-    if (event_.type != Event::Type::_Null)
+    if (event_.type != Event::Type::kNull)
     {
       event_handler_(*this, event_);
     }
   }
   void Context::HandleEvents() noexcept
   {
-    event_.type = Event::Type::_Null;
+    event_.type = Event::Type::kNull;
 
     // We handle the events we want to handle here because wndProc is an external
     // function and has no direct way for knowing the context itself.
@@ -139,17 +140,17 @@ namespace nogl
         case WM_SYSCOMMAND:
         if (msg_.wParam == SC_CLOSE)
         {
-          event_.type = Event::Type::Close;
+          event_.type = Event::Type::kClose;
           HandleEvent();
         }
         break;
         case WM_CLOSE:
-        event_.type = Event::Type::Close;
+        event_.type = Event::Type::kClose;
         HandleEvent();
         break;
 
         case WM_KEYDOWN:
-        event_.type = Event::Type::Press;
+        event_.type = Event::Type::kPress;
         HandleEvent();
         break;
 

@@ -10,9 +10,9 @@ namespace nogl
     public:
     enum class Priority : std::uint8_t
     {
-      Auto,
-      Speed, // Prioritize speed, cache all characters in advance
-      Memory, // Prioritize less memory, loads glyphs in realtime from the file
+      kAuto,
+      kSpeed, // Prioritize speed, cache all characters in advance
+      kMemory, // Prioritize less memory, loads glyphs in realtime from the file
     };
 
     union
@@ -25,7 +25,7 @@ namespace nogl
       unsigned char size[2];
     };
 
-    Font(const char* fp) : Font(fp, Priority::Auto) {}
+    Font(const char* fp) : Font(fp, Priority::kAuto) {}
     // priority is priority, check out P_* enum
     Font(const char* fp, Priority priority) { Open(fp, priority); }
     ~Font();

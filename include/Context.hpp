@@ -19,11 +19,11 @@ namespace nogl
     {
       enum class Type : uint8_t
       {
-        _Null,
+        kNull,
 
-        Close,
+        kClose,
         // Includes mouse keys
-        Press, Release,
+        kPress, Release,
         MouseMove, // Moving the mouse
       };
 

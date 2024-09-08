@@ -7,7 +7,7 @@ namespace nogl
     unsigned exe_path_i = exe_path_end;
     for (unsigned file_path_i = 0; filePath[file_path_i]; file_path_i++, exe_path_i++)
     {
-      if (exe_path_i >= PATH_SIZE-1) // Too long!
+      if (exe_path_i >= kPathSize-1) // Too long!
       {
         return nullptr;
       }

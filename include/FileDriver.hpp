@@ -23,9 +23,9 @@ namespace nogl
     FileDriver();
     ~FileDriver() = default;
     
-    static constexpr unsigned PATH_SIZE = 512;
+    static constexpr unsigned kPathSize = 512;
     
     unsigned exe_path_end;
-    char exe_path[PATH_SIZE];
+    char exe_path[kPathSize];
   };
 }

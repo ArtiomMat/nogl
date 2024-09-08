@@ -32,7 +32,7 @@ namespace nogl
   {
     // We do the same thing in V4 but 2 for 1 essentially
     // NOTE: We jump 2 vectors ofc, not 1, but just hu.
-    for (V4* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(V4)))
+    for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
     {
       __m256 res = _mm256_setzero_ps();
 

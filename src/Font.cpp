@@ -106,7 +106,7 @@ namespace nogl
     }
     
     // Just opt for memory priority since it's the safe option
-    priority = (priority == Priority::Speed) ? Priority::Memory : priority;
+    priority = (priority == Priority::kSpeed) ? Priority::kMemory : priority;
 
     if (_type == PSF1)
     {
@@ -128,7 +128,7 @@ namespace nogl
       int char_size = row_size*psf1.size;
 
       // If we prioritize speed we will read all the characters, otherwise we read one for each glyph we get
-      if (priority == Priority::Speed)
+      if (priority == Priority::kSpeed)
       {
         data = new char[glyphs_n * char_size];
         stream.read(data, glyphs_n * char_size);
@@ -137,7 +137,7 @@ namespace nogl
           throw ReadException((std::stringstream("Bad PSF file. Read") << stream.gcount() << "characters but need" << glyphs_n << ".").str().c_str());
         }
 
-        // Don't need the file anymore in Priority::Speed
+        // Don't need the file anymore in Priority::kSpeed
         stream.close();
       }
       else // P_MEMORY
@@ -169,7 +169,7 @@ namespace nogl
     }
 
     unsigned index =  g * row_size * height;
-    if (priority == Priority::Speed)
+    if (priority == Priority::kSpeed)
     {
       return &((char*)data)[index];
     }

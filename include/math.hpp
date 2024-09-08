@@ -163,16 +163,16 @@ namespace nogl
   {
     public:
 
-    static constexpr unsigned ALIGN = sizeof(__m256); // Using the 256-bit AVX/SSE SIMD
+    static constexpr unsigned kAlign = sizeof(__m256); // Using the 256-bit AVX/SSE SIMD
 
     // n is the number of the vectors.
     VOV4(unsigned n) : n_(n)
     {
       // To fit the 256 alignment.
-      unsigned extras = n % (ALIGN / sizeof (V4));
+      unsigned extras = n % (kAlign / sizeof (V4));
       
       buffer_ = std::unique_ptr<V4[]>(
-        new (std::align_val_t(ALIGN)) V4[(n + extras)]
+        new (std::align_val_t(kAlign)) V4[(n + extras)]
       );
     }
     VOV4(const VOV4& other) : VOV4(other.n_)
@@ -186,14 +186,14 @@ namespace nogl
     void operator =(float f) noexcept
     {
       __m256 filler = _mm256_set1_ps(f);
-      for (V4* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(V4)))
+      for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
         _mm256_store_ps(ptr->p_, filler);
       }
     }
     void operator =(const VOV4& other) noexcept
     {
-      for (unsigned off = 0; off < std::min(n_, other.n_); off += (ALIGN / sizeof(V4)))
+      for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof(V4)))
       {
         _mm256_store_ps(
           buffer_[off].p_,
@@ -207,7 +207,7 @@ namespace nogl
       __m256 v256 = reinterpret_cast<__m256>(
         _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(v128))
       );
-      for (V4* ptr = begin(); ptr < end(); ptr += (ALIGN / sizeof(V4)))
+      for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
         _mm256_store_ps(ptr->p_, v256);
       }
@@ -226,7 +226,7 @@ namespace nogl
     private:
     // The number of vectors, not bytes, not floats, remember that before you refer to it as something else.
     unsigned n_;
-    // MUST BE ALIGNED TO `ALIGN`
+    // MUST BE ALIGNED TO `kAlign`
     std::unique_ptr<V4[]> buffer_;
   };
 }
