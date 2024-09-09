@@ -122,7 +122,15 @@ namespace nogl
       _mm_store_ps(p_, vec_128);
     }
     
-    // In this context, `this` is the vector, `o` is right vector, so `this`x`o`.
+    // Returns dot product. Note that this takes the 4-th component into account.
+    float Dot(const V4& o)
+    {
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(other.p_);
+      return _mm_cvtss_f32(_mm_dp_ps(a, b, 0xFF));
+    }
+
+    // In this context, `this` is the vector, `o` is right vector, so `this`x`o`. The result is put in `this`.
     // Does not utilize the 4-th component, since cross product is only valid for 3D in our case.
     // 4-th component is zeroed out, because there is no defined opearation on it.
     void Cross(const V4& o)
