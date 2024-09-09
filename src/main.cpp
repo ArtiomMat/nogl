@@ -32,16 +32,13 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
 static int StartTestThread(int& i)
 {
   i++;
-  std::cout << i << '\n';
+  std::cout << "Thread: " << i << '\n';
 
   return 10;
 }
 
 int main()
 {
-  auto& clock_driver = nogl::ClockDriver::instance();
-  auto& file_driver = nogl::FileDriver::instance();
-
   nogl::Thread t(StartTestThread, 1);
 
   nogl::Context ctx(480,360);
@@ -61,14 +58,14 @@ int main()
   nogl::V4& v2 = vov.v(1);
   v2 = (const float[]) { 10, 2, -10, 0 };
   nogl::V4& v = vov.v(2);
-  v = (const float[]) { 1, 1, 1, 3 };
+  v = (const float[]) { 1, 1, 1, 1 };
   
-  v.Normalize3();
+  // v.Normalize3();
   
   std::cout << "Mag: " << v.magnitude() << '\n';
   std::cout << "Mag3: " << v.magnitude3() << '\n';
 
-  v.Cross(v2); // Result should be [-26,40,-18]
+  v.Cross(v2);
 
   // vov *= matrix;
 
@@ -79,7 +76,7 @@ int main()
   std::cout << vov.v(4)[0] << ' ' << vov.v(4)[1] << ' ' << vov.v(4)[2]  << ' ' << vov.v(4)[3] << '\n';
   v *= matrix;
 
-  clock_driver.Reset();
+  nogl::Clock clock;
   while (run_loop)
   {
     ctx.HandleEvents();
@@ -88,7 +85,7 @@ int main()
     // *Rendering*
     ctx.Refresh();
 
-    clock_driver.SleepRemainder();
+    clock.SleepRemainder();
   }
 
   return 0;

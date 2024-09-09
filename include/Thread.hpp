@@ -54,7 +54,7 @@ namespace nogl
         throw SystemException("Creating a thread.");
       }
     }
-    ~Thread();
+    ~Thread() { Join(); }
 
     // Wait for thread to finish. Returns return code returned by the start function.
     int Join();
@@ -62,44 +62,13 @@ namespace nogl
     void Close();
 
     bool has_closed() noexcept;
-
+    
+    // Make the thread that calls it sleep for a given number of milliseconds.
+    static void Sleep(unsigned t);
+    
     private:
     #ifdef _WIN32
       HANDLE hthread_;
     #endif
   };
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  #ifdef _WIN32
-  void Thread::Close()
-  {
-    CloseHandle(hthread_);
-  }
-
-  bool Thread::has_closed() noexcept
-  {
-    if (WaitForSingleObject(hthread_, 0) == WAIT_OBJECT_0)
-    {
-      return true;
-    }
-    return false;
-  }
-
-  int Thread::Join()
-  {
-    DWORD code;
-    if (WaitForSingleObject(hthread_, INFINITE) != WAIT_OBJECT_0)
-    {
-      auto msg = (std::stringstream() << "Could not wait for the thread " << hthread_ << " to finish.").str();
-      throw SystemException(msg.c_str());
-    }
-    // Must have closed
-    GetExitCodeThread(hthread_, &code);
-    return static_cast<int>(code);
-  }
-  #endif
 }

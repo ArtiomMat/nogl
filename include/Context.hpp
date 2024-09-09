@@ -74,6 +74,7 @@ namespace nogl
     // A flat array of BGRX components(X being reserved for 32-bit padding), it's essentially the back buffer.
     inline uint8_t* data() const { return data_; }
     // z-buffer, `0` means as front as it can get, and `1` means farthest it can be.
+    // The z-buffer is aligned to __m256!
     inline float* zdata() const { return zdata_.get(); }
 
     inline unsigned width() const { return width_; }

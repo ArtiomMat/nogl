@@ -151,7 +151,6 @@ namespace nogl
       _mm_store_ps(p_, _mm_sub_ps(left, right));
     }
 
-
     void Normalize(int mask) noexcept;
     
     // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`. If you know for sure that 4-th component is 0 then you can call this, it will be slightly faster.
@@ -179,14 +178,14 @@ namespace nogl
       return __builtin_sqrtf(_mm_cvtss_f32(mag_128));
     }
 
-    float magnitude3() noexcept
-    {
-      return magnitude(0b0111'0111);
-    }
-
     float magnitude() noexcept
     {
       return magnitude(0b1111'1111);
+    }
+
+    float magnitude3() noexcept
+    {
+      return magnitude(0b0111'0111);
     }
 
     private:
@@ -218,15 +217,6 @@ namespace nogl
 
     ~VOV4() = default;
 
-    // Assume f is the size of `4*n()`, so it contains all the vectors necessary flattened into an array.
-    void operator =(float* f) noexcept
-    {
-      for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
-      {
-        _mm256_store_ps(ptr->p_, _mm256_load_ps(f));
-      }
-    }
-
     // Set every single vector, and every one of its components to `f`.
     void operator =(float f) noexcept
     {
@@ -236,14 +226,12 @@ namespace nogl
         _mm256_store_ps(ptr->p_, filler);
       }
     }
-    void operator =(const VOV4& other) noexcept
+    // Assume f is the size of `4*n()`, so it contains all the vectors necessary flattened into an array.
+    void operator =(float* f) noexcept
     {
-      for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof(V4)))
+      for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        _mm256_store_ps(
-          buffer_[off].p_,
-          _mm256_load_ps(other.buffer_[off].p_)
-        );
+        _mm256_store_ps(ptr->p_, _mm256_load_ps(f));
       }
     }
     void operator =(const V4& v) noexcept
@@ -257,10 +245,22 @@ namespace nogl
         _mm256_store_ps(ptr->p_, v256);
       }
     }
+    // Copies vectors from `other` to `this`, the number of vectors is whoever has a smaller `n`.
+    void operator =(const VOV4& other) noexcept
+    {
+      for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof(V4)))
+      {
+        _mm256_store_ps(
+          buffer_[off].p_,
+          _mm256_load_ps(other.buffer_[off].p_)
+        );
+      }
+    }
 
-    // Multiplies this buffer by `matrix`(as if our vectors are matrices) and puts results into `to`.
+    // Multiplies all vectors by `matrix`(as if our vectors are matrices) and puts results into `to`.
     void operator *=(const M4x4& m) noexcept;
 
+    // The number of vectors, not bytes, not floats, remember that before you refer to it as something else.
     unsigned n() const noexcept { return n_; }
     V4* begin() const noexcept { return buffer_.get(); }
     V4* end() const noexcept { return buffer_.get() + n_; }
@@ -270,9 +270,10 @@ namespace nogl
     V4& v(unsigned i) noexcept { return buffer_[i]; }
 
     private:
-    // The number of vectors, not bytes, not floats, remember that before you refer to it as something else.
+    // See `n()`
     unsigned n_;
     // MUST BE ALIGNED TO `kAlign`
     std::unique_ptr<V4[]> buffer_;
   };
 }
+

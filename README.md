@@ -50,6 +50,7 @@ mkdir build
 cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make
+nogl
 ```
 
 # Making on Linux for Windows
@@ -59,4 +60,5 @@ mkdir build
 cd build
 cmake -DCMAKE_TOOLCHAIN_FILE=toolchains/unix-win32.cmake -DCMAKE_BUILD_TYPE=Release ..
 make
+wine nogl.exe
 ```
