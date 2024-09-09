@@ -4,30 +4,41 @@
 // To define GLenum and all the stuff we need
 #include "windows.hpp"
 #include "Context.hpp"
+#include "Mutex.hpp"
+
 #include <iostream>
 #include <new>
 #include <memory>
 
 namespace nogl
 {
-  constexpr wchar_t kClassName[] = L"OMGL CLASS";
+  static uint8_t contexts_n = 0;
+  static Mutex contexts_n_mutex;
+
+  constexpr wchar_t kClassName[] = L"NOGL CLASS";
+  constexpr DWORD kStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
   Context::Context(unsigned _width, unsigned _height) : width_(_width), height_(_height)
   {
-    HINSTANCE hinstance = GetModuleHandle(nullptr);
+    HINSTANCE hinstance = GetModuleHandleW(nullptr);
 
-    constexpr DWORD kStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-
-    WNDCLASSW wc = { };
-    wc.lpfnWndProc = DefWindowProcW;
-    wc.hInstance = hinstance;
-    wc.lpszClassName = kClassName;
-    wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-
-    if (!RegisterClassW(&wc))
+    contexts_n_mutex.Lock();
+    // First context?
+    if (contexts_n == 0)
     {
-      throw SystemException("Registering class.");
+      WNDCLASSW wc = { };
+      wc.lpfnWndProc = DefWindowProcW;
+      wc.hInstance = hinstance;
+      wc.lpszClassName = kClassName;
+      wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+
+      if (!RegisterClassW(&wc))
+      {
+        throw SystemException("Registering class.");
+      }
     }
+    contexts_n++;
+    contexts_n_mutex.Unlock();
 
     // Calculate full window size given desired client-area size
     RECT rect{
@@ -109,6 +120,16 @@ namespace nogl
 
     ReleaseDC(hwnd_, hdc_);
     DestroyWindow(hwnd_);
+
+    contexts_n_mutex.Lock();
+    // Last context?
+    if (contexts_n == 1)
+    {
+      UnregisterClassW(kClassName, GetModuleHandleW(nullptr));
+      std::cout << "Class unregistered.\n";
+    }
+    contexts_n--;
+    contexts_n_mutex.Unlock();
   }
 
   void Context::DefaultEventHandler(Context&, const Context::Event& e)

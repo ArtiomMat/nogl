@@ -5,6 +5,8 @@
 // #include "FileDriver.hpp"
 #include "Context.hpp"
 #include "Font.hpp"
+
+#include "Atomic.hpp"
 #include "Thread.hpp"
 
 #include "math.hpp"

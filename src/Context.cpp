@@ -1,5 +1,6 @@
 #include <immintrin.h>
 
+#include "Atomic.hpp"
 #include "Context.hpp"
 
 namespace nogl
