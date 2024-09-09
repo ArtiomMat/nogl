@@ -52,16 +52,20 @@ int main()
     4,0,0,0,
     0,4,0,0,
     0,0,4,0,
-    0,0,0,4,
+    0,0,1,0,
   });
 
   nogl::VOV4 vov(5);
-  vov = nogl::V4((const float[]) { 1, 2, 3, 4 });
-
+  vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
+  
+  nogl::V4& v2 = vov.v(1);
+  v2 = (const float[]) { 10, 2, -10, 0 };
   nogl::V4& v = vov.v(2);
-  v = (const float[]) { 1, 1, 1, 0 };
+  v = (const float[]) { 1, 2, 3, 0 };
 
-  vov *= matrix;
+  v.Cross(v2); // Result should be [-26,40,-18]
+
+  // vov *= matrix;
 
   std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << '\n';
   std::cout << vov.v(1)[0] << ' ' << vov.v(1)[1] << ' ' << vov.v(1)[2]  << ' ' << vov.v(1)[3] << '\n';

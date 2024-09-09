@@ -60,7 +60,8 @@ namespace nogl
     {
       _mm_store_ps(p_, _mm_loadu_ps(p));
     }
-
+    
+    // Simple multiplication of components, in fancy terms "Hadamard Product".
     void operator *=(const V4& other) noexcept
     {
       __m128 a = _mm_load_ps(p_);
@@ -120,6 +121,28 @@ namespace nogl
       __m128 vec_128 = _mm_sub_ps(_mm_setzero_ps(), _mm_load_ps(p_));
       _mm_store_ps(p_, vec_128);
     }
+    
+    // In this context, `this` is the vector, `o` is right vector, so `this`x`o`.
+    // Does not utilize the 4-th component, since cross product is only valid for 3D in our case.
+    // 4-th component is zeroed out, because there is no defined opearation on it.
+    void Cross(const V4& o)
+    {
+      // We use the 3 per-component formulas, in order.
+
+      // Setup the subtracted values
+      __m128 left = _mm_mul_ps(
+        _mm_set_ps(0, p_[0], p_[2], p_[1]),
+        _mm_set_ps(0, o.p_[1], o.p_[0], o.p_[2])
+      );
+      // Setup the subtracting values
+      __m128 right = _mm_mul_ps(
+        _mm_set_ps(0, p_[1], p_[0], p_[2]),
+        _mm_set_ps(0, o.p_[0], o.p_[2], o.p_[1])
+      );
+      // Now do the subtraction and store it back
+      _mm_store_ps(p_, _mm_sub_ps(left, right));
+    }
+
 
     // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`. If you know for sure that 4-th component is 0 then you can call this, it will be slightly faster.
     void Normalize() noexcept;
