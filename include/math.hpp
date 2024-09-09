@@ -126,7 +126,7 @@ namespace nogl
     float Dot(const V4& o)
     {
       __m128 a = _mm_load_ps(p_);
-      __m128 b = _mm_load_ps(other.p_);
+      __m128 b = _mm_load_ps(o.p_);
       return _mm_cvtss_f32(_mm_dp_ps(a, b, 0xFF));
     }
 
@@ -152,38 +152,41 @@ namespace nogl
     }
 
 
+    void Normalize(int mask) noexcept;
+    
     // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`. If you know for sure that 4-th component is 0 then you can call this, it will be slightly faster.
-    void Normalize() noexcept;
+    void Normalize() noexcept
+    {
+      Normalize(0b1111'1111);
+    }
 
     // Please not that the w component(3rd index) is discarded during this operation.
     // If you want it then use `Normalize()`
     void Normalize3() noexcept
     {
-      float tmp = p_[3];
-      p_[3] = 0;
-      Normalize();
-      p_[3] = tmp;
+      Normalize(0b0111'0111);
     }
 
     // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3. If you know for sure that 4-th component is 0 then you can call this, it will be slightly faster.
-    float magnitude() noexcept
+    float magnitude(int mask) noexcept
     {
       __m128 vec_128 = _mm_load_ps(p_);
       // Load the vector to begin calculating the inverse magnitude
       __m128 mag_128;
 
-      mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
+      mag_128 = _mm_dp_ps(vec_128, vec_128, mask);
 
       return __builtin_sqrtf(_mm_cvtss_f32(mag_128));
     }
 
     float magnitude3() noexcept
     {
-      float tmp = p_[3];
-      p_[3] = 0;
-      float mag = magnitude();
-      p_[3] = tmp;
-      return mag;
+      return magnitude(0b0111'0111);
+    }
+
+    float magnitude() noexcept
+    {
+      return magnitude(0b1111'1111);
     }
 
     private:

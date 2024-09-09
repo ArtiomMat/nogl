@@ -2,14 +2,14 @@
 
 namespace nogl
 {
-  void V4::Normalize() noexcept
+  void V4::Normalize(int mask) noexcept
   {
     // Load the vector to begin calculating the inverse magnitude
     __m128 vec_128 = _mm_load_ps(p_);
     __m128 inv_mag_128;
 
     // XXX: _mm_dp_ps() computes dot product, this line can be faster than commented below. But there seem to be "caveats", and it may not be as fast.
-    inv_mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
+    inv_mag_128 = _mm_dp_ps(vec_128, vec_128, mask);
     
     // Sum of squares into the least-significant component
     // inv_mag_128 = _mm_mul_ps(vec_128, vec_128);
