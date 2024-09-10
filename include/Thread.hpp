@@ -27,7 +27,7 @@ namespace nogl
     public:
     // Copies `i` to an internally managed buffer.
     template <typename I>
-    Thread(int (*start)(I& i), const I& i)
+    Thread(int (*start)(I& i),const I& i)
     {
       // Allocate and copy the stuff.
       auto* lambda_input = new FullLambdaInput<I>;

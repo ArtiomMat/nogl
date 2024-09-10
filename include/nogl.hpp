@@ -5,9 +5,11 @@
 // #include "FileDriver.hpp"
 #include "Context.hpp"
 #include "Font.hpp"
+#include "Chain.hpp"
 
 #include "Atomic.hpp"
 #include "Thread.hpp"
+#include "Minion.hpp"
 
 #include "math.hpp"
 
