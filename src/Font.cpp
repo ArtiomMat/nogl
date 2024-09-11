@@ -150,7 +150,7 @@ namespace nogl
       throw FileException("PSF2 not yet supported.");
 
       // Make endian readable on this system
-      for (unsigned long i = 0; i < sizeof(__array)/sizeof(__array[0]); i++)
+      for (unsigned long i = 0; i < sizeof(__array)/sizeof(__array[0]); ++i)
       {
         __array[i] = LilE(__array[i]);
       }

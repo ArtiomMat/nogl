@@ -4,11 +4,6 @@
 #include <memory>
 #include <exception>
 
-// Integer intrinsics
-#include <immintrin.h>
-// Float intrinsics, 4*float32 registers
-#include <xmmintrin.h>
-
 #include "nogl.hpp"
 
 static bool run_loop = true;
@@ -31,7 +26,7 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
 
 static int StartTestThread(int& i)
 {
-  i++;
+  ++i;
   std::cout << "Thread: " << i << '\n';
 
   return 10;
@@ -41,11 +36,13 @@ int main()
 {
   if (!nogl::Thread::has_simd())
   {
-    std::cout << "nogl: CPU does not support correct SIMD.\n";
+    std::cout << "CPU does not support correct SIMD. Can't proceed.\n";
     return 1;
   }
 
-  nogl::Thread t(StartTestThread, 1);
+  std::unique_ptr<nogl::Minion[]> minions = nogl::Minion::OpenMinions();
+
+  // nogl::Thread t(StartTestThread, 1);
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
@@ -93,6 +90,8 @@ int main()
 
     clock.SleepRemainder();
   }
+
+  nogl::Minion::alive = false;
 
   return 0;
 }

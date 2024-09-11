@@ -34,7 +34,7 @@ namespace nogl
     {
       __m256 res = _mm256_setzero_ps();
 
-      for (unsigned i = 0; i < 4; i++)
+      for (unsigned i = 0; i < 4; ++i)
       {
         // Load the matrix column into both 128 parts of the AVX
         __m128 col = _mm_load_ps(m.p_[i]);

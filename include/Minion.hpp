@@ -1,11 +1,13 @@
 #pragma once
 
+#include "Thread.hpp"
 #include "Bell.hpp"
 #include "Atomic.hpp"
 #include "Chain.hpp"
 #include "math.hpp"
 
 #include <cstdint>
+#include <memory>
 
 namespace nogl
 {
@@ -14,8 +16,10 @@ namespace nogl
   // A minion only knows how many other minions there are, and its own index, it is all it needs to figure out which portions it works on during runtime.
   struct Minion
   {
-    // Total number of threads.
-    uint8_t total_n;
+    Thread thread;
+
+    // Total number of threads. set once, doesn't change.
+    static uint8_t total_n;
     uint8_t index;
     // First bell to look at is always [0].
     uint8_t begin_bell_i = 0;
@@ -33,6 +37,9 @@ namespace nogl
 
     // A chain of all the vov ptrs for the threads to manage.
     static Chain<VOV4*> vovs;
+    
+    // Returns an array of minions, you can check the number by going `Minion::total_n`, it will likely be `Thread::logical_cores()`.
+    static std::unique_ptr<Minion[]> OpenMinions();
 
     // This is what is called when a thread is opened.
     static int Start(Minion&);

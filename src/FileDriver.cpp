@@ -5,7 +5,7 @@ namespace nogl
   const char* FileDriver::Rel(const char* filePath)
   {
     unsigned exe_path_i = exe_path_end;
-    for (unsigned file_path_i = 0; filePath[file_path_i]; file_path_i++, exe_path_i++)
+    for (unsigned file_path_i = 0; filePath[file_path_i]; ++file_path_i, ++exe_path_i)
     {
       if (exe_path_i >= kPathSize-1) // Too long!
       {

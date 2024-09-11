@@ -23,9 +23,9 @@ namespace nogl
     // The columns are actually on y axis in `v`, and the the rows become the x axis, so instead of [row][col] access it's [col][row] access.
     M4x4(const float m[4*4])
     {
-      for (unsigned x = 0; x < 4; x++)
+      for (unsigned x = 0; x < 4; ++x)
       {
-        for (unsigned y = 0; y < 4; y++)
+        for (unsigned y = 0; y < 4; ++y)
         {
           p_[x][y] = m[x + y*4];
         }
@@ -91,7 +91,7 @@ namespace nogl
     {
       __m128 res = _mm_setzero_ps();
       
-      for (unsigned i = 0; i < 4; i++)
+      for (unsigned i = 0; i < 4; ++i)
       {
         // Load the i-th component into all SSE components
         __m128 comp128 = _mm_set1_ps(p_[i]);

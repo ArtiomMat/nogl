@@ -21,7 +21,8 @@ namespace nogl
       if (exe_path[exe_path_end] == '\\' || exe_path[exe_path_end] == '/')
       {
         // found_slash = 1;
-        exe_path[++exe_path_end] = 0;
+        ++exe_path_end;
+        exe_path[exe_path_end] = 0;
         break;
       }
 

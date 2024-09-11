@@ -29,6 +29,14 @@ namespace nogl
     template <typename I>
     Thread(int (*start)(I& i),const I& i)
     {
+      Open(start, i);
+    }
+    Thread() { hthread_ = nullptr; }
+    ~Thread() { Join(); }
+
+    template <typename I>
+    void Open(int (*start)(I& i),const I& i)
+    {
       // Allocate and copy the stuff.
       auto* lambda_input = new FullLambdaInput<I>;
       lambda_input->start = start;
@@ -54,7 +62,6 @@ namespace nogl
         throw SystemException("Creating a thread.");
       }
     }
-    ~Thread() { Join(); }
 
     // Wait for thread to finish. Returns return code returned by the start function.
     int Join();

@@ -37,7 +37,7 @@ namespace nogl
         throw SystemException("Registering class.");
       }
     }
-    contexts_n++;
+    ++contexts_n;
     contexts_n_mutex.Unlock();
 
     // Calculate full window size given desired client-area size
