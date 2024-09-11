@@ -18,6 +18,8 @@ namespace nogl
     };
 
     Atomic() = default;
+    Atomic(T v) { Store(v, Order::kSeqCst); }
+
     ~Atomic() = default;
 
     T Load(Order o) { return __atomic_load_n(&data, o); }
