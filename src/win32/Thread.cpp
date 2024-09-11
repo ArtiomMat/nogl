@@ -7,7 +7,6 @@ namespace nogl
     CloseHandle(hthread_);
   }
 
-
   unsigned Thread::logical_cores()
   {
     SYSTEM_INFO si;

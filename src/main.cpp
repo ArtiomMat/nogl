@@ -80,18 +80,33 @@ int main()
   v *= matrix;
 
   nogl::Clock clock;
+  uint8_t begin_bell_i = 0;
   while (run_loop)
   {
+    // Reset the other bell, to avoid premature begin
+    nogl::Minion::begin_bells[!begin_bell_i].Reset();
+    // Ring the actual bell, time for work!
+    nogl::Minion::begin_bells[begin_bell_i].Ring();
+    
     ctx.HandleEvents();
-
     ctx.Clear();
-    // *Rendering*
+    
+    // Wait for all minions
+    nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
+    for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
+    {
+      nogl::Minion::done_bells[i].Reset();
+    }
+    begin_bell_i = !begin_bell_i; // Swap begin_bell
+    
     ctx.Refresh();
 
     clock.SleepRemainder();
   }
-
+  
   nogl::Minion::alive = false;
+  nogl::Minion::begin_bells[0].Ring();
+  nogl::Minion::begin_bells[1].Ring();
 
   return 0;
 }

@@ -21,6 +21,10 @@ namespace nogl
     bool Wait(); 
     
     void Reset(); 
+    
+    // Wait for multiple bells at once with less cost, `n` is the number of bells, they must be packed mind you.
+    // Same return and logic as non-static `Wait()`.
+    static bool MultiWait(Bell* arr, unsigned n);
 
     private:
     #ifdef _WIN32
@@ -28,4 +32,3 @@ namespace nogl
     #endif
   };
 }
-

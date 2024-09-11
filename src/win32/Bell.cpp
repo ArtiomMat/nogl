@@ -25,4 +25,9 @@ namespace nogl
   { 
     ResetEvent(hevent);
   }
+
+  bool Bell::MultiWait(Bell* arr, unsigned n)
+  {
+    return WaitForMultipleObjects(n, reinterpret_cast<HANDLE*>(arr), true, INFINITE);
+  }
 }

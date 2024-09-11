@@ -8,6 +8,7 @@
 
 #include "Exception.hpp"
 
+#include <iostream>
 #include <sstream>
 #include <memory>
 
@@ -33,7 +34,8 @@ namespace nogl
     }
     Thread() { hthread_ = nullptr; }
     ~Thread() { Join(); }
-
+    
+    // Copies `i` to an internally managed buffer.
     template <typename I>
     void Open(int (*start)(I& i),const I& i)
     {
@@ -61,6 +63,8 @@ namespace nogl
       {
         throw SystemException("Creating a thread.");
       }
+
+      std::cout << "OPENED\n";
     }
 
     // Wait for thread to finish. Returns return code returned by the start function.
