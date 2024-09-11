@@ -39,6 +39,12 @@ static int StartTestThread(int& i)
 
 int main()
 {
+  if (!nogl::Thread::has_simd())
+  {
+    std::cout << "nogl: CPU does not support correct SIMD.\n";
+    return 1;
+  }
+
   nogl::Thread t(StartTestThread, 1);
 
   nogl::Context ctx(480,360);

@@ -61,11 +61,15 @@ namespace nogl
     // Can cause resource leaks, depending on whether or not you allocate anything on the heap. Consider Join() instead.
     void Close();
 
-    bool has_closed() noexcept;
+    bool closed() noexcept;
     
     // Make the thread that calls it sleep for a given number of milliseconds.
     static void Sleep(unsigned t);
-    
+    // Returns number of logical cores.
+    static unsigned logical_cores();
+    // Returns during runtime if the CPU supports the SIMD instructions nogl needs.
+    static bool has_simd();
+
     private:
     #ifdef _WIN32
       HANDLE hthread_;

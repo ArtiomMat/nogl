@@ -18,7 +18,7 @@ namespace nogl
     uint8_t total_n;
     uint8_t index;
     // First bell to look at is always [0].
-    char begin_bell_i = 0;
+    uint8_t begin_bell_i = 0;
     
     // A bell from the main thread to all threads to begin work.
     // Why 2? Well its like swapping buffers, after a thread rings done_bell, they now Wait() on the other begin_bell, since the first begin_bell is still rung, this is to avoid the thread doing work again(since the main thread didn't Reset() the first bell yet). The initial bell to be looked at is ALWAYS begin_bells[0].
@@ -35,6 +35,6 @@ namespace nogl
     static Chain<VOV4*> vovs;
 
     // This is what is called when a thread is opened.
-    static int Start(Minion*);
+    static int Start(Minion&);
   };
 }

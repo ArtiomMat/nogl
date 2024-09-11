@@ -17,9 +17,9 @@ namespace nogl
     Chain() = default;
     ~Chain()
     {
-      for (Node* n : *this)
+      for (auto i = this->begin(); i != this->end(); ++i)
       {
-        delete n;
+        delete i.node();
       }
     }
 

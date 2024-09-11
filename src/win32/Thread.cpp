@@ -7,7 +7,15 @@ namespace nogl
     CloseHandle(hthread_);
   }
 
-  bool Thread::has_closed() noexcept
+
+  unsigned Thread::logical_cores()
+  {
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    return si.dwNumberOfProcessors;
+  }
+
+  bool Thread::closed() noexcept
   {
     if (WaitForSingleObject(hthread_, 0) == WAIT_OBJECT_0)
     {
