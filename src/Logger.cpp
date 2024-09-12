@@ -31,20 +31,22 @@ namespace nogl
       {
         Logger::mutex_.Lock();
 
-        // Only print the thread if it's a new logger.
-        if (last_index != Logger::index_)
-        {
-          printf("THREAD%u\n", index_);
-          last_index = Logger::index_;
-        }
-
         // Get time
         time_t timer = time(NULL);
         struct tm* tm_info = localtime(&timer);
 
         strftime(time_buf, sizeof(time_buf), "%d/%m/%Y %H:%M:%S", tm_info);
-        
-        printf(" [%s] ", time_buf);
+
+        // Only print the thread if it's a new logger.
+        if (last_index != Logger::index_)
+        {
+          printf("THREAD%u\t[%s] ", index_, time_buf);
+          last_index = Logger::index_;
+        }
+        else
+        {
+          printf("       \t[%s] ", time_buf);
+        }
       }
       break;
 

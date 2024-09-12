@@ -47,7 +47,7 @@ namespace nogl
       begin_bell_i = !begin_bell_i; // Swap begin_bell.
     }
 
-    Logger::Begin() << "M" << (int)m->index << " counter is " << c << Logger::End();
+    Logger::Begin() << "M" << m->index << " counter is " << c << Logger::End();
     
     return 0;
   }
