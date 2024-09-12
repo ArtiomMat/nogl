@@ -19,7 +19,6 @@ namespace nogl
     // Interfaced by `Thread` to determine index of thread.
     // NOTE: Since Thread modifies it, it will never modify main's index, leaving it at 0, perfect.
     static thread_local unsigned index_;
-
     static Logger logger_;
 
     public:
@@ -37,6 +36,7 @@ namespace nogl
     Logger& operator <<(Code c);
     Logger& operator <<(const char* str);
     Logger& operator <<(char c);
+
     Logger& operator <<(long long i);
     Logger& operator <<(int i) { return (*this) << (long long)i; }
     Logger& operator <<(short i) { return (*this) << (long long)i; }
@@ -44,6 +44,10 @@ namespace nogl
     Logger& operator <<(unsigned int i) { return (*this) << (long long)i; }
     Logger& operator <<(unsigned short i) { return (*this) << (long long)i; }
     Logger& operator <<(unsigned char i) { return (*this) << (long long)i; }
+
+    Logger& operator <<(double i);
+    Logger& operator <<(float i) { return (*this) << (double)i; }
+
     template<typename T>
     Logger& operator <<(T* ptr) { return PushPtr(reinterpret_cast<void*>(ptr)); }
     

@@ -24,14 +24,6 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
-static int StartTestThread(int& i)
-{
-  ++i;
-  std::cout << "Thread: " << i << '\n';
-
-  return 10;
-}
-
 int main()
 {
   if (!nogl::Thread::has_simd())
@@ -41,8 +33,6 @@ int main()
   }
 
   std::unique_ptr<nogl::Minion[]> minions = nogl::Minion::OpenMinions();
-
-  // nogl::Thread t(StartTestThread, 1);
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
@@ -65,18 +55,18 @@ int main()
   
   // v.Normalize3();
   
-  std::cout << "Mag: " << v.magnitude() << '\n';
-  std::cout << "Mag3: " << v.magnitude3() << '\n';
+  nogl::Logger::Begin() << "Mag: " << v.magnitude() << nogl::Logger::End();
+  nogl::Logger::Begin() << "Mag3: " << v.magnitude3() << nogl::Logger::End();
 
   v.Cross(v2);
 
   // vov *= matrix;
 
-  std::cout << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << '\n';
-  std::cout << vov.v(1)[0] << ' ' << vov.v(1)[1] << ' ' << vov.v(1)[2]  << ' ' << vov.v(1)[3] << '\n';
-  std::cout << vov.v(2)[0] << ' ' << vov.v(2)[1] << ' ' << vov.v(2)[2]  << ' ' << vov.v(2)[3] << '\n';
-  std::cout << vov.v(3)[0] << ' ' << vov.v(3)[1] << ' ' << vov.v(3)[2]  << ' ' << vov.v(3)[3] << '\n';
-  std::cout << vov.v(4)[0] << ' ' << vov.v(4)[1] << ' ' << vov.v(4)[2]  << ' ' << vov.v(4)[3] << '\n';
+  nogl::Logger::Begin() << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << nogl::Logger::End();
+  nogl::Logger::Begin() << vov.v(1)[0] << ' ' << vov.v(1)[1] << ' ' << vov.v(1)[2]  << ' ' << vov.v(1)[3] << nogl::Logger::End();
+  nogl::Logger::Begin() << vov.v(2)[0] << ' ' << vov.v(2)[1] << ' ' << vov.v(2)[2]  << ' ' << vov.v(2)[3] << nogl::Logger::End();
+  nogl::Logger::Begin() << vov.v(3)[0] << ' ' << vov.v(3)[1] << ' ' << vov.v(3)[2]  << ' ' << vov.v(3)[3] << nogl::Logger::End();
+  nogl::Logger::Begin() << vov.v(4)[0] << ' ' << vov.v(4)[1] << ' ' << vov.v(4)[2]  << ' ' << vov.v(4)[3] << nogl::Logger::End();
   v *= matrix;
 
   uint8_t begin_bell_i = 1; // Swapped to 0 from the start.
