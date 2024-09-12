@@ -5,6 +5,7 @@
 
 namespace nogl
 {
+  // Bunch of Minion statics.
   Chain<VOV4*> Minion::vovs;
   Atomic<bool> Minion::alive(true);
   uint8_t Minion::total_n = 0;
@@ -13,7 +14,7 @@ namespace nogl
 
   std::unique_ptr<Minion[]> Minion::OpenMinions()
   {
-    Minion::total_n = Thread::logical_cores();
+    Minion::total_n = Thread::logical_cores() - 1;
     // std::cout << "Logical cores: " << (int)Minion::total_n << '\n';
     std::unique_ptr<Minion[]> minions(new Minion[Minion::total_n]);
     Minion::done_bells.reset(new Bell[Minion::total_n]);

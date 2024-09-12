@@ -79,10 +79,11 @@ int main()
   std::cout << vov.v(4)[0] << ' ' << vov.v(4)[1] << ' ' << vov.v(4)[2]  << ' ' << vov.v(4)[3] << '\n';
   v *= matrix;
 
+  uint8_t begin_bell_i = 1; // Swapped to 0 from the start.
   nogl::Clock clock;
-  uint8_t begin_bell_i = 0;
   while (run_loop)
   {
+    begin_bell_i = !begin_bell_i;
     // Reset the other bell, to avoid premature begin
     nogl::Minion::begin_bells[!begin_bell_i].Reset();
     // Ring the actual bell, time for work!
@@ -97,7 +98,6 @@ int main()
     {
       nogl::Minion::done_bells[i].Reset();
     }
-    begin_bell_i = !begin_bell_i; // Swap begin_bell
     
     ctx.Refresh();
 
