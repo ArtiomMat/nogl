@@ -6,6 +6,7 @@
   #error Not yet
 #endif
 
+#include "Atomic.hpp"
 #include "Exception.hpp"
 
 #include <iostream>
@@ -48,6 +49,8 @@ namespace nogl
         nullptr,
         0, 
         [](void* _lambda_input) {
+          IncThreadsOpened();
+          
           auto* lambda_input = reinterpret_cast<FullLambdaInput<I>*>(_lambda_input);
           lambda_input->start(lambda_input->i);
           delete lambda_input; // We know for sure that it's from new
@@ -64,8 +67,8 @@ namespace nogl
         throw SystemException("Creating a thread.");
       }
 
-      std::cout << "OPENED\n";
     }
+    
 
     // Wait for thread to finish. Returns return code returned by the start function.
     int Join();
@@ -82,6 +85,10 @@ namespace nogl
     static bool has_simd();
 
     private:
+    static Atomic<unsigned> threads_opened_;
+    // Both increment and interface with `Logger::who_`. Must be called within the opened thread function itself.
+    static void IncThreadsOpened();
+
     #ifdef _WIN32
       HANDLE hthread_;
     #endif

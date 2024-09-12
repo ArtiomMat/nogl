@@ -36,7 +36,7 @@ int main()
 {
   if (!nogl::Thread::has_simd())
   {
-    std::cout << "CPU does not support correct SIMD. Can't proceed.\n";
+    nogl::Logger::Begin() << "CPU does not support correct SIMD. Can't proceed." << nogl::Logger::End();
     return 1;
   }
 

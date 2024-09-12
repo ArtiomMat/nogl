@@ -5,6 +5,7 @@
 #include "windows.hpp"
 #include "Context.hpp"
 #include "Mutex.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <new>
@@ -126,7 +127,7 @@ namespace nogl
     if (contexts_n == 1)
     {
       UnregisterClassW(kClassName, GetModuleHandleW(nullptr));
-      std::cout << "Class unregistered.\n";
+      Logger::Begin() << "Class unregistered." << Logger::End();
     }
     contexts_n--;
     contexts_n_mutex.Unlock();
@@ -137,7 +138,7 @@ namespace nogl
     switch (e.type)
     {
       case Context::Event::Type::kClose:
-      std::cout << "Close event, exitting...\n";
+      Logger::Begin() << "Close event, exitting..." << Logger::End();
       exit(0);
       break;
 

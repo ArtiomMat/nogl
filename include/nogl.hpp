@@ -7,6 +7,7 @@
 #include "Font.hpp"
 #include "Chain.hpp"
 
+#include "Logger.hpp"
 #include "Atomic.hpp"
 #include "Thread.hpp"
 #include "Minion.hpp"

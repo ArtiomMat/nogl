@@ -1,3 +1,4 @@
+#include "Logger.hpp"
 #include "Minion.hpp"
 #include "Thread.hpp"
 
@@ -5,7 +6,7 @@
 
 namespace nogl
 {
-  // Bunch of Minion statics.
+  // Various Minion statics.
   Chain<VOV4*> Minion::vovs;
   Atomic<bool> Minion::alive(true);
   uint8_t Minion::total_n = 0;
@@ -34,8 +35,6 @@ namespace nogl
     // First bell to look at is always [0].
     uint8_t begin_bell_i = 0;
     unsigned long long c = 0;
-    
-    // std::cout << 'M' << (int)m->index << " started.\n";
 
     while (Minion::alive)
     {
@@ -48,8 +47,7 @@ namespace nogl
       begin_bell_i = !begin_bell_i; // Swap begin_bell.
     }
 
-    Thread::Sleep(m->index * 600);
-    std::cout << "M" << (int)m->index << " counter is " << c << '\n';
+    Logger::Begin() << "M" << (int)m->index << " counter is " << c << Logger::End();
     
     return 0;
   }
