@@ -52,13 +52,13 @@ namespace nogl
           IncThreadsOpened();
           
           auto* lambda_input = reinterpret_cast<FullLambdaInput<I>*>(_lambda_input);
-          lambda_input->start(lambda_input->i);
+          DWORD ret = lambda_input->start(lambda_input->i);
           delete lambda_input; // We know for sure that it's from new
 
-          return (DWORD)0;
+          return (DWORD)ret;
         }, 
         lambda_input, 
-        0, 
+        0,
         nullptr
       );
 
@@ -66,7 +66,6 @@ namespace nogl
       {
         throw SystemException("Creating a thread.");
       }
-
     }
     
 

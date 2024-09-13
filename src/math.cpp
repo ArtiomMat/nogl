@@ -26,11 +26,11 @@ namespace nogl
     _mm_store_ps(p_, vec_128);
   }
 
-  void VOV4::operator *=(const M4x4& m) noexcept
+  void VOV4::Multiply(const M4x4& m, V4* from, V4* to) noexcept
   {
     // We do the same thing in V4 but 2 for 1 essentially
     // NOTE: We jump 2 vectors ofc, not 1, but just hu.
-    for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
+    for (V4* ptr = from; ptr < to; ptr += (kAlign / sizeof(V4)))
     {
       __m256 res = _mm256_setzero_ps();
 

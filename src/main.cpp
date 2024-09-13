@@ -45,29 +45,9 @@ int main()
     0,0,1,0,
   });
 
-  nogl::VOV4 vov(5);
+  nogl::VOV4 vov(1'000'000);
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
-  
-  nogl::V4& v2 = vov.v(1);
-  v2 = (const float[]) { 10, 2, -10, 0 };
-  nogl::V4& v = vov.v(2);
-  v = (const float[]) { 1, 1, 1, 1 };
-  
-  // v.Normalize3();
-  
-  nogl::Logger::Begin() << "Mag: " << v.magnitude() << nogl::Logger::End();
-  nogl::Logger::Begin() << "Mag3: " << v.magnitude3() << nogl::Logger::End();
-
-  v.Cross(v2);
-
-  // vov *= matrix;
-
-  nogl::Logger::Begin() << vov.v(0)[0] << ' ' << vov.v(0)[1] << ' ' << vov.v(0)[2]  << ' ' << vov.v(0)[3] << nogl::Logger::End();
-  nogl::Logger::Begin() << vov.v(1)[0] << ' ' << vov.v(1)[1] << ' ' << vov.v(1)[2]  << ' ' << vov.v(1)[3] << nogl::Logger::End();
-  nogl::Logger::Begin() << vov.v(2)[0] << ' ' << vov.v(2)[1] << ' ' << vov.v(2)[2]  << ' ' << vov.v(2)[3] << nogl::Logger::End();
-  nogl::Logger::Begin() << vov.v(3)[0] << ' ' << vov.v(3)[1] << ' ' << vov.v(3)[2]  << ' ' << vov.v(3)[3] << nogl::Logger::End();
-  nogl::Logger::Begin() << vov.v(4)[0] << ' ' << vov.v(4)[1] << ' ' << vov.v(4)[2]  << ' ' << vov.v(4)[3] << nogl::Logger::End();
-  v *= matrix;
+  nogl::Minion::vovs.Push(&vov);
 
   uint8_t begin_bell_i = 1; // Swapped to 0 from the start.
   nogl::Clock clock;

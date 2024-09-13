@@ -34,8 +34,8 @@ namespace nogl
     // true when initialized.
     static Atomic<bool> alive;
 
-    // A chain of all the vov ptrs for the threads to manage.
     static Chain<VOV4*> vovs;
+    static const M4x4* projection_matrix;
     
     // Returns an array of minions, you can check the number by going `Minion::total_n`, it will likely be `Thread::logical_cores()`.
     static std::unique_ptr<Minion[]> OpenMinions();

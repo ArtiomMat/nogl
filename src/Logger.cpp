@@ -1,4 +1,5 @@
 #include "Logger.hpp"
+#include "Clock.hpp"
 
 #include <cstdio>
 #include <ctime>
@@ -32,20 +33,23 @@ namespace nogl
         Logger::mutex_.Lock();
 
         // Get time
-        time_t timer = time(NULL);
+        time_t timer = time(nullptr);
         struct tm* tm_info = localtime(&timer);
-
-        strftime(time_buf, sizeof(time_buf), "%d/%m/%Y %H:%M:%S", tm_info);
+        // unsigned t = Clock::global_now();
+        // tm_info->tm_sec = (t / 1000) % 60;
+        // tm_info->tm_min = (t / (1000 * 60)) % 60;
+        // tm_info->tm_hour = (t / (1000 * 60 * 60)) % 24;
+        strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", tm_info);
 
         // Only print the thread if it's a new logger.
         if (last_index != Logger::index_)
         {
-          printf("THREAD%u\t[%s] ", index_, time_buf);
+          printf("TH%u\t[%s] ", index_, time_buf);
           last_index = Logger::index_;
         }
         else
         {
-          printf("       \t[%s] ", time_buf);
+          printf("\t[%s] ", time_buf);
         }
       }
       break;

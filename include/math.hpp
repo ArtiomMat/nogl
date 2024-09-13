@@ -1,6 +1,8 @@
 // Contains all kinds of math types.
 #pragma once
 
+#include "Exception.hpp"
+
 // Various intel intrinsics for SIMD instructions, both AVX, and SSE
 #include <immintrin.h>
 
@@ -32,6 +34,7 @@ namespace nogl
       }
     }
 
+    // Gets column, then the second [] gets row.
     float* operator [](unsigned i) { return p_[i]; }
 
     private:
@@ -248,7 +251,7 @@ namespace nogl
     // Copies vectors from `other` to `this`, the number of vectors is whoever has a smaller `n`.
     void operator =(const VOV4& other) noexcept
     {
-      for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof(V4)))
+      for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof (V4)))
       {
         _mm256_store_ps(
           buffer_[off].p_,
@@ -257,8 +260,15 @@ namespace nogl
       }
     }
 
-    // Multiplies all vectors by `matrix`(as if our vectors are matrices) and puts results into `to`.
-    void operator *=(const M4x4& m) noexcept;
+    void operator *=(const M4x4& m) noexcept { Multiply(m, begin(), end()); }
+    
+    // Multiplies all vectors by `matrix`(as if our vectors are 1x4 matrices).
+    // From `from` up to `to`(not including the V4 at `to` though).
+    // Huge note: The address in bytes of `from` & `to` must be aligned to `kAlign`.
+    void Multiply(const M4x4& m, V4* from, V4* to) noexcept;
+
+    // A chunk is a piece that a single Minion may process at once.
+    // unsigned chunk_size(unsigned total_n) { return (n_ / (kAlign / sizeof (V4))) / total_n; }
 
     // The number of vectors, not bytes, not floats, remember that before you refer to it as something else.
     unsigned n() const noexcept { return n_; }
