@@ -4,10 +4,6 @@
 
 namespace nogl
 {
-  Clock::Clock()
-  {
-    t0_ = global_now();
-  }
 
   unsigned long long Clock::global_now()
   {

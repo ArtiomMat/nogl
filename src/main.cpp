@@ -45,12 +45,14 @@ int main()
     0,0,1,0,
   });
 
-  nogl::VOV4 vov(1'000'000);
+  nogl::VOV4 vov(100'000);
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
   nogl::Minion::vovs.Push(&vov);
 
+
   uint8_t begin_bell_i = 1; // Swapped to 0 from the start.
-  nogl::Clock clock;
+  nogl::Clock clock(16);
+  unsigned avg_frame_time = clock.target_frame_time;
   while (run_loop)
   {
     begin_bell_i = !begin_bell_i;
@@ -70,13 +72,19 @@ int main()
     }
     
     ctx.Refresh();
-
+    
     clock.SleepRemainder();
+
+    avg_frame_time += clock.frame_time;
+    avg_frame_time /= 2;
   }
   
   nogl::Minion::alive = false;
   nogl::Minion::begin_bells[0].Ring();
   nogl::Minion::begin_bells[1].Ring();
 
+  nogl::Logger::Begin() << "Average FPS: " << 1000.0/avg_frame_time << nogl::Logger::End();
+
   return 0;
 }
+

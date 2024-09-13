@@ -3,6 +3,11 @@
 
 namespace nogl
 {
+  Clock::Clock(unsigned _target_frame_time) : target_frame_time(_target_frame_time)
+  {
+    t0_ = global_now();
+  }
+  
   unsigned Clock::now()
   {
     return global_now() - t0_;
@@ -15,7 +20,7 @@ namespace nogl
 
   int Clock::SleepRemainder()
   {
-    long long delta = now() - begin_frame_time_;
+    long long delta = (long long)now() - begin_frame_time_;
     long long sleep_time = target_frame_time - delta;
 
     if (sleep_time > 0)
