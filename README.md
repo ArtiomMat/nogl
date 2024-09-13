@@ -12,17 +12,22 @@ It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths wit
   - [x] Thread objects.
   - [x] Atomic objects(basics, not everything).
   - [x] Fast mutex objects.
-- [ ] Math utilities.
+  - [x] Event based objects(Bells).
+- [ ] Math utilities. (Ongoing
   - [x] Understand SIMD enough to use it.
   - [x] Play around with SIMD and prototype stuff for the below step.
   - [x] Vector math, using SIMD and bulk computation of vectors. The idea is a VOV(Vector Of Vectors) object.
   - [x] Matrix math for perspective projection.
   - [x] Various vector arithmetic using SIMD: normalization, dot, cross, etc.
-  - [ ] What did we forget...
+  - [x] Refector hot functions like multiplication with matrices for multi-thread support.
+  - [ ] Polish up.
+- [ ] Multi-threading.
+  - [x] Minions, split work between each other, like multiplying VOVs.
+  - [ ] Polish up.
 - [ ] Rendering.
-  - [ ] Get a regular triangle projected, just its points will do.
-  - [ ] Begin utilizing multi-threading and reimplementing VOV logic for that. Eg seperate projection of vertices into multiple threads to reduce load.
-  - [ ] Render triangles.
+  - [ ] Get a regular triangle rendered, just its points will do.
+  - [ ] Render filled triangles.
+  - [ ] Idea: Make the loop more sophisticated, the main thread renders some finished VOVs, minions keep projecting, until all is rendered.
   - [ ] TODO
 - [ ] Advanced shading to prepare for next step.
   - [ ] Specular highlighting.

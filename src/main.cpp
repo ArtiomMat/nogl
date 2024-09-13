@@ -32,7 +32,7 @@ int main()
     return 1;
   }
 
-  std::unique_ptr<nogl::Minion[]> minions = nogl::Minion::OpenMinions();
+  nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
@@ -45,45 +45,31 @@ int main()
     0,0,1,0,
   });
 
-  nogl::VOV4 vov(100'000);
+  nogl::VOV4 vov(10'000);
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
   nogl::Minion::vovs.Push(&vov);
 
-
-  uint8_t begin_bell_i = 1; // Swapped to 0 from the start.
   nogl::Clock clock(16);
   unsigned avg_frame_time = clock.target_frame_time;
   while (run_loop)
   {
-    begin_bell_i = !begin_bell_i;
-    // Reset the other bell, to avoid premature begin
-    nogl::Minion::begin_bells[!begin_bell_i].Reset();
-    // Ring the actual bell, time for work!
-    nogl::Minion::begin_bells[begin_bell_i].Ring();
+    nogl::Minion::RingBegin();
     
     ctx.HandleEvents();
     ctx.Clear();
     
-    // Wait for all minions
-    nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
-    for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
-    {
-      nogl::Minion::done_bells[i].Reset();
-    }
+    nogl::Minion::WaitAndReset();
     
     ctx.Refresh();
     
     clock.SleepRemainder();
 
-    avg_frame_time += clock.frame_time;
-    avg_frame_time /= 2;
+    avg_frame_time = (avg_frame_time + clock.frame_time) / 2;
   }
-  
-  nogl::Minion::alive = false;
-  nogl::Minion::begin_bells[0].Ring();
-  nogl::Minion::begin_bells[1].Ring();
 
   nogl::Logger::Begin() << "Average FPS: " << 1000.0/avg_frame_time << nogl::Logger::End();
+
+  minions.reset();
 
   return 0;
 }

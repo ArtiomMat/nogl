@@ -17,10 +17,16 @@ namespace nogl
     Chain() = default;
     ~Chain()
     {
+      Clear();
+    }
+    
+    void Clear()
+    {
       for (auto i = this->begin(); i != this->end(); ++i)
       {
         delete i.node();
       }
+      first = nullptr;
     }
 
     // Push a node into the beginning.

@@ -6,7 +6,7 @@
 
 namespace nogl
 {
-  static M4x4 kDefaultMatrix((const float[]){
+  static const M4x4 kDefaultMatrix((const float[]){
     1,0,0,0,
     0,1,0,0,
     0,0,1,0,
@@ -16,16 +16,36 @@ namespace nogl
   // Various Minion statics.
   Chain<VOV4*> Minion::vovs;
   const M4x4* Minion::projection_matrix = &kDefaultMatrix;
-  Atomic<bool> Minion::alive(true);
+  bool Minion::alive = true;
   uint8_t Minion::total_n = 0;
   Bell Minion::begin_bells[2];
   std::unique_ptr<Bell[]> Minion::done_bells;
 
-  std::unique_ptr<Minion[]> Minion::OpenMinions()
-  {
+  Minion::UniquePtr Minion::OpenMinions()
+  { 
+    // Already have minions? Return nullptr equivalent
+    if (Minion::total_n > 0)
+    {
+      return Minion::UniquePtr(nullptr, [] (Minion*) {});
+    }
+
     Minion::total_n = Thread::logical_cores() - 1;
-    // std::cout << "Logical cores: " << (int)Minion::total_n << '\n';
-    std::unique_ptr<Minion[]> minions(new Minion[Minion::total_n]);
+
+    // The lambda here defines the deleter, very complex stuff I know
+    Minion::UniquePtr minions(new Minion[Minion::total_n], [] (Minion* m) {
+      // XXX: I am unsure just how much of a bad hack this is, it's a hack, because the loop should terminate with WaitAndReset() called, so we need just one more cycle to end this, I am scared though that one day it may break.
+      Minion::RingBegin();
+      Minion::WaitAndReset();
+
+      // Some stuff to force them to work one more time
+      Minion::alive = false;
+      Minion::begin_bells[0].Ring();
+      Minion::begin_bells[1].Ring();
+      delete m;
+      
+      Logger::Begin() << "Minions closed." << Logger::End();
+    });
+
     Minion::done_bells.reset(new Bell[Minion::total_n]);
     
     // Open all minions
@@ -35,19 +55,47 @@ namespace nogl
       minions[i].thread.Open(Minion::Start, &minions[i]);
     }
 
+    Logger::Begin() << "Minions opened." << Logger::End();
     return minions;
+  }
+  
+  void Minion::WaitAndReset()
+  {
+    nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
+    for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
+    {
+      nogl::Minion::done_bells[i].Reset();
+    }
+  }
+
+  unsigned Minion::RingBegin()
+  {
+    static uint8_t begin_bell_i = 0;
+
+    // Reset the other bell, to avoid premature begin
+    nogl::Minion::begin_bells[!begin_bell_i].Reset();
+    // Ring the actual bell, time for work!
+    nogl::Minion::begin_bells[begin_bell_i].Ring();
+
+    begin_bell_i = !begin_bell_i; // Swap
+    return begin_bell_i;
   }
 
   int Minion::Start(Minion*& m)
   {
-    Logger::Begin() << "Minion opened." << Logger::End();
     // First bell to look at is always [0].
     uint8_t begin_bell_i = 0;
     unsigned long long c = 0;
 
-    while (Minion::alive)
+    // Break elsewhere, to avoid otherwise necessary extra safety logic in minion deleter.
+    while (true)
     {
       Minion::begin_bells[begin_bell_i].Wait();
+
+      if (!Minion::alive)
+      {
+        break;
+      }
       
       for (VOV4* v : Minion::vovs)
       {
@@ -82,8 +130,6 @@ namespace nogl
       Minion::done_bells[m->index].Ring();
       begin_bell_i = !begin_bell_i; // Swap begin_bell.
     }
-
-    Logger::Begin() << "Minion closed." << Logger::End();
     
     return 0;
   }

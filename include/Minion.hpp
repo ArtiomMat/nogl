@@ -14,8 +14,9 @@ namespace nogl
   // A minion is a sub-thread of the main thread, does the evil bidding of the main thread >:).
   // For instance it multiplies VOVs by matrices, runs shaders, anything that needs to be done it does.
   // A minion only knows how many other minions there are, and its own index, it is all it needs to figure out which portions it works on during runtime.
-  struct Minion
+  class Minion
   {
+    public:
     Thread thread;
 
     // Total number of threads. set once, doesn't change.
@@ -32,13 +33,27 @@ namespace nogl
     
     // The main thread may set it to false any time, signaling clean-up->exit to all threads.
     // true when initialized.
-    static Atomic<bool> alive;
+    // Should only be interfaced with when the minions are not working.
+    static bool alive;
 
     static Chain<VOV4*> vovs;
     static const M4x4* projection_matrix;
     
-    // Returns an array of minions, you can check the number by going `Minion::total_n`, it will likely be `Thread::logical_cores()`.
-    static std::unique_ptr<Minion[]> OpenMinions();
+    using UniquePtr = std::unique_ptr<Minion[], void(*)(Minion*)>;
+
+    // Returns an array of minions, you can check the number by going `Minion::total_n`, it will likely be `Thread::logical_cores()`. If there are already minions, return a nullptr as unique_ptr.
+    // To free it prematurely just call reset(), it will have logic like flipping `alive`, and freeing other stuff, ofc this will be automatic if you want to.
+    static UniquePtr OpenMinions();
+
+    // Wait for all minions to ring done_bell, and then reset it too. Should not be called in the minion thread, will lead to deadlock.
+    // Essentially, this function allows you to wait for the minions to finish what they were assigned. After this function, it is expected you ring the OTHER bell to begin work again(switch bells).
+    // MUST be called after calling `RingBegin()` in the loop, not before.
+    static void WaitAndReset();
+
+    // Has internal logic that takes care of switching bells.
+    // MUST be called before calling `WaitAndReset()` in the loop, threads are automatically reset for the first time.
+    // Returns index of the begin bell rung this time to signal begin of work.
+    static unsigned RingBegin();
 
     // This is what is called when a thread is opened.
     // A pointer is used to COMMUNICATE with the main thread.
