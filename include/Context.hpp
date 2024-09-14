@@ -22,7 +22,7 @@ namespace nogl
     {
       enum class Type : uint8_t
       {
-        kNull,
+        kNone,
 
         kClose,
         // Includes mouse keys
@@ -52,6 +52,9 @@ namespace nogl
     ~Context();
 
     static void DefaultEventHandler(Context&, const Event&);
+
+    // Accepts ASCII string
+    void set_title(const char* str);
 
     // Draws the `data` on the screen. Success gives true.
     bool Refresh() const noexcept;

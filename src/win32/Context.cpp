@@ -55,7 +55,7 @@ namespace nogl
     hwnd_ = CreateWindowExW(
       0,
       kClassName,
-      L"OMGL",
+      L"NOGL",
       kStyle,
 
       CW_USEDEFAULT, CW_USEDEFAULT,
@@ -149,14 +149,14 @@ namespace nogl
 
   void Context::HandleEvent() noexcept
   {
-    if (event_.type != Event::Type::kNull)
+    if (event_.type != Event::Type::kNone)
     {
       event_handler_(*this, event_);
     }
   }
   void Context::HandleEvents() noexcept
   {
-    event_.type = Event::Type::kNull;
+    event_.type = Event::Type::kNone;
 
     // We handle the events we want to handle here because wndProc is an external
     // function and has no direct way for knowing the context itself.
@@ -193,5 +193,10 @@ namespace nogl
   bool Context::Refresh() const noexcept
   {
     return BitBlt(hdc_, 0, 0, width_, height_, bitmap_hdc_, 0, 0, SRCCOPY);
+  }
+
+  void Context::set_title(const char* str)
+  {
+    SetWindowTextA(hwnd_, str);
   }
 }

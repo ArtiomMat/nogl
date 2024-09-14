@@ -49,8 +49,10 @@ int main()
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
   nogl::Minion::vovs.Push(&vov);
 
-  nogl::Clock clock(16);
-  unsigned avg_frame_time = clock.target_frame_time;
+  char title[128];
+  unsigned title_set_time = ~0;
+  unsigned avg_frame_time = 16;
+  nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {
     nogl::Minion::RingBegin();
@@ -58,16 +60,23 @@ int main()
     ctx.HandleEvents();
     ctx.Clear();
     
-    nogl::Minion::WaitAndReset();
+    nogl::Minion::WaitDone();
     
     ctx.Refresh();
     
     clock.SleepRemainder();
 
+    // For displaying FPS on title
     avg_frame_time = (avg_frame_time + clock.frame_time) / 2;
+    title_set_time += clock.frame_time;
+    if (title_set_time >= 3000)
+    {
+      title_set_time = 0;
+      sprintf(title, "NOGL - %u FPS", 1000/avg_frame_time);
+      ctx.set_title(title);
+      avg_frame_time = clock.frame_time;
+    }
   }
-
-  nogl::Logger::Begin() << "Average FPS: " << 1000.0/avg_frame_time << nogl::Logger::End();
 
   minions.reset();
 

@@ -33,9 +33,9 @@ namespace nogl
 
     // The lambda here defines the deleter, very complex stuff I know
     Minion::UniquePtr minions(new Minion[Minion::total_n], [] (Minion* m) {
-      // XXX: I am unsure just how much of a bad hack this is, it's a hack, because the loop should terminate with WaitAndReset() called, so we need just one more cycle to end this, I am scared though that one day it may break.
+      // XXX: I am unsure just how much of a bad hack this is, it's a hack, because the loop should terminate with WaitDone() called, so we need just one more cycle to end this, I am scared though that one day it may break.
       Minion::RingBegin();
-      Minion::WaitAndReset();
+      Minion::WaitDone();
 
       // Some stuff to force them to work one more time
       Minion::alive = false;
@@ -52,14 +52,14 @@ namespace nogl
     for (unsigned i = 0; i < Minion::total_n; ++i)
     {
       minions[i].index = i;
-      minions[i].thread.Open(Minion::Start, &minions[i]);
+      minions[i].thread.Open(Minion::_Start, &minions[i]);
     }
 
     Logger::Begin() << "Minions opened." << Logger::End();
     return minions;
   }
   
-  void Minion::WaitAndReset()
+  void Minion::WaitDone()
   {
     nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
     for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
@@ -81,16 +81,23 @@ namespace nogl
     return begin_bell_i;
   }
 
-  int Minion::Start(Minion*& m)
+  void Minion::RingDone()
   {
-    // First bell to look at is always [0].
-    uint8_t begin_bell_i = 0;
-    unsigned long long c = 0;
+    Minion::done_bells[index].Ring();
+    begin_bell_i_ = !begin_bell_i_; // Swap begin_bell.
+  }
 
+  void Minion::WaitBegin()
+  {
+    Minion::begin_bells[begin_bell_i_].Wait();
+  }
+
+  int Minion::Start()
+  {
     // Break elsewhere, to avoid otherwise necessary extra safety logic in minion deleter.
     while (true)
     {
-      Minion::begin_bells[begin_bell_i].Wait();
+      WaitBegin();
 
       if (!Minion::alive)
       {
@@ -103,11 +110,10 @@ namespace nogl
         unsigned v4_per_align = v->kAlign / sizeof (V4);
         unsigned chunk_size = (v->n() / v4_per_align) / Minion::total_n;
         chunk_size *= v4_per_align; // Back to 1 vector scale instead of 2. Necessary to do rounding,
-        
-        V4* from = v->begin() + (chunk_size * m->index);
+        V4* from = v->begin() + (chunk_size * index);
         V4* to;
         // The last minion will need to deal with some rounding error from chunk_size 
-        if (m->index == Minion::total_n - 1)
+        if (index == Minion::total_n - 1)
         {
           to = v->end();
         }
@@ -115,8 +121,6 @@ namespace nogl
         {
           to = from + chunk_size;
         }
-
-        // Logger::Begin() << m->index << "  " << (uintptr_t)(from - v->begin()) << " - " << (uintptr_t)(to - v->begin()) << Logger::End();
 
         // Now for multiplication
         const M4x4* matrix = Minion::projection_matrix;
@@ -126,9 +130,8 @@ namespace nogl
         }
         v->Multiply(*matrix, from, to);
       }
-      
-      Minion::done_bells[m->index].Ring();
-      begin_bell_i = !begin_bell_i; // Swap begin_bell.
+
+      RingDone();
     }
     
     return 0;
