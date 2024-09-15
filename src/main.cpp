@@ -66,7 +66,7 @@ int main()
     
     clock.SleepRemainder();
 
-    // For displaying FPS on title
+    // Displaying FPS on title
     avg_frame_time = (avg_frame_time + clock.frame_time) / 2;
     title_set_time += clock.frame_time;
     if (title_set_time >= 3000)
@@ -77,9 +77,7 @@ int main()
       avg_frame_time = clock.frame_time;
     }
   }
-
-  minions.reset();
-
+ 
   return 0;
 }
 

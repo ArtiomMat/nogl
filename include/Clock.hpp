@@ -9,8 +9,7 @@ namespace nogl
   {
     public:
     // Should be put right before loop, otherwise, call `BeginLoop()`.
-    Clock(unsigned target_frame_time);
-    Clock() : Clock(16) {}
+    Clock(unsigned target_frame_time = 16);
     ~Clock() = default;
 
     // Can be modified in real-time
