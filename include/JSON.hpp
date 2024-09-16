@@ -52,20 +52,27 @@ namespace nogl
       Node(Type type, const char* key = "", Node* parent = nullptr);
       ~Node() = default;
       
-      // Find sub elements by key. Isn't a valid option for arrays.
-      Node& Find(const char* key);
+      // To avoid using try catch with `FindNode()` or `[]`. Can be used to get a direct pointer, and so if not found returns `nullptr`.
+      Node* PointNode(const char* key);
+      // Equivalent of `FindNode(unsigned)` but like `PointNode(const char*)`
+      Node* PointNode(unsigned i);
+
+      // Find sub elements by key. Isn't a valid option for arrays. Throws Error if not found.
+      Node& FindNode(const char* key);
       // Useful for arrays. Traverse sub-elements up to element at index i, can be done on any type really.
       // NOTE: Due to internal implementation being `std::list` this is O(n), a sacrifice for comfort.
-      Node& Find(unsigned i);
-      // `Find()`
+      Node& FindNode(unsigned i);
+      // `FindNode()`.
       template <typename T>
-      Node& operator [](T x) { return Find(x); }
+      Node& operator [](T x) { return FindNode(x); }
     
       // Returns key of this JSON object, returns empty string if there is no key.
       // If "" is returned, consider the node key-less(I can do it because "" is reserved during parsing, and an error is thrown if "" exists in the JSON, not ideal, but comfortable).
       std::string key() { return key_; }
       // Returns the type of the object, useful if unsure of it.
       Type type() { return type_; }
+
+      void set_value();
       
       // Will always succeed, as long as it's not an object.
       std::string string();

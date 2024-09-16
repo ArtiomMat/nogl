@@ -54,12 +54,39 @@ namespace nogl
 
   JSON::Node& JSON::Node::AddChild(const Node& node)
   {
+    switch (type_)
+    {
+      case Type::kString:
+      
 
+      case Type::kObject:
+      case Type::kArray:
+      delete value_._ptr;
+      break;
+    }
   }
 
   // ==================================================================
   //                                JSON
   // ==================================================================
+
+  std::string JSON::line()
+  {
+    unsigned si = this->si_;
+    // Only go backward in the line if si > 0
+    if (si)
+    {
+      for (; si > 0 && s_[si - 1] != '\n'; --si)
+      {}
+    }
+    // Now that we are at the start, copy the line
+    std::string ret;
+    for (; s_[si] && s_[si] != '\n'; ++si)
+    {
+      ret += s_[si];
+    }
+    return ret;
+  }
 
   void JSON::NextSymbol()
   {
