@@ -4,6 +4,7 @@
 #include <memory>
 #include <list>
 #include <variant>
+#include <stdexcept>
 
 namespace nogl
 {
@@ -12,6 +13,27 @@ namespace nogl
   class JSON
   {
     public:
+    class Error : public std::exception
+    {
+      public:
+      Error(JSON* j, const char* msg)
+      {
+        str += "JSON: ";
+        str += (int)j->line_i();
+        str += msg;
+        str += "\n  ";
+        str += j->line();
+      }
+
+      const char* what() const noexcept override
+      {
+        return str.c_str();
+      }
+
+      private:
+      std::string str;
+    };
+
     class Node
     {
       friend JSON;
@@ -27,12 +49,11 @@ namespace nogl
         kArray, // [] array
       };
 
-      Node(const char* name, Type type);
-      Node(Type type) : Node("", type) {}
+      Node(Type type, const char* key = "", Node* parent = nullptr);
       ~Node() = default;
       
-      // Find sub elements by name. Isn't a valid option for arrays.
-      Node& Find(const char* name);
+      // Find sub elements by key. Isn't a valid option for arrays.
+      Node& Find(const char* key);
       // Useful for arrays. Traverse sub-elements up to element at index i, can be done on any type really.
       // NOTE: Due to internal implementation being `std::list` this is O(n), a sacrifice for comfort.
       Node& Find(unsigned i);
@@ -40,10 +61,11 @@ namespace nogl
       template <typename T>
       Node& operator [](T x) { return Find(x); }
     
-      // Returns name of this JSON object, returns empty string if there is no name.
-      std::string name() { return name_; }
+      // Returns key of this JSON object, returns empty string if there is no key.
+      // If "" is returned, consider the node key-less(I can do it because "" is reserved during parsing, and an error is thrown if "" exists in the JSON, not ideal, but comfortable).
+      std::string key() { return key_; }
       // Returns the type of the object, useful if unsure of it.
-      Type type() { return value_.type; }
+      Type type() { return type_; }
       
       // Will always succeed, as long as it's not an object.
       std::string string();
@@ -52,43 +74,54 @@ namespace nogl
       // Equivalent of true is just anything "not empty", like a non empty string, or non 0 number.
       bool boolean();
       
-      // Copies a node into this one. If it's a single value node, it's turned into an object node. 
-      Node& Insert(const Node& node);
+      // Copies a node into this one. If it's a single value node, it's upgraded to object, meaning the previous value it stored is now the first node of the object, and this node is the second. If an array, and node is not key-less, the node is upgraded to object.
+      Node& AddChild(const Node& node);
+      Node& operator +=(const Node& node) { return AddChild(node); }
       
       private:
-      struct Value
-      {
-        Type type;
-        std::variant<
-          double, // Number. Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
-          bool, // Boolean
-          std::string, // String
-          std::list<Node>, // Object
-          std::list<Value> // Array
-        > variant;
-      };
-      
-      std::string name_;
-      Value value_;
+      // Some values are heap allocated, so before switching anything clear is required.
+      void FreeValue();
+
+      std::string key_;
       Node* parent_;
+      Type type_;
+      union
+      {
+        double number; // Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
+        bool boolean;
+        std::string* string;
+        std::list<Node>* object;
+        std::list<Node>* array;
+
+        void* _ptr;
+      } value_;
     };
     
     // Parses the string
-    JSON(const char* str, bool& success) : root_(JSON::Node::Type::kObject) { success = Parse(str); }
-    JSON(const char* str = "{}") : root_(JSON::Node::Type::kObject) { Parse(str); }
+    JSON(const char* str = "{}");
     ~JSON();
 
-    bool Parse(const char* str);
-
     Node& root() { return root_; }
+
+    unsigned line_i() { return line_i_; }
+    // Returns copy of the current line.
+    std::string line();
     
     private:
     Node root_;
 
-    const char* s_; // String given from JSON, only used for constructor but global
+    const char* s_; // String given from JSON ; only used for constructor but global
     unsigned si_; // Index in the string
-
-    void SkipWhite();
+    unsigned line_i_;
+    
+    // Go to next symbol. skip the white-space too.
+    void NextSymbol();
     bool at_end() { return s_[si_] == 0; }
+    
+    // `si_` must be on first `"`. By the end `si_` will be on last `"`.
+    std::string ParseString();
+
+    // Parse entie `"xyz":` part, `si_` must be on first `"`.
+    void GiveNodeKey(Node* n);
   };
 }
