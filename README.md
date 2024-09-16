@@ -13,7 +13,7 @@ It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths wit
   - [x] Atomic objects(basics, not everything).
   - [x] Fast mutex objects.
   - [x] Event based objects(Bells).
-- [ ] Math utilities. (Ongoing
+- [ ] Math utilities. (Ongoing)
   - [x] Understand SIMD enough to use it.
   - [x] Play around with SIMD and prototype stuff for the below step.
   - [x] Vector math, using SIMD and bulk computation of vectors. The idea is a VOV(Vector Of Vectors) object.
@@ -24,10 +24,13 @@ It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths wit
 - [ ] Multi-threading.
   - [x] Minions, split work between each other, like multiplying VOVs.
   - [ ] Polish up.
+- [ ] Loading models(glTF format(.glb only for now))
+  - [x] Refer to [glTF](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html) for docs(Ongoing).
+  - [ ] Make a JSON parser, integral part of glTF.
+  - [ ] Make a PNG parser, I ain't dealing with it myself so with libpng.
+  - [ ] Load models into a Scene object using utilities you made.
+  - [ ] Optional - Add support for glTF text version.
 - [ ] Rendering.
-  - [ ] Get a regular triangle rendered, just its points will do.
-  - [ ] Render filled triangles.
-  - [ ] Idea: Make the loop more sophisticated, the main thread renders some finished VOVs, minions keep projecting, until all is rendered.
   - [ ] TODO
 - [ ] Advanced shading to prepare for next step.
   - [ ] Specular highlighting.
