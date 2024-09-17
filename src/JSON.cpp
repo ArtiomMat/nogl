@@ -6,15 +6,12 @@ namespace nogl
   JSON::Error::Error(const char* msg, JSON* j) noexcept
   {
     str += "JSON:";
-    if (j != nullptr )
-    {
-      str += std::to_string(j->line_i());
-    }
-    str += ":";
     str += msg;
     if (j != nullptr)
     {
-      str += "\n  ";
+      str += "\n  Line ";
+      str += std::to_string(j->line_i());
+      str += ": ";
       str += j->line();
     }
   }
@@ -98,6 +95,7 @@ namespace nogl
 
       case Type::kArray:
       {
+        // BUG: Segfault due to this, reason is that we may copy heap objects' pointers, and then the og `node` is freed prematurely, and the heap object is lost.
         value_.array->push_back(node);
         Node& n = value_.array->back();
         n.key_.clear();
@@ -392,16 +390,24 @@ namespace nogl
     return key;
   }
 
-  JSON::JSON(const char* str) : root_(Node::Type::kObject)
+  JSON::JSON(const char* str) : root_(Node::Type::kNull)
   {
     s_ = str;
     si_ = 0;
     line_i_ = 0;
 
     SkipWS();
-    if (s_[si_] != '{')
+    if (s_[si_] == '{')
     {
-      throw Error("File must start with {.", this);
+      root_.FreeValue(Node::Type::kObject);
+    }
+    else if (s_[si_] == '[')
+    {
+      root_.FreeValue(Node::Type::kArray);
+    }
+    else
+    {
+      throw Error("File must start with global { or [.", this);
     }
     ++si_;
 
@@ -459,8 +465,16 @@ namespace nogl
         }
         else if (depth > 1)
         {
-          --depth;
           node = node->parent_; // Depth > 0 => parent node isn't nullptr
+          if (node->type_ == Node::Type::kObject && s_[si_] == ']')
+          {
+            throw Error("Expected } but got ].", this);
+          }
+          else if (node->type_ == Node::Type::kArray && s_[si_] == '}')
+          {
+            throw Error("Expected ] but got }.", this);
+          }
+          --depth;
         }
         else
         {
@@ -515,6 +529,7 @@ namespace nogl
           {
             Node& n = node->AddChild(Node::Type::kString);
             *(n.value_.string) = ParseString();
+            // ParseString();
           }
           // key for new node
           else
@@ -524,7 +539,7 @@ namespace nogl
 
             keyed_node = true;
           }
-          
+
           had_comma = false;
         }
         else
