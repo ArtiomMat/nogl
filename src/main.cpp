@@ -34,15 +34,16 @@ int main()
 
   const char json_str[] =
   "[\n"
-  "\"true\",\n"
-  "\"true\",\n"
-  "\"true\"\n"
-  "]\n";
+  "\"Whatever\": \"a\",\n"
+  "\"b\",\n"
+  "\"c\"\n"
+  "}\n";
 
   nogl::JSON json(json_str);
 
-  nogl::Logger::Begin() << json.root()[0].boolean() << nogl::Logger::End();
+  nogl::Logger::Begin() << json.root()["Whatever"].string() << nogl::Logger::End();
   nogl::Logger::Begin() << json.root()[1].string() << nogl::Logger::End();
+  nogl::Logger::Begin() << json.root()[2].string() << nogl::Logger::End();
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 

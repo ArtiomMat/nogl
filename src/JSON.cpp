@@ -20,193 +20,117 @@ namespace nogl
   //                                NODE
   // ==================================================================
 
-  JSON::Node::Node(Type type, const char* key, Node* parent)
-  {
-    type_ = type;
-    key_ = key;
-    parent_ = parent;
-
-    AllocateValue();
-  }
-
   JSON::Node::~Node()
   {
-    FreeValue(Type::kNull);
-  }
-
-  void JSON::Node::FreeValue(Type new_type)
-  {
-    if (new_type == type_)
-    {
-      return;
-    }
-
-    switch (type_)
-    {
-      case Type::kString:
-      delete value_.string;
-      break;
-      case Type::kObject:
-      delete value_.object;
-      break;
-      case Type::kArray:
-      delete value_.array;
-      break;
-
-      default:
-      break;
-    }
-
-    type_ = new_type;
-    AllocateValue();
-  }
-
-  void JSON::Node::AllocateValue()
-  {
-    switch (type_)
-    {
-      case Type::kNumber:
-      value_.number = 0.0;
-      break;
-      case Type::kBoolean:
-      value_.boolean = false;
-      break;
-
-      case Type::kString:
-      value_.string = new std::string;
-      break;
-      case Type::kObject:
-      case Type::kArray:
-      value_.object = new std::list<Node>;
-      break;
-
-      default:
-      break;
-    }
+    
   }
 
   JSON::Node& JSON::Node::AddChild(const Node& node)
   {
-    switch (type_)
+    if (std::holds_alternative<Container>(value_))
     {
-      default:
+      Container& c = std::get<Container>(value_);
+      c.push_back(node);
+      Node& n = c.back();
+      n.key_.clear();
+      n.parent_ = this;
+      return n;
+    }
+    else
+    {
       throw JSON::Error("TODO JSON::Node::AddChild().");
-      break;
-
-      case Type::kArray:
-      {
-        // BUG: Segfault due to this, reason is that we may copy heap objects' pointers, and then the og `node` is freed prematurely, and the heap object is lost.
-        value_.array->push_back(node);
-        Node& n = value_.array->back();
-        n.key_.clear();
-        n.parent_ = this;
-        return n;
-      }
-
-      case Type::kObject:
-      {
-        if (node.key_ == "")
-        {
-          throw Error("Cannot add a key-less node to object node.");
-        }
-        value_.object->push_back(node);
-        Node& n = value_.object->back();
-        n.parent_ = this;
-        return n;
-      }
     }
   }
 
   bool JSON::Node::empty() const
   {
-    switch (type_)
+    if (std::holds_alternative<Container>(value_))
     {
-      default:
+      return std::get<Container>(value_).empty();
+    }
+    else if (std::holds_alternative<String>(value_))
+    {
+      return std::get<String>(value_).empty();
+    }
+    else
+    {
       return false;
-      break;
-
-      case Type::kString:
-      return value_.string->empty();
-      break;
-
-      case Type::kArray:
-      return value_.array->empty();
-      break;
-
-      case Type::kObject:
-      return value_.object->empty();
-      break;
     }
   }
   
-  std::string JSON::Node::string()
+  JSON::String JSON::Node::string()
   {
-    switch (type_)
+    if (std::holds_alternative<Number>(value_))
     {
-      case Type::kNumber:
-      return std::to_string(value_.number);
-      break;
-      case Type::kBoolean:
-      return value_.boolean ? "true" : "false";
-      break;
-      case Type::kNull:
+      return std::to_string(std::get<Number>(value_));
+    }
+    else if (std::holds_alternative<Boolean>(value_))
+    {
+      return std::get<Boolean>(value_) ? "true" : "false";
+    }
+    else if (std::holds_alternative<Null>(value_))
+    {
       return "null";
-      break;
-      case Type::kString:
-      return *value_.string;
-      break;
-
-      default:
+    }
+    else if (std::holds_alternative<String>(value_))
+    {
+      return std::get<String>(value_);
+    }
+    else 
+    {
       return "";
-      break;
     }
   }
 
-  double JSON::Node::number()
+  JSON::Number JSON::Node::number()
   {
-    switch (type_)
+    if (std::holds_alternative<Number>(value_))
     {
-      case Type::kNumber:
-      return value_.number;
-      break;
-      case Type::kBoolean:
-      return value_.boolean ? 1.0 : 0.0;
-      break;
-      case Type::kString:
-      return std::stod(*value_.string);
-      break;
-
-      default:
+      return std::get<Number>(value_);
+    }
+    else if (std::holds_alternative<Boolean>(value_))
+    {
+      return std::get<Boolean>(value_);
+    }
+    else if (std::holds_alternative<String>(value_))
+    {
+      return std::stod(std::get<String>(value_));
+    }
+    else 
+    {
       return 0.0;
-      break;
     }
   }
 
-  bool JSON::Node::boolean()
+  JSON::Boolean JSON::Node::boolean()
   {
-    switch (type_)
+    if (std::holds_alternative<Number>(value_))
     {
-      case Type::kNumber:
-      return value_.number != 0.0;
-      break;
-      case Type::kBoolean:
-      return value_.boolean;
-      break;
-      case Type::kString:
-      return *value_.string == "true";
-      break;
-
-      default:
+      return std::get<Number>(value_) != 0.0;
+    }
+    else if (std::holds_alternative<Boolean>(value_))
+    {
+      return std::get<Boolean>(value_);
+    }
+    else if (std::holds_alternative<String>(value_))
+    {
+      return std::get<String>(value_) == "true";
+    }
+    else if (std::holds_alternative<Null>(value_))
+    {
+      return false;
+    }
+    else 
+    {
       return !empty();
-      break;
     }
   }
 
   JSON::Node* JSON::Node::PointNode(const char* key)
   {
-    if (type_ == Type::kObject)
+    if (std::holds_alternative<Container>(value_))
     {
-      for (Node& n : *value_.object)
+      for (Node& n : std::get<Container>(value_))
       {
         if (n.key_ == key)
         {
@@ -218,24 +142,10 @@ namespace nogl
   }
   JSON::Node* JSON::Node::PointNode(unsigned i)
   {
-    // Ok, I know that this is literally boilerplate code and can be combined or some shit.
-    // But as long as I am unsure if array should be equivalent to object in memory, can't take risks.
-    if (type_ == Type::kObject)
+    if (std::holds_alternative<Container>(value_))
     {
       unsigned j = 0;
-      for (Node& n : *value_.object)
-      {
-        if (i == j)
-        {
-          return &n;
-        }
-        ++j;
-      }
-    }
-    else if (type_ == Type::kArray)
-    {
-      unsigned j = 0;
-      for (Node& n : *value_.array)
+      for (Node& n : std::get<Container>(value_))
       {
         if (i == j)
         {
@@ -265,7 +175,26 @@ namespace nogl
     }
     return *n;
   }
-
+  template<>
+  void JSON::Node::ResetValue<JSON::Number>()
+  {
+    value_ = 0.0;
+  }
+  template<>
+  void JSON::Node::ResetValue<JSON::String>()
+  {
+    value_ = String("");
+  }
+  template<>
+  void JSON::Node::ResetValue<JSON::Boolean>()
+  {
+    value_ = false;
+  }
+  template<>
+  void JSON::Node::ResetValue<JSON::Container>()
+  {
+    value_ = Container();
+  }
   // ==================================================================
   //                                JSON
   // ==================================================================
@@ -390,7 +319,7 @@ namespace nogl
     return key;
   }
 
-  JSON::JSON(const char* str) : root_(Node::Type::kNull)
+  JSON::JSON(const char* str)
   {
     s_ = str;
     si_ = 0;
@@ -399,11 +328,11 @@ namespace nogl
     SkipWS();
     if (s_[si_] == '{')
     {
-      root_.FreeValue(Node::Type::kObject);
+      root_.ResetValue<Container>();
     }
     else if (s_[si_] == '[')
     {
-      root_.FreeValue(Node::Type::kArray);
+      root_.ResetValue<Container>();
     }
     else
     {
@@ -466,14 +395,14 @@ namespace nogl
         else if (depth > 1)
         {
           node = node->parent_; // Depth > 0 => parent node isn't nullptr
-          if (node->type_ == Node::Type::kObject && s_[si_] == ']')
-          {
-            throw Error("Expected } but got ].", this);
-          }
-          else if (node->type_ == Node::Type::kArray && s_[si_] == '}')
-          {
-            throw Error("Expected ] but got }.", this);
-          }
+          // if (node->type_ == Node::Type::kObject && s_[si_] == ']')
+          // {
+          //   throw Error("Expected } but got ].", this);
+          // }
+          // else if (node->type_ == Node::Type::kArray && s_[si_] == '}')
+          // {
+          //   throw Error("Expected ] but got }.", this);
+          // }
           --depth;
         }
         else
@@ -487,18 +416,19 @@ namespace nogl
         case '{':
         case '[':
         {
-          auto type = s_[si_] == '{' ? Node::Type::kObject : Node::Type::kArray;
+          // auto type = s_[si_] == '{' ? Node::Type::kObject : Node::Type::kArray;
           
           // The '"' case already AddChild() and shit, just gotta set type.
           if (keyed_node)
           {
-            node->type_ = type;
+            // node->type_ = type;
             keyed_node = false;
           }
           // A new object/array without a name
           else if (node->empty() || had_comma)
           {
-            node = &node->AddChild(type);
+            node = &node->AddChild(Node());
+            node->ResetValue<Container>();
             had_comma = false;
           }
           else
@@ -515,8 +445,8 @@ namespace nogl
         // It's a string value
         if (keyed_node)
         {
-          node->FreeValue(Node::Type::kString);
-          *(node->value_.string) = ParseString();
+          node->ResetValue<String>();
+          std::get<String>(node->value_) = ParseString();
           node = node->parent_; // Cannot be nullptr
 
           keyed_node = false;
@@ -525,17 +455,18 @@ namespace nogl
         else if (node->empty() || had_comma)
         {
           // String literal element of array
-          if (node->type_ == Node::Type::kArray)
+          // FIXME: Will always think it's an array, because Container is an object too.
+          if (std::holds_alternative<Container>(node->value_))
           {
-            Node& n = node->AddChild(Node::Type::kString);
-            *(n.value_.string) = ParseString();
-            // ParseString();
+            Node& n = node->AddChild(Node());
+            n.ResetValue<String>();
+            std::get<String>(n.value_) = ParseString();
           }
           // key for new node
           else
           {
             std::string key = ParseKey();
-            node = &node->AddChild(Node(Node::Type::kNull, key.c_str()));
+            node = &node->AddChild(Node(key.c_str()));
 
             keyed_node = true;
           }
@@ -549,6 +480,7 @@ namespace nogl
         break;
 
         default:
+        Logger::Begin() << s_[si_] << Logger::End();
         throw Error("Unexpected symbol.", this);
         break;
       }

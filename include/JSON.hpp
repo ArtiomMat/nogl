@@ -13,6 +13,14 @@ namespace nogl
   class JSON
   {
     public:
+    class Node;
+
+    struct Null {};
+    using Number = double; // Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
+    using Boolean = bool;
+    using String = std::string;
+    using Container = std::list<Node>; // Can be either array or object
+
     class Error : public std::exception
     {
       public:
@@ -32,17 +40,31 @@ namespace nogl
       friend JSON;
 
       public:
-      enum class Type : unsigned char
-      {
-        kString,
-        kNumber,
-        kBoolean,
-        kNull,
-        kObject, // {} object
-        kArray, // [] array
-      };
+      using ValueVariant = std::variant<
+        Null,
+        Number,
+        Boolean,
+        String,
+        Container
+      >;
 
-      Node(Type type, const char* key = "", Node* parent = nullptr);
+      // enum class Type : unsigned char
+      // {
+      //   kString,
+      //   kNumber,
+      //   kBoolean,
+      //   kNull,
+      //   kObject, // {} object
+      //   kArray, // [] array
+      // };
+
+      // Automatically calls `ResetValue<Null>()`.
+      Node(const char* key = "", Node* parent = nullptr)
+      {
+        key_ = key;
+        parent_ = parent;
+        ResetValue<Null>();
+      }
       ~Node();
       
       // To avoid using try catch with `FindNode()` or `[]`. Can be used to get a direct pointer, and so if not found returns `nullptr`.
@@ -61,16 +83,17 @@ namespace nogl
     
       // Returns key of this JSON object, returns empty string if there is no key.
       // If "" is returned, consider the node key-less(I can do it because "" is reserved during parsing, and an error is thrown if "" exists in the JSON, not ideal, but comfortable).
-      std::string key() { return key_; }
-      // Returns the type of the object, useful if unsure of it.
-      Type type() { return type_; }
+      String key() { return key_; }
       
       // Will always succeed, as long as it's not an object/array.
-      std::string string();
+      String string();
       // Tries to return as a number, if fails returns 0.0.
-      double number();
+      Number number();
       // If string returns true if value is `"true"`, if number returns true if `!=0.0`, if boolean returns boolean, if object/array returns `!empty()`.
-      bool boolean();
+      Boolean boolean();
+
+      // Returns reference, so you can modify, also can use `std::holds_alternative<>()` to determine type.
+      ValueVariant& value() { return value_; }
       
       // Copies a node into this one. If it's a single value node, it's upgraded to object/array(depending on if node key-less), meaning the previous value it stored is now the first node of the object, and this node is the second. If an array, and node has a key, the copied node is DEGRADED to being key-less. If the node is keyless and it's an object, exception.
       Node& AddChild(const Node& node);
@@ -83,22 +106,15 @@ namespace nogl
       // Some values are heap allocated, so before switching anything clear is required.
       // Free the current value and change type to a new value, calls `AllocateValue()`.
       // `Type::kNull` is an easy way to just free the current heap allocated type completely, and not allocate anything new.
-      void FreeValue(Type new_type = Type::kNull);
+      // void FreeValue(Type new_type = Type::kNull);
       // Some values are heap allocated, so they require special logic, but the primitives(boolean & number & null) don't require anything other than value reset(especially not null).
       // Allocates a new resetted value, depending on current `type_`.
-      void AllocateValue();
+      template<typename T>
+      void ResetValue() {}
 
       std::string key_;
       Node* parent_;
-      Type type_;
-      union
-      {
-        double number; // Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
-        bool boolean;
-        std::string* string;
-        std::list<Node>* object;
-        std::list<Node>* array;
-      } value_;
+      ValueVariant value_;
     };
     
     // Parses the string
@@ -129,4 +145,25 @@ namespace nogl
     // After calling it, if everything goes well, will be right after `:`.
     std::string ParseKey();
   };
+
+  // template<>
+  // void JSON::Node::ResetValue<JSON::Number>()
+  // {
+  //   value_ = 0.0;
+  // }
+  // template<>
+  // void JSON::Node::ResetValue<JSON::String>()
+  // {
+  //   value_ = String("");
+  // }
+  // template<>
+  // void JSON::Node::ResetValue<JSON::Boolean>()
+  // {
+  //   value_ = false;
+  // }
+  // template<>
+  // void JSON::Node::ResetValue<JSON::Container>()
+  // {
+  //   value_ = Container();
+  // }
 }
