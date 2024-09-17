@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "Mutex.hpp"
 
 namespace nogl
@@ -35,6 +36,7 @@ namespace nogl
     
     Logger& operator <<(Code c);
     Logger& operator <<(const char* str);
+    Logger& operator <<(const std::string& str);
     Logger& operator <<(char c);
 
     Logger& operator <<(long long i);
@@ -47,6 +49,8 @@ namespace nogl
 
     Logger& operator <<(double i);
     Logger& operator <<(float i) { return (*this) << (double)i; }
+
+    Logger& operator <<(bool b) { return (*this) << (b ? "true" : "false"); }
 
     template<typename T>
     Logger& operator <<(T* ptr) { return PushPtr(reinterpret_cast<void*>(ptr)); }

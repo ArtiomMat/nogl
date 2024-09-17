@@ -68,6 +68,11 @@ namespace nogl
     fputs(str, stdout);
     return *this;
   }
+  Logger& Logger::operator <<(const std::string& str)
+  {
+    fputs(str.c_str(), stdout);
+    return *this;
+  }
   Logger& Logger::operator <<(char c)
   {
     putc(c, stdout);

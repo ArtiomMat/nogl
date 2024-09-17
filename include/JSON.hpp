@@ -76,11 +76,17 @@ namespace nogl
       Node& AddChild(const Node& node);
       Node& operator +=(const Node& node) { return AddChild(node); }
       
-      private:
-      // Some values are heap allocated, so before switching anything clear is required.
-      void FreeValue();
       // Returns true if object/array is empty, same for string(is ""). If not object/array/string returns false because meaningless.
       bool empty() const;
+      
+      private:
+      // Some values are heap allocated, so before switching anything clear is required.
+      // Free the current value and change type to a new value, calls `AllocateValue()`.
+      // `Type::kNull` is an easy way to just free the current heap allocated type completely, and not allocate anything new.
+      void FreeValue(Type new_type = Type::kNull);
+      // Some values are heap allocated, so they require special logic, but the primitives(boolean & number & null) don't require anything other than value reset(especially not null).
+      // Allocates a new resetted value, depending on current `type_`.
+      void AllocateValue();
 
       std::string key_;
       Node* parent_;
@@ -112,14 +118,15 @@ namespace nogl
     unsigned si_; // Index in the string
     unsigned line_i_;
     
-    // Go to next symbol. skip the white-space too.
-    void NextSymbol();
+    // If standing on white-space right now, skip until next symbol, otherwise stay here.
+    void SkipWS();
     bool at_end() { return s_[si_] == 0; }
     
-    // `si_` must be on first `"`. By the end `si_` will be on last `"`.
+    // `si_` must be on first `"`. By the end `si_` will be right after last `"`.
     std::string ParseString();
 
     // Parse entie `"xyz":` part, `si_` must be on first `"`.
-    void GiveNodeKey(Node& n);
+    // After calling it, if everything goes well, will be right after `:`.
+    std::string ParseKey();
   };
 }

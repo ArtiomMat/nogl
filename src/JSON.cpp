@@ -8,7 +8,7 @@ namespace nogl
     str += "JSON:";
     if (j != nullptr )
     {
-      str += (int)j->line_i();
+      str += std::to_string(j->line_i());
     }
     str += ":";
     str += msg;
@@ -25,10 +25,47 @@ namespace nogl
 
   JSON::Node::Node(Type type, const char* key, Node* parent)
   {
-    key_ = key;
     type_ = type;
+    key_ = key;
     parent_ = parent;
 
+    AllocateValue();
+  }
+
+  JSON::Node::~Node()
+  {
+    FreeValue(Type::kNull);
+  }
+
+  void JSON::Node::FreeValue(Type new_type)
+  {
+    if (new_type == type_)
+    {
+      return;
+    }
+
+    switch (type_)
+    {
+      case Type::kString:
+      delete value_.string;
+      break;
+      case Type::kObject:
+      delete value_.object;
+      break;
+      case Type::kArray:
+      delete value_.array;
+      break;
+
+      default:
+      break;
+    }
+
+    type_ = new_type;
+    AllocateValue();
+  }
+
+  void JSON::Node::AllocateValue()
+  {
     switch (type_)
     {
       case Type::kNumber:
@@ -44,30 +81,6 @@ namespace nogl
       case Type::kObject:
       case Type::kArray:
       value_.object = new std::list<Node>;
-      break;
-
-      default:
-      break;
-    }
-  }
-
-  JSON::Node::~Node()
-  {
-    FreeValue();
-  }
-
-  void JSON::Node::FreeValue()
-  {
-    switch (type_)
-    {
-      case Type::kString:
-      delete value_.string;
-      break;
-      case Type::kObject:
-      delete value_.object;
-      break;
-      case Type::kArray:
-      delete value_.array;
       break;
 
       default:
@@ -96,7 +109,7 @@ namespace nogl
       {
         if (node.key_ == "")
         {
-          throw Error("Cannot add node to a key-less node to object.");
+          throw Error("Cannot add a key-less node to object node.");
         }
         value_.object->push_back(node);
         Node& n = value_.object->back();
@@ -191,6 +204,70 @@ namespace nogl
     }
   }
 
+  JSON::Node* JSON::Node::PointNode(const char* key)
+  {
+    if (type_ == Type::kObject)
+    {
+      for (Node& n : *value_.object)
+      {
+        if (n.key_ == key)
+        {
+          return &n;
+        }
+      }
+    }
+    return nullptr;
+  }
+  JSON::Node* JSON::Node::PointNode(unsigned i)
+  {
+    // Ok, I know that this is literally boilerplate code and can be combined or some shit.
+    // But as long as I am unsure if array should be equivalent to object in memory, can't take risks.
+    if (type_ == Type::kObject)
+    {
+      unsigned j = 0;
+      for (Node& n : *value_.object)
+      {
+        if (i == j)
+        {
+          return &n;
+        }
+        ++j;
+      }
+    }
+    else if (type_ == Type::kArray)
+    {
+      unsigned j = 0;
+      for (Node& n : *value_.array)
+      {
+        if (i == j)
+        {
+          return &n;
+        }
+        ++j;
+      }
+    }
+    return nullptr;
+  }
+
+  JSON::Node& JSON::Node::FindNode(const char* key)
+  {
+    Node* n = PointNode(key);
+    if (n == nullptr)
+    {
+      throw Error("Cannot find node with key.");
+    }
+    return *n;
+  }
+  JSON::Node& JSON::Node::FindNode(unsigned i)
+  {
+    Node* n = PointNode(i);
+    if (n == nullptr)
+    {
+      throw Error("Node index out of range.");
+    }
+    return *n;
+  }
+
   // ==================================================================
   //                                JSON
   // ==================================================================
@@ -213,21 +290,16 @@ namespace nogl
     return ret;
   }
 
-  void JSON::NextSymbol()
+  void JSON::SkipWS()
   {
-    if (!s_[si_])
-    {
-      return;
-    }
-
-    do
+    while (s_[si_] <= ' ' && s_[si_] >= 1)
     {
       ++si_;
       if (s_[si_] == '\n')
       {
         ++line_i_;
       }
-    } while (s_[si_] <= ' ' && s_[si_] >= 1);
+    };
   }
 
   std::string JSON::ParseString()
@@ -246,31 +318,43 @@ namespace nogl
     {
       if (at_end())
       {
+        _OOPS:
         throw Error("String literal parsing cut-off.", this);
       }
       // Escape sequence
       if (s_[si_] == '\\')
       {
-        switch (s_[si_ + 1])
+        ++si_;
+        if (at_end())
+        {
+          throw Error("String literal parsing cut-off.", this);
+        }
+        switch (s_[si_])
         {
           case '\\':
           str += '\\';
           break;
+
           case '"':
           str += '"';
           break;
+          
           case 'n':
           str += '\n';
           break;
+
           case 'b':
           str += '\b';
           break;
+
           case 'f':
           str += '\f';
           break;
+
           case 'r':
           str += '\r';
           break;
+
           case 'u':
           Logger::Begin() << "JSON: Unicode escape sequence(\\e) not implemented yet. Ignoring." << Logger::End();
           str += "\\u";
@@ -284,10 +368,12 @@ namespace nogl
       }
     }
 
+    ++si_; // Advance to right after last "
+
     return str;
   }
 
-  void JSON::GiveNodeKey(Node& node)
+  std::string JSON::ParseKey()
   {
     std::string key = ParseString();
     if (key == "")
@@ -295,13 +381,15 @@ namespace nogl
       throw Error("Node key \"\" is reserved.", this);
     }
 
-    NextSymbol();
+    SkipWS();
     if (s_[si_] != ':')
     {
       throw Error("Missing the : after key.", this);
     }
+    
+    ++si_; // Advance to after :
 
-    node.key_ = key;
+    return key;
   }
 
   JSON::JSON(const char* str) : root_(Node::Type::kObject)
@@ -310,15 +398,16 @@ namespace nogl
     si_ = 0;
     line_i_ = 0;
 
-    NextSymbol();
+    SkipWS();
     if (s_[si_] != '{')
     {
-      throw Error("File must start with {", this);
+      throw Error("File must start with {.", this);
     }
+    ++si_;
 
     unsigned depth = 1;
     // Current node we are dealing with
-    Node& node = root_;
+    Node* node = &root_;
 
     // So that if we hit a {, [, or even ", after "xyz": we know that it's not a new key-less node but rather the value of the current node.
     bool keyed_node = false;
@@ -327,9 +416,9 @@ namespace nogl
     // If right before this switch(s_[si_]) we had a comma
     bool had_comma = false;
 
-    while (force_done)
+    while (!force_done)
     {
-      NextSymbol();
+      SkipWS();
 
       if (at_end())
       {
@@ -343,15 +432,17 @@ namespace nogl
         }
       }
 
+      // NOTE TO SELF: ALL the cases need to finish with cursor being right after the expression
       switch (s_[si_])
       {
         case ',':
         // The if statement takes care of all cases where a comma is invalid because if we see other things we 
         if (keyed_node)
         {
-          throw Error("Unexpected comma", this);
+          throw Error("Unexpected ,.", this);
         }
         had_comma = true;
+        ++si_;
         break;
 
         // Finishing with the current scope
@@ -369,12 +460,14 @@ namespace nogl
         else if (depth > 1)
         {
           --depth;
-          node = *node.parent_; // Depth > 0 => parent node isn't nullptr
+          node = node->parent_; // Depth > 0 => parent node isn't nullptr
         }
         else
         {
           throw Error("Too many }/].", this);
         }
+
+        ++si_;
         break;
 
         case '{':
@@ -385,45 +478,54 @@ namespace nogl
           // The '"' case already AddChild() and shit, just gotta set type.
           if (keyed_node)
           {
-            node.type_ = type;
+            node->type_ = type;
+            keyed_node = false;
           }
           // A new object/array without a name
-          else if (node.empty() || had_comma)
+          else if (node->empty() || had_comma)
           {
-            node = node.AddChild(type);
+            node = &node->AddChild(type);
+            had_comma = false;
           }
           else
           {
-            throw Error("Unexpected object started.", this);
+            throw Error("Unexpected object/array started.", this);
           }
 
-          ++depth;
-          break;
+          ++depth; // You know, entering new depth
+          ++si_;
         }
+        break;
 
         case '"':
         // It's a string value
         if (keyed_node)
         {
-          node.type_ = Node::Type::kString;
-          node.FreeValue();
-          *node.value_.string = ParseString();
-          node = *node.parent_; // Cannot be nullptr
+          node->FreeValue(Node::Type::kString);
+          *(node->value_.string) = ParseString();
+          node = node->parent_; // Cannot be nullptr
+
+          keyed_node = false;
         }
-        // A key for a new object, OR maybe an array string literal element.
-        else if (node.empty() || had_comma)
+        // A key for a new node, OR maybe an array string literal element.
+        else if (node->empty() || had_comma)
         {
           // String literal element of array
-          if (node.type_ == Node::Type::kArray)
+          if (node->type_ == Node::Type::kArray)
           {
-            Node& n = node.AddChild(Node::Type::kString);
+            Node& n = node->AddChild(Node::Type::kString);
             *(n.value_.string) = ParseString();
-            break;
           }
+          // key for new node
+          else
+          {
+            std::string key = ParseKey();
+            node = &node->AddChild(Node(Node::Type::kNull, key.c_str()));
 
-          node = node.AddChild(Node::Type::kNull);
-          GiveNodeKey(node);
-          keyed_node = true;
+            keyed_node = true;
+          }
+          
+          had_comma = false;
         }
         else
         {
@@ -436,5 +538,10 @@ namespace nogl
         break;
       }
     }
+  }
+
+  JSON::~JSON()
+  {
+    // TODO: Figure out if there is anything.
   }
 }
