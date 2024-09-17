@@ -16,14 +16,7 @@ namespace nogl
     class Error : public std::exception
     {
       public:
-      Error(JSON* j, const char* msg)
-      {
-        str += "JSON: ";
-        str += (int)j->line_i();
-        str += msg;
-        str += "\n  ";
-        str += j->line();
-      }
+      Error(const char* msg, JSON* j = nullptr) noexcept;
 
       const char* what() const noexcept override
       {
@@ -50,7 +43,7 @@ namespace nogl
       };
 
       Node(Type type, const char* key = "", Node* parent = nullptr);
-      ~Node() = default;
+      ~Node();
       
       // To avoid using try catch with `FindNode()` or `[]`. Can be used to get a direct pointer, and so if not found returns `nullptr`.
       Node* PointNode(const char* key);
@@ -71,23 +64,23 @@ namespace nogl
       std::string key() { return key_; }
       // Returns the type of the object, useful if unsure of it.
       Type type() { return type_; }
-
-      void set_value();
       
-      // Will always succeed, as long as it's not an object.
+      // Will always succeed, as long as it's not an object/array.
       std::string string();
       // Tries to return as a number, if fails returns 0.0.
       double number();
-      // Equivalent of true is just anything "not empty", like a non empty string, or non 0 number.
+      // If string returns true if value is `"true"`, if number returns true if `!=0.0`, if boolean returns boolean, if object/array returns `!empty()`.
       bool boolean();
       
-      // Copies a node into this one. If it's a single value node, it's upgraded to object, meaning the previous value it stored is now the first node of the object, and this node is the second. If an array, and node is not key-less, the node is upgraded to object.
+      // Copies a node into this one. If it's a single value node, it's upgraded to object/array(depending on if node key-less), meaning the previous value it stored is now the first node of the object, and this node is the second. If an array, and node has a key, the copied node is DEGRADED to being key-less. If the node is keyless and it's an object, exception.
       Node& AddChild(const Node& node);
       Node& operator +=(const Node& node) { return AddChild(node); }
       
       private:
       // Some values are heap allocated, so before switching anything clear is required.
       void FreeValue();
+      // Returns true if object/array is empty, same for string(is ""). If not object/array/string returns false because meaningless.
+      bool empty() const;
 
       std::string key_;
       Node* parent_;
@@ -99,8 +92,6 @@ namespace nogl
         std::string* string;
         std::list<Node>* object;
         std::list<Node>* array;
-
-        void* _ptr;
       } value_;
     };
     
@@ -129,6 +120,6 @@ namespace nogl
     std::string ParseString();
 
     // Parse entie `"xyz":` part, `si_` must be on first `"`.
-    void GiveNodeKey(Node* n);
+    void GiveNodeKey(Node& n);
   };
 }

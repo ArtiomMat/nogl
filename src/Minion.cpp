@@ -14,7 +14,7 @@ namespace nogl
   });
 
   // Various Minion statics.
-  Chain<VOV4*> Minion::vovs;
+  std::list<VOV4*> Minion::vovs;
   const M4x4* Minion::projection_matrix = &kDefaultMatrix;
   bool Minion::alive = true;
   uint8_t Minion::total_n = 0;

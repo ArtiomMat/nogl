@@ -3,11 +3,11 @@
 #include "Thread.hpp"
 #include "Bell.hpp"
 #include "Atomic.hpp"
-#include "Chain.hpp"
 #include "math.hpp"
 
 #include <cstdint>
 #include <memory>
+#include <list>
 
 namespace nogl
 {
@@ -35,7 +35,7 @@ namespace nogl
     // Should only be interfaced with when the minions are not working.
     static bool alive;
 
-    static Chain<VOV4*> vovs;
+    static std::list<VOV4*> vovs;
     static const M4x4* projection_matrix;
     
     using UniquePtr = std::unique_ptr<Minion[], void(*)(Minion*)>;

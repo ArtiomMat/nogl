@@ -1,5 +1,6 @@
 #pragma once
 
+#include "JSON.hpp"
 
 namespace nogl
 {

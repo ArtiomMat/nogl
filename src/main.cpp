@@ -32,6 +32,12 @@ int main()
     return 1;
   }
 
+  const char* json_str =
+  "{"
+  "}";
+
+  nogl::JSON json(json_str);
+
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
   nogl::Context ctx(480,360);
@@ -47,7 +53,7 @@ int main()
 
   nogl::VOV4 vov(10'000);
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
-  nogl::Minion::vovs.Push(&vov);
+  nogl::Minion::vovs.push_back(&vov);
 
   char title[128];
   unsigned title_set_time = ~0;
