@@ -17,9 +17,6 @@ namespace nogl
 
     static Mutex mutex_;
     
-    // Interfaced by `Thread` to determine index of thread.
-    // NOTE: Since Thread modifies it, it will never modify main's index, leaving it at 0, perfect.
-    static thread_local unsigned index_;
     static Logger logger_;
 
     public:

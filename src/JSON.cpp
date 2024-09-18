@@ -24,9 +24,20 @@ namespace nogl
   //                                NODE
   // ==================================================================
 
-  JSON::Node::~Node()
+  unsigned JSON::Node::children_n()
   {
-    
+    if (std::holds_alternative<Container>(value_))
+    {
+      auto& l = std::get<Container>(value_).l;
+      unsigned i = 0;
+      for (auto it = l.begin(); it != l.end(); ++it)
+      {
+        ++i;
+      }
+      return i;
+    }
+
+    return 0;
   }
 
   JSON::Node& JSON::Node::AddChild(const Node& node)
@@ -629,10 +640,5 @@ namespace nogl
     {
       throw Error("Junk after closing global container.", this);
     }
-  }
-
-  JSON::~JSON()
-  {
-    // TODO: Figure out if there is anything.
   }
 }

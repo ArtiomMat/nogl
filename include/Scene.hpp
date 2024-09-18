@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+
+#include "Node.hpp"
 #include "JSON.hpp"
 
 namespace nogl
@@ -12,8 +15,7 @@ namespace nogl
     Scene(const char* path);
     ~Scene();
 
-
-
     private:
+    std::string name;
   };
 }

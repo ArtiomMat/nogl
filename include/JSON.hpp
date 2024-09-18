@@ -15,10 +15,13 @@ namespace nogl
     public:
     class Node;
 
+    // The types found in the JSON file
     struct Null {};
-    using Number = double; // Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
+    // Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
+    using Number = double;
     using Boolean = bool;
     using String = std::string;
+    // Array and Object are the same internally but have different logic and error checking, so `Container::c` is needed.
     struct Container
     {
       Container(char c)
@@ -63,7 +66,7 @@ namespace nogl
         container_ = parent;
         value_ = Null();
       }
-      ~Node();
+      ~Node() = default;
       
       // To avoid using try catch with `FindNode()` or `[]`. Can be used to get a direct pointer, and so if not found returns `nullptr`.
       Node* PointNode(const char* key);
@@ -100,6 +103,9 @@ namespace nogl
       // Returns true if object/array is empty, same for string(is ""). If not object/array/string returns false because meaningless.
       bool empty() const;
       
+      // For testing purposes that I didn't screw up the parser and have extra stuff, O(n), no point in using it.
+      unsigned children_n();
+
       private:
       std::string key_;
       // The container that holds this node, may be nullptr, which would mean that this is the root.
@@ -109,7 +115,7 @@ namespace nogl
     
     // Parses the string
     JSON(const char* str = "{}");
-    ~JSON();
+    ~JSON() = default;
 
     Node& root() { return root_; }
 

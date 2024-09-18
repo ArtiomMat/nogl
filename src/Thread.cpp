@@ -3,11 +3,12 @@
 
 namespace nogl
 {
+  thread_local unsigned Thread::index_ = 0;
   Atomic<unsigned> Thread::threads_opened_ = 1;
 
   void Thread::IncThreadsOpened()
   {
-    Logger::index_ = (threads_opened_ += 1);
+    Thread::index_ = (threads_opened_ += 1);
   }
 
   bool Thread::has_simd()

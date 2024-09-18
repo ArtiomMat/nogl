@@ -1,12 +1,12 @@
 #include "Logger.hpp"
 #include "Clock.hpp"
+#include "Thread.hpp"
 
 #include <cstdio>
 #include <ctime>
 
 namespace nogl
 {
-  thread_local unsigned Logger::index_ = 0;
 
   Mutex Logger::mutex_;
   Logger Logger::logger_;
@@ -42,10 +42,10 @@ namespace nogl
         strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", tm_info);
 
         // Only print the thread if it's a new logger.
-        if (last_index != Logger::index_)
+        if (last_index != Thread::index())
         {
-          printf("TH%u\t[%s] ", index_, time_buf);
-          last_index = Logger::index_;
+          printf("TH%u\t[%s] ", Thread::index(), time_buf);
+          last_index = Thread::index();
         }
         else
         {

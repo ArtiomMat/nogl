@@ -10,6 +10,7 @@
 #include "Thread.hpp"
 #include "Minion.hpp"
 
+#include "Image.hpp"
 #include "Font.hpp"
 #include "Scene.hpp"
 

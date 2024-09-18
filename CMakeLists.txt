@@ -9,10 +9,10 @@ file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 # Add the platform source files and append them
 if(WIN32)
-  set(LIBRARIES -lopengl32 -lws2_32 -lole32 -lcomctl32 -lgdi32)
+  set(LIBRARIES -lopengl32 -lws2_32 -lole32 -lcomctl32 -lgdi32 -lwindowscodecs)
   file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/win32/*.cpp")
 elseif(UNIX)
-  set(LIBRARIES -lGL)
+  set(LIBRARIES -lGL -lm -lpng)
   file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/unix/*.cpp")
 endif()
 list(APPEND SOURCES ${PLATFORM_SOURCES})

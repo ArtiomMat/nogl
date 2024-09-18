@@ -83,7 +83,12 @@ namespace nogl
     // Returns during runtime if the CPU supports the SIMD instructions nogl needs.
     static bool has_simd();
 
+    static unsigned index() { return index_; }
+
     private:
+    // NOTE: Since `Thread` modifies it, it will never modify main's index, leaving it at 0, perfect.
+    static thread_local unsigned index_;
+
     static Atomic<unsigned> threads_opened_;
     // Both increment and interface with `Logger::who_`. Must be called within the opened thread function itself.
     static void IncThreadsOpened();
