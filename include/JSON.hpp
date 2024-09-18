@@ -56,21 +56,11 @@ namespace nogl
         Container
       >;
 
-      // enum class Type : unsigned char
-      // {
-      //   kString,
-      //   kNumber,
-      //   kBoolean,
-      //   kNull,
-      //   kObject, // {} object
-      //   kArray, // [] array
-      // };
-
       // Automatically calls `ResetValue<Null>()`.
       Node(const char* key = "", Node* parent = nullptr)
       {
         key_ = key;
-        parent_ = parent;
+        container_ = parent;
         value_ = Null();
       }
       ~Node();
@@ -111,15 +101,9 @@ namespace nogl
       bool empty() const;
       
       private:
-      // Some values are heap allocated, so before switching anything clear is required.
-      // Free the current value and change type to a new value, calls `AllocateValue()`.
-      // `Type::kNull` is an easy way to just free the current heap allocated type completely, and not allocate anything new.
-      // void FreeValue(Type new_type = Type::kNull);
-      // Some values are heap allocated, so they require special logic, but the primitives(boolean & number & null) don't require anything other than value reset(especially not null).
-      // Allocates a new resetted value, depending on current `type_`.
-
       std::string key_;
-      Node* parent_;
+      // The container that holds this node, may be nullptr, which would mean that this is the root.
+      Node* container_;
       ValueVariant value_;
     };
     
@@ -136,7 +120,8 @@ namespace nogl
     private:
     Node root_;
 
-    const char* s_; // String given from JSON ; only used for constructor but global
+    // BELOW VARIABLES ARE GLOBAL BUT ARE ONLY USED FOR THE CONSTRUCTOR!
+    const char* s_; // String given from JSON
     unsigned si_; // Index in the string
     unsigned line_i_;
     

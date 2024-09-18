@@ -26,7 +26,8 @@ It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths wit
   - [ ] Polish up.
 - [ ] Loading models(glTF format(.glb only for now))
   - [x] Refer to [glTF](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html) for docs(Ongoing).
-  - [ ] Make a JSON parser, integral part of glTF.
+  - [x] Make a JSON parser, integral part of glTF.
+  - [ ] Look for any leaks and stuff in the JSON parser.
   - [ ] Make a PNG parser, I ain't dealing with it myself so with libpng.
   - [ ] Load models into a Scene object using utilities you made.
   - [ ] Optional - Add support for glTF text version.

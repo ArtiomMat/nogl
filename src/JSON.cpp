@@ -9,7 +9,7 @@ namespace nogl
 
   JSON::Error::Error(const char* msg, JSON* j) noexcept
   {
-    str += "JSON:";
+    str += "JSON: ";
     str += msg;
     if (j != nullptr)
     {
@@ -44,7 +44,7 @@ namespace nogl
       {
         n.key_.clear();
       }
-      n.parent_ = this;
+      n.container_ = this;
       return n;
     }
     else
@@ -243,11 +243,11 @@ namespace nogl
   {
     while (s_[si_] <= ' ' && s_[si_] >= 1)
     {
-      ++si_;
       if (s_[si_] == '\n')
       {
         ++line_i_;
       }
+      ++si_;
     };
   }
 
@@ -282,13 +282,13 @@ namespace nogl
     {
       if (at_end())
       {
-        _OOPS:
         throw Error("String literal parsing cut-off.", this);
       }
       // Escape sequence
       if (s_[si_] == '\\')
       {
         ++si_;
+        // Boilerplate, but honestly no clue how to turn into one...
         if (at_end())
         {
           throw Error("String literal parsing cut-off.", this);
@@ -356,11 +356,13 @@ namespace nogl
     return key;
   }
 
+
+  // XXX: Yes, this parser isn't great, a lot of boilerplate code, but in my defence, I don't do parsers.
   JSON::JSON(const char* str)
   {
     s_ = str;
     si_ = 0;
-    line_i_ = 0;
+    line_i_ = 1;
 
     SkipWS();
     if (s_[si_] == '{' || s_[si_] == '[')
@@ -373,24 +375,21 @@ namespace nogl
     }
     ++si_;
 
-    unsigned depth = 1;
     // Current node we are dealing with
     Node* node = &root_;
 
     // So that if we hit a {, [, or even ", after "xyz": we know that it's not a new key-less node but rather the value of the current node.
     bool keyed_node = false;
-    // Sometimes need to break from within the switch, but can't.
-    bool force_done = false;
     // If right before this switch(s_[si_]) we had a comma
     bool had_comma = false;
 
-    while (!force_done)
+    while (node != nullptr)
     {
       SkipWS();
 
       if (at_end())
       {
-        if (keyed_node || had_comma || depth > 0)
+        if (keyed_node || had_comma)
         {
           throw Error("Buffer cut off before closing }.", this);
         }
@@ -421,7 +420,7 @@ namespace nogl
           throw Error("Had , but no new element after.", this);
         }
 
-        if (depth > 0)
+        if (node != nullptr)
         {
           char test = std::get<Container>(node->value_).c == '{' ? '}' : ']';
           if (test != s_[si_])
@@ -435,8 +434,8 @@ namespace nogl
               throw Error("Expected ] but got }.", this);
             }
           }
-          --depth;
-          node = node->parent_; // Depth > 0 => parent node isn't nullptr
+          // Even if node is now nullptr, we stop the while() because it would be the end.
+          node = node->container_;
         }
         else
         {
@@ -450,9 +449,7 @@ namespace nogl
         case '{':
         case '[':
         {
-          // auto type = s_[si_] == '{' ? Node::Type::kObject : Node::Type::kArray;
-          
-          // The '"' case already did AddChild() and shit, just gotta set type.
+          // The '"' case already did node = &AddChild(), just set value_ to array.
           if (keyed_node)
           {
             node->value_ = Container(s_[si_]);
@@ -470,38 +467,7 @@ namespace nogl
             throw Error("Unexpected object/array started.", this);
           }
 
-          ++depth; // You know, entering new depth
           ++si_;
-        }
-        break;
-
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        case '.':
-        case '-':
-        // It's a number value
-        if (keyed_node)
-        {
-          node->value_ = ParseNumber();
-          node = node->parent_; // Cannot be nullptr
-
-          keyed_node = false;
-        }
-        // Number element.
-        else if (node->empty() || had_comma)
-        {
-          Node& n = node->AddChild(Node());
-          n.value_ = ParseNumber();
-
-          had_comma = false;
         }
         break;
 
@@ -510,7 +476,7 @@ namespace nogl
         if (keyed_node)
         {
           node->value_ = ParseString();
-          node = node->parent_; // Cannot be nullptr
+          node = node->container_; // Cannot be nullptr
 
           keyed_node = false;
         }
@@ -543,11 +509,125 @@ namespace nogl
         }
         break;
 
+        case 'n':
+        {
+          const char cmp[] = "null";
+
+          if (strncmp(s_ + si_, cmp, sizeof (cmp) - 2))
+          {
+            throw Error("Unexpected symbol, did you mean null?", this);
+          }
+
+          if (keyed_node)
+          {
+            node->value_ = Null();
+            node = node->container_; // Cannot be nullptr
+
+            keyed_node = false;
+          }
+          // Null array element.
+          else if (node->empty() || had_comma)
+          {
+            Node& n = node->AddChild(Node());
+            n.value_ = Null();
+
+            had_comma = false;
+          }
+          else
+          {
+            throw Error("Unexpected null value.", this);
+          }
+
+          // Increment!
+          si_ += sizeof (cmp) - 1;
+        }
+        break;
+
+        case 't':
+        case 'f':
+        {
+          const char t[] = "true";
+          const char f[] = "false";
+          
+          if (
+            strncmp(s_ + si_, t, sizeof (t) - 2)
+            && strncmp(s_ + si_, f, sizeof (f) - 2)
+          )
+          {
+            throw Error("Unexpected symbol, did you mean true/false?", this);
+          }
+
+          bool v = (s_[si_] == 't');
+
+          if (keyed_node)
+          {
+            node->value_ = v;
+            node = node->container_; // Cannot be nullptr
+
+            keyed_node = false;
+          }
+          // Boolean array element.
+          else if (node->empty() || had_comma)
+          {
+            Node& n = node->AddChild(Node());
+            n.value_ = v;
+
+            had_comma = false;
+          }
+          else
+          {
+            throw Error("Unexpected boolean.", this);
+          }
+
+          // Increment!
+          si_ += v ? (sizeof (t) - 1) : (sizeof (f) - 1);
+        }
+        break;
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '.':
+        case '-':
+        // It's a number value
+        if (keyed_node)
+        {
+          node->value_ = ParseNumber();
+          node = node->container_; // Cannot be nullptr
+
+          keyed_node = false;
+        }
+        // Number array element.
+        else if (node->empty() || had_comma)
+        {
+          Node& n = node->AddChild(Node());
+          n.value_ = ParseNumber();
+
+          had_comma = false;
+        }
+        else
+        {
+          throw Error("Unexpected number started.", this);
+        }
+        break;
+
         default:
-        Logger::Begin() << s_[si_] << Logger::End();
         throw Error("Unexpected symbol.", this);
         break;
       }
+    }
+
+    SkipWS();
+    if (s_[si_] != 0)
+    {
+      throw Error("Junk after closing global container.", this);
     }
   }
 

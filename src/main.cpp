@@ -37,7 +37,10 @@ int main()
   buffer << t.rdbuf();
   nogl::JSON json(buffer.str().c_str());
 
-  nogl::Logger::Begin() << json.root()["accessors"][0]["max"][0].number() << nogl::Logger::End();
+  nogl::Logger::Begin() << "Scene: " << json.root()["scene"].number() << nogl::Logger::End();
+  nogl::Logger::Begin() << "Random element: " << json.root()["asset"]["loveU"].boolean() << nogl::Logger::End();
+  nogl::Logger::Begin() << "Random element: " << json.root()["asset"]["hateU"].boolean() << nogl::Logger::End();
+  nogl::Logger::Begin() << "Random element: " << json.root()["asset"]["Who"].string() << nogl::Logger::End();
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
