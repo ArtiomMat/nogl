@@ -144,9 +144,11 @@ namespace nogl
     void SkipWS();
     bool at_end() { return s_[si_] == 0; }
     
+    // `si_` must be on first digit or `.`. By the end `si_` will be right after number.
+    Number ParseNumber();
     // `si_` must be on first `"`. By the end `si_` will be right after last `"`.
-    std::string ParseString();
-
+    String ParseString();
+    
     // Parse entie `"xyz":` part, `si_` must be on first `"`.
     // After calling it, if everything goes well, will be right after `:`.
     std::string ParseKey();

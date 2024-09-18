@@ -251,7 +251,22 @@ namespace nogl
     };
   }
 
-  std::string JSON::ParseString()
+  JSON::Number JSON::ParseNumber()
+  {
+    unsigned len = 0;
+    for (len = 0; (s_[si_ + len] >= '0' && s_[si_ + len] <= '9') || s_[si_ + len] == '.' || s_[si_ + len] == '-'; ++len)
+    {}
+    
+    char str[len + 1];
+    memcpy(str, s_ + si_, len);
+    str[len] = 0;
+    Number n = std::stod(str);
+
+    si_ += len;
+    return n;
+  }
+
+  JSON::String JSON::ParseString()
   {
     std::string str = "";
 
@@ -457,6 +472,36 @@ namespace nogl
 
           ++depth; // You know, entering new depth
           ++si_;
+        }
+        break;
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+        case '.':
+        case '-':
+        // It's a number value
+        if (keyed_node)
+        {
+          node->value_ = ParseNumber();
+          node = node->parent_; // Cannot be nullptr
+
+          keyed_node = false;
+        }
+        // Number element.
+        else if (node->empty() || had_comma)
+        {
+          Node& n = node->AddChild(Node());
+          n.value_ = ParseNumber();
+
+          had_comma = false;
         }
         break;
 

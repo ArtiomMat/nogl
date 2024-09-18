@@ -33,16 +33,11 @@ int main()
   }
   
   std::ifstream t("test.json");
-  if (!t.is_open())
-  {
-    return 1;
-  }
   std::stringstream buffer;
   buffer << t.rdbuf();
-  
   nogl::JSON json(buffer.str().c_str());
 
-  nogl::Logger::Begin() << json.root()[0]["copyright"].string() << nogl::Logger::End();
+  nogl::Logger::Begin() << json.root()["accessors"][0]["max"][0].number() << nogl::Logger::End();
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
