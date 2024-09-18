@@ -3,6 +3,10 @@
 
 namespace nogl
 {
+  // ==================================================================
+  //                               ERROR
+  // ==================================================================
+
   JSON::Error::Error(const char* msg, JSON* j) noexcept
   {
     str += "JSON:";
@@ -30,9 +34,16 @@ namespace nogl
     if (std::holds_alternative<Container>(value_))
     {
       Container& c = std::get<Container>(value_);
-      c.push_back(node);
-      Node& n = c.back();
-      n.key_.clear();
+      if (c.c == '{' && node.key_ == "")
+      {
+        throw JSON::Error("Node cannot be keyless");
+      }
+      c.l.push_back(node);
+      Node& n = c.l.back();
+      if (c.c == '[')
+      {
+        n.key_.clear();
+      }
       n.parent_ = this;
       return n;
     }
@@ -46,7 +57,7 @@ namespace nogl
   {
     if (std::holds_alternative<Container>(value_))
     {
-      return std::get<Container>(value_).empty();
+      return std::get<Container>(value_).l.empty();
     }
     else if (std::holds_alternative<String>(value_))
     {
@@ -130,7 +141,13 @@ namespace nogl
   {
     if (std::holds_alternative<Container>(value_))
     {
-      for (Node& n : std::get<Container>(value_))
+      Container& c = std::get<Container>(value_);
+      if (c.c == '[')
+      {
+        return nullptr;
+      }
+
+      for (Node& n : c.l)
       {
         if (n.key_ == key)
         {
@@ -145,7 +162,7 @@ namespace nogl
     if (std::holds_alternative<Container>(value_))
     {
       unsigned j = 0;
-      for (Node& n : std::get<Container>(value_))
+      for (Node& n : std::get<Container>(value_).l)
       {
         if (i == j)
         {
@@ -175,6 +192,8 @@ namespace nogl
     }
     return *n;
   }
+  /*
+  
   template<>
   void JSON::Node::ResetValue<JSON::Number>()
   {
@@ -193,8 +212,11 @@ namespace nogl
   template<>
   void JSON::Node::ResetValue<JSON::Container>()
   {
-    value_ = Container();
+    value_ = Container('{');
   }
+  
+  */
+
   // ==================================================================
   //                                JSON
   // ==================================================================
@@ -326,13 +348,9 @@ namespace nogl
     line_i_ = 0;
 
     SkipWS();
-    if (s_[si_] == '{')
+    if (s_[si_] == '{' || s_[si_] == '[')
     {
-      root_.ResetValue<Container>();
-    }
-    else if (s_[si_] == '[')
-    {
-      root_.ResetValue<Container>();
+      root_.value_ = Container(s_[si_]);
     }
     else
     {
@@ -357,7 +375,7 @@ namespace nogl
 
       if (at_end())
       {
-        if (depth > 0)
+        if (keyed_node || had_comma || depth > 0)
         {
           throw Error("Buffer cut off before closing }.", this);
         }
@@ -388,25 +406,26 @@ namespace nogl
           throw Error("Had , but no new element after.", this);
         }
 
-        if (depth == 1)
+        if (depth > 0)
         {
-          force_done = true;
-        }
-        else if (depth > 1)
-        {
-          node = node->parent_; // Depth > 0 => parent node isn't nullptr
-          // if (node->type_ == Node::Type::kObject && s_[si_] == ']')
-          // {
-          //   throw Error("Expected } but got ].", this);
-          // }
-          // else if (node->type_ == Node::Type::kArray && s_[si_] == '}')
-          // {
-          //   throw Error("Expected ] but got }.", this);
-          // }
+          char test = std::get<Container>(node->value_).c == '{' ? '}' : ']';
+          if (test != s_[si_])
+          {
+            if (s_[si_] == ']')
+            {
+              throw Error("Expected } but got ].", this);
+            }
+            else if (s_[si_] == '}')
+            {
+              throw Error("Expected ] but got }.", this);
+            }
+          }
           --depth;
+          node = node->parent_; // Depth > 0 => parent node isn't nullptr
         }
         else
         {
+          Logger::Begin() << s_[si_] << Logger::End();
           throw Error("Too many }/].", this);
         }
 
@@ -418,17 +437,17 @@ namespace nogl
         {
           // auto type = s_[si_] == '{' ? Node::Type::kObject : Node::Type::kArray;
           
-          // The '"' case already AddChild() and shit, just gotta set type.
+          // The '"' case already did AddChild() and shit, just gotta set type.
           if (keyed_node)
           {
-            // node->type_ = type;
+            node->value_ = Container(s_[si_]);
             keyed_node = false;
           }
           // A new object/array without a name
           else if (node->empty() || had_comma)
           {
             node = &node->AddChild(Node());
-            node->ResetValue<Container>();
+            node->value_ = Container(s_[si_]);
             had_comma = false;
           }
           else
@@ -445,8 +464,7 @@ namespace nogl
         // It's a string value
         if (keyed_node)
         {
-          node->ResetValue<String>();
-          std::get<String>(node->value_) = ParseString();
+          node->value_ = ParseString();
           node = node->parent_; // Cannot be nullptr
 
           keyed_node = false;
@@ -455,12 +473,13 @@ namespace nogl
         else if (node->empty() || had_comma)
         {
           // String literal element of array
-          // FIXME: Will always think it's an array, because Container is an object too.
-          if (std::holds_alternative<Container>(node->value_))
+          if (
+            std::holds_alternative<Container>(node->value_)
+            && std::get<Container>(node->value_).c == '['
+          )
           {
             Node& n = node->AddChild(Node());
-            n.ResetValue<String>();
-            std::get<String>(n.value_) = ParseString();
+            n.value_ = ParseString();
           }
           // key for new node
           else

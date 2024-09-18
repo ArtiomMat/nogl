@@ -19,7 +19,15 @@ namespace nogl
     using Number = double; // Complies with how JSON is meant to be used(JavaScript's 53 bit integer percision).
     using Boolean = bool;
     using String = std::string;
-    using Container = std::list<Node>; // Can be either array or object
+    struct Container
+    {
+      Container(char c)
+      {
+        this->c = c;
+      }
+      std::list<Node> l; // Can be either array or object
+      char c; // The type of character, { or [.
+    };
 
     class Error : public std::exception
     {
@@ -63,7 +71,7 @@ namespace nogl
       {
         key_ = key;
         parent_ = parent;
-        ResetValue<Null>();
+        value_ = Null();
       }
       ~Node();
       
@@ -109,8 +117,6 @@ namespace nogl
       // void FreeValue(Type new_type = Type::kNull);
       // Some values are heap allocated, so they require special logic, but the primitives(boolean & number & null) don't require anything other than value reset(especially not null).
       // Allocates a new resetted value, depending on current `type_`.
-      template<typename T>
-      void ResetValue() {}
 
       std::string key_;
       Node* parent_;
@@ -145,25 +151,4 @@ namespace nogl
     // After calling it, if everything goes well, will be right after `:`.
     std::string ParseKey();
   };
-
-  // template<>
-  // void JSON::Node::ResetValue<JSON::Number>()
-  // {
-  //   value_ = 0.0;
-  // }
-  // template<>
-  // void JSON::Node::ResetValue<JSON::String>()
-  // {
-  //   value_ = String("");
-  // }
-  // template<>
-  // void JSON::Node::ResetValue<JSON::Boolean>()
-  // {
-  //   value_ = false;
-  // }
-  // template<>
-  // void JSON::Node::ResetValue<JSON::Container>()
-  // {
-  //   value_ = Container();
-  // }
 }

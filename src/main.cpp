@@ -31,19 +31,18 @@ int main()
     nogl::Logger::Begin() << "CPU does not support correct SIMD. Can't proceed." << nogl::Logger::End();
     return 1;
   }
+  
+  std::ifstream t("test.json");
+  if (!t.is_open())
+  {
+    return 1;
+  }
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  
+  nogl::JSON json(buffer.str().c_str());
 
-  const char json_str[] =
-  "[\n"
-  "\"Whatever\": \"a\",\n"
-  "\"b\",\n"
-  "\"c\"\n"
-  "}\n";
-
-  nogl::JSON json(json_str);
-
-  nogl::Logger::Begin() << json.root()["Whatever"].string() << nogl::Logger::End();
-  nogl::Logger::Begin() << json.root()[1].string() << nogl::Logger::End();
-  nogl::Logger::Begin() << json.root()[2].string() << nogl::Logger::End();
+  nogl::Logger::Begin() << json.root()[0]["copyright"].string() << nogl::Logger::End();
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
