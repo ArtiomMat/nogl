@@ -32,12 +32,14 @@ int main()
     return 1;
   }
   
-  std::ifstream t("test.json");
-  std::stringstream buffer;
-  buffer << t.rdbuf();
-  nogl::JSON json(buffer.str().c_str());
+  // std::ifstream t("test.json");
+  // std::stringstream buffer;
+  // buffer << t.rdbuf();
+  // nogl::JSON json(buffer.str().c_str());
 
-  nogl::Logger::Begin() << "Scene: " << json.root()["meshes"][0]["name"].children_n() << nogl::Logger::End();
+  // nogl::Logger::Begin() << "Scene: " << json.root()["meshes"][0]["name"].children_n() << nogl::Logger::End();
+
+  nogl::Scene scene("cube.glb");
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 

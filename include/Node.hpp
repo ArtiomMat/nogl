@@ -1,10 +1,10 @@
 #pragma once
 
-
 #include <string>
 #include <list>
 #include <variant>
 
+#include "Camera.hpp"
 #include "Mesh.hpp"
 #include "math.hpp"
 
@@ -17,7 +17,7 @@ namespace nogl
     friend class Scene;
 
     public:
-    using Variant = std::variant<V4, Mesh&, >;
+    using Variant = std::variant<V4, Mesh*, Camera*>;
 
     private:
     std::string name_;

@@ -102,9 +102,18 @@ namespace nogl
       
       // Returns true if object/array is empty, same for string(is ""). If not object/array/string returns false because meaningless.
       bool empty() const;
+      bool is_array() const
+      {
+        return std::holds_alternative<Container>(value_) && std::get<Container>(value_).c == '[';
+      }
       
       // For testing purposes that I didn't screw up the parser and have extra stuff, O(n), no point in using it.
       unsigned children_n();
+
+      // Will throw an exception if not a Container type, use `is_array()` to check.
+      std::list<Node>::iterator begin() { return std::get<Container>(value_).l.begin(); }
+      // Will throw an exception if not a Container type, use `is_array()` to check.
+      std::list<Node>::iterator end() { return std::get<Container>(value_).l.end(); }
 
       private:
       std::string key_;
