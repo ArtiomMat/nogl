@@ -19,6 +19,8 @@ namespace nogl
     public:
     using Variant = std::variant<V4, Mesh*, Camera*>;
 
+    Node() = default;
+
     private:
     std::string name_;
 

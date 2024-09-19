@@ -21,6 +21,18 @@ namespace nogl
     _mm_store_ps(p_, vec_128);
   }
 
+  void VOV4::Reallocate(unsigned n)
+  {
+    n_ = n;
+
+    // To fit the 256 alignment.
+    unsigned extras = n % (kAlign / sizeof (V4));
+    
+    buffer_ = std::unique_ptr<V4[]>(
+      new (std::align_val_t(kAlign)) V4[n + extras]
+    );
+  }
+
   void VOV4::Multiply(const M4x4& m, V4* from, V4* to) noexcept
   {
     // We do the same thing in V4 but 2 for 1 essentially

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <vector>
 #include <string>
 
 #include "Exception.hpp"
@@ -20,6 +20,9 @@ namespace nogl
 
     private:
     std::string name_;
-    std::list<Node> nodes_;
+    std::vector<Node> nodes_;
+    std::vector<Mesh> meshes_;
+    std::vector<Camera> cameras_;
+    std::vector<V4> points_;
   };
 }

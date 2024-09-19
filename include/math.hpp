@@ -20,6 +20,13 @@ namespace nogl
     friend V4;
 
     public:
+    M4x4()
+    {
+      __m256 zero = _mm256_setzero_ps();
+      _mm256_store_ps(p_[0], zero);
+      _mm256_store_ps(p_[2], zero);
+    }
+
     // While the construction is intuitive, the array is just a flattened array of the matrix,
     // the actual storage is different from the input array, for performance reasons,
     // The columns are actually on y axis in `v`, and the the rows become the x axis, so instead of [row][col] access it's [col][row] access.
@@ -50,8 +57,13 @@ namespace nogl
     public:
 
     V4(float f) { _mm_store_ps(p_, _mm_set1_ps(f)); }
+    // `p` must be 4 floats in size.
     V4(const float p[4]) { *this = p; }
     V4(const V4& other) { _mm_store_ps(p_, _mm_load_ps(other.p_)); }
+    V4(float x, float y, float z)
+    {
+      _mm_store_ps(p_, _mm_set_ps(0, z, y, x));
+    }
 
     V4() = default;
     ~V4() = default;
@@ -204,14 +216,9 @@ namespace nogl
     static constexpr unsigned kAlign = sizeof(__m256); // Using the 256-bit AVX/SSE SIMD
 
     // n is the number of the vectors.
-    VOV4(unsigned n) : n_(n)
+    VOV4(unsigned n = 0)
     {
-      // To fit the 256 alignment.
-      unsigned extras = n % (kAlign / sizeof (V4));
-      
-      buffer_ = std::unique_ptr<V4[]>(
-        new (std::align_val_t(kAlign)) V4[n + extras]
-      );
+      Reallocate(n);
     }
     VOV4(const VOV4& other) : VOV4(other.n_)
     {
@@ -219,6 +226,15 @@ namespace nogl
     }
 
     ~VOV4() = default;
+
+    // NOTE: Erases all previous data if existed.
+    void Reallocate(unsigned n);
+    // Assuming v is the size of `n()`, copies float triplets into the VOV with the 4th component being `0`.
+    // NOTE: Since V3 is only aligned to 8 bytes and is 12 bytes, it makes for a challenging copy.
+    // void operator =(V3* v)
+    // {
+
+    // }
 
     // Set every single vector, and every one of its components to `f`.
     void operator =(float f) noexcept
@@ -283,7 +299,7 @@ namespace nogl
     // See `n()`
     unsigned n_;
     // MUST BE ALIGNED TO `kAlign`
-    std::unique_ptr<V4[]> buffer_;
+    std::unique_ptr<V4[]> buffer_ = nullptr;
   };
 }
 

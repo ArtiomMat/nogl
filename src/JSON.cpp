@@ -7,16 +7,16 @@ namespace nogl
   //                               ERROR
   // ==================================================================
 
-  JSON::Error::Error(const char* msg, JSON* j) noexcept
+  JSON::Error::Error(const std::string& msg, JSON* j) noexcept
   {
-    str += "JSON: ";
-    str += msg;
+    msg_ = "JSON: ";
+    msg_ += msg;
     if (j != nullptr)
     {
-      str += "\n  Line ";
-      str += std::to_string(j->line_i());
-      str += ": ";
-      str += j->line();
+      msg_ += "\n  Line ";
+      msg_ += std::to_string(j->line_i());
+      msg_ += ": ";
+      msg_ += j->line();
     }
   }
 
@@ -28,13 +28,8 @@ namespace nogl
   {
     if (std::holds_alternative<Container>(value_))
     {
-      auto& l = std::get<Container>(value_).l;
-      unsigned i = 0;
-      for (auto it = l.begin(); it != l.end(); ++it)
-      {
-        ++i;
-      }
-      return i;
+      auto& c = std::get<Container>(value_);
+      return c.vec.size();
     }
 
     return 0;
@@ -49,8 +44,8 @@ namespace nogl
       {
         throw JSON::Error("Node cannot be keyless");
       }
-      c.l.push_back(node);
-      Node& n = c.l.back();
+      c.vec.push_back(node);
+      Node& n = c.vec.back();
       if (c.c == '[')
       {
         n.key_.clear();
@@ -68,7 +63,7 @@ namespace nogl
   {
     if (std::holds_alternative<Container>(value_))
     {
-      return std::get<Container>(value_).l.empty();
+      return std::get<Container>(value_).vec.empty();
     }
     else if (std::holds_alternative<String>(value_))
     {
@@ -158,7 +153,7 @@ namespace nogl
         return nullptr;
       }
 
-      for (Node& n : c.l)
+      for (Node& n : c.vec)
       {
         if (n.key_ == key)
         {
@@ -172,15 +167,12 @@ namespace nogl
   {
     if (std::holds_alternative<Container>(value_))
     {
-      unsigned j = 0;
-      for (Node& n : std::get<Container>(value_).l)
+      Container& c = std::get<Container>(value_);
+      if (c.vec.size() <= i)
       {
-        if (i == j)
-        {
-          return &n;
-        }
-        ++j;
+        return nullptr;
       }
+      return &c.vec[i];
     }
     return nullptr;
   }
@@ -190,7 +182,7 @@ namespace nogl
     Node* n = PointNode(key);
     if (n == nullptr)
     {
-      throw Error("Cannot find node with key.");
+      throw Error(std::string("Key \"") + key + "\" not found in \"" + key_ + "\".");
     }
     return *n;
   }
@@ -630,7 +622,7 @@ namespace nogl
         break;
 
         default:
-        throw Error("Unexpected symbol.", this);
+        throw Error(std::string("Unexpected symbol ") + s_[si_] + ".", this);
         break;
       }
     }

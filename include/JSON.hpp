@@ -2,7 +2,7 @@
 
 #include <string>
 #include <memory>
-#include <list>
+#include <vector>
 #include <variant>
 #include <stdexcept>
 
@@ -28,22 +28,22 @@ namespace nogl
       {
         this->c = c;
       }
-      std::list<Node> l; // Can be either array or object
+      std::vector<Node> vec; // Can be either array or object
       char c; // The type of character, { or [.
     };
 
     class Error : public std::exception
     {
       public:
-      Error(const char* msg, JSON* j = nullptr) noexcept;
+      Error(const std::string& msg, JSON* j = nullptr) noexcept;
 
       const char* what() const noexcept override
       {
-        return str.c_str();
+        return msg_.c_str();
       }
 
       private:
-      std::string str;
+      std::string msg_;
     };
 
     class Node
@@ -76,7 +76,7 @@ namespace nogl
       // Find sub elements by key. Isn't a valid option for arrays. Throws Error if not found.
       Node& FindNode(const char* key);
       // Useful for arrays. Traverse sub-elements up to element at index i, can be done on any type really.
-      // NOTE: Due to internal implementation being `std::list` this is O(n), a sacrifice for comfort.
+      // O(1) access due to internal structure using std::vector
       Node& FindNode(unsigned i);
       // `FindNode()`.
       template <typename T>
@@ -107,13 +107,13 @@ namespace nogl
         return std::holds_alternative<Container>(value_) && std::get<Container>(value_).c == '[';
       }
       
-      // For testing purposes that I didn't screw up the parser and have extra stuff, O(n), no point in using it.
+      // Number of child nodes.
       unsigned children_n();
 
       // Will throw an exception if not a Container type, use `is_array()` to check.
-      std::list<Node>::iterator begin() { return std::get<Container>(value_).l.begin(); }
+      std::vector<Node>::iterator begin() { return std::get<Container>(value_).vec.begin(); }
       // Will throw an exception if not a Container type, use `is_array()` to check.
-      std::list<Node>::iterator end() { return std::get<Container>(value_).l.end(); }
+      std::vector<Node>::iterator end() { return std::get<Container>(value_).vec.end(); }
 
       private:
       std::string key_;
