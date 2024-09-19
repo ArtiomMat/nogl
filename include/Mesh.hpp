@@ -24,7 +24,10 @@ namespace nogl
     VOV4 vertices_;
     VOV4 normals_;
     VOV4 tangents_;
-    VOV4 texcoords_;
+
+    // TODO: Gotta make VOV2 first...
+    // VOV2 texcoords_;
+    
     // Stored as flattened+packed triplets. Stored in CCW, note that glTF requires it.
     std::unique_ptr<unsigned[]> indices_;
   };

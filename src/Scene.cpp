@@ -62,6 +62,7 @@ namespace nogl
     }
 
     // BIN chunk
+    // FIXME: bin_chunk access is usually unsafe, because relying on the gltf file, so gotta wrap it in std::vector some time and use .at() instead of []
     char* bin_chunk = nullptr;
     unsigned bin_chunk_len = 0;
     f.read(buf, sizeof (i));
@@ -186,22 +187,27 @@ namespace nogl
       {
         const char* desired_type = "VEC3";
         unsigned desired_component_type = 5126;
+        unsigned components_n = 3; // How many components per vector in the glTF format, not the VOV
+        float f[4] = {0,0,0,1}; // A buffer for copying into the vov easily. Value of the 4th component is set up below, not supposed to be 1 for non positional vectors.
         
         // Choose VOV from the mesh based on the primitive
         VOV4& vov = mesh.vertices_;
         if (attrib.key() == "NORMAL")
         {
           vov = mesh.normals_;
+          f[3] = 0;
         }
         else if (attrib.key() == "TANGENTS")
         {
           vov = mesh.tangents_;
+          f[3] = 0;
         }
-        else if (attrib.key() == "TEXCOORD_0")
-        {
-          vov = mesh.texcoords_;
-          desired_type = "VEC2";
-        }
+        // else if (attrib.key() == "TEXCOORD_0")
+        // {
+        //   vov = mesh.texcoords_;
+        //   desired_type = "VEC2";
+        //   components_n = 2;
+        // }
         else if (attrib.key() != "POSITION")
         {
           Logger::Begin() << name_ << ": Skipping unsupported attribute key: " << attrib.key() << '.' << Logger::End();
@@ -221,7 +227,36 @@ namespace nogl
 
         auto& buffer_view = jsonr["bufferViews"][accessor["bufferView"].number()];
 
-      
+        unsigned byte_offset = buffer_view.PointNode("byteOffset") != nullptr ? buffer_view["byteOffset"].number() : 0;
+        unsigned byte_stride;
+        if (buffer_view.PointNode("byteStride") != nullptr)
+        {
+          byte_stride = buffer_view["byteStride"].number();
+        }
+        else
+        {
+          byte_stride = sizeof (float) * components_n;
+        }
+        unsigned byte_length = buffer_view["byteLength"].number();
+
+        for (unsigned byte = byte_offset, vec = 0; byte < byte_offset + byte_length; byte += byte_stride, ++vec)
+        {
+          float* first_comp = reinterpret_cast<float*>(bin_chunk + byte);
+          switch (components_n)
+          {
+            case 2:
+            break;
+
+            case 3:
+            f[0] = first_comp[0];
+            f[1] = first_comp[1];
+            f[2] = first_comp[2];
+            vov.v(vec) = f;
+
+            // Logger::Begin() << '[' << f[0] << "," << f[1] << "," << f[2] << "," << f[3] << ']' << Logger::End();
+            break;
+          }
+        }
       }
     }
     // Node parsing
@@ -229,7 +264,6 @@ namespace nogl
     {
       unsigned index = n.number();
 
-      // XXX: May be slower if there are multiple instances of the same node.
       nodes_.push_back(Node());
       Node& node = nodes_.back();
 
