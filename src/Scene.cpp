@@ -106,14 +106,14 @@ namespace nogl
     name_ = jsonr["scenes"][scene]["name"].string();
 
     // Mesh parsing
-    for (auto& n: jsonr["meshes"])
+    for (auto& json_mesh: jsonr["meshes"])
     {
       // Primitive[0]
-      if (n["primitives"].children_n() > 1)
+      if (json_mesh["primitives"].children_n() > 1)
       {
         throw ReadException("Multiple primitives not supported yet, too complex for now :(");
       }
-      auto& primitive0 = n["primitives"][0];
+      auto& primitive0 = json_mesh["primitives"][0];
 
       // Mode
       auto* mode = primitive0.PointNode("mode");
@@ -126,7 +126,7 @@ namespace nogl
       Mesh& mesh = meshes_.back();
       
       // Name
-      mesh.name_ = n["name"].string();
+      mesh.name_ = json_mesh["name"].string();
 
       // Indices
       {
@@ -185,13 +185,14 @@ namespace nogl
       // Attributes
       for (auto& attrib : primitive0["attributes"])
       {
+        // ALL VALUES BELOW ASSUME THAT THE ATTRIBUTE IS POSITION, CHECK IFS BELOW.
         const char* desired_type = "VEC3";
         unsigned desired_component_type = 5126;
         unsigned components_n = 3; // How many components per vector in the glTF format, not the VOV
         float f[4] = {0,0,0,1}; // A buffer for copying into the vov easily. Value of the 4th component is set up below, not supposed to be 1 for non positional vectors.
-        
         // Choose VOV from the mesh based on the primitive
         VOV4& vov = mesh.vertices_;
+
         if (attrib.key() == "NORMAL")
         {
           vov = mesh.normals_;
@@ -208,7 +209,11 @@ namespace nogl
         //   desired_type = "VEC2";
         //   components_n = 2;
         // }
-        else if (attrib.key() != "POSITION")
+        else if (attrib.key() == "POSITION")
+        {
+          // Just a special thing real quick
+        }
+        else
         {
           Logger::Begin() << name_ << ": Skipping unsupported attribute key: " << attrib.key() << '.' << Logger::End();
           continue;
@@ -252,22 +257,31 @@ namespace nogl
             f[1] = first_comp[1];
             f[2] = first_comp[2];
             vov.v(vec) = f;
-
-            // Logger::Begin() << '[' << f[0] << "," << f[1] << "," << f[2] << "," << f[3] << ']' << Logger::End();
             break;
           }
         }
       }
+
+      // After ALL THAT, we for sure have vertices_, at very least n()=0 so...
+      mesh.vertices_projected_.Reallocate(mesh.vertices_.n());
     }
+
     // Node parsing
-    for (auto& n: jsonr["scenes"][scene]["nodes"])
+    for (auto& json_node: jsonr["scenes"][scene]["nodes"])
     {
-      unsigned index = n.number();
+      unsigned index = json_node.number();
 
       nodes_.push_back(Node());
       Node& node = nodes_.back();
 
       node.name_ = jsonr["nodes"][index]["name"].string();
+
+      auto* mesh = jsonr["nodes"][index].PointNode("mesh");
+      if (mesh != nullptr)
+      {
+        node.data_ = &meshes_.at(mesh->number());
+        continue;
+      }
     }
 
     delete [] json_chunk;

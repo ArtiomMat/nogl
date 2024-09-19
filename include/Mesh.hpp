@@ -21,10 +21,12 @@ namespace nogl
 
     private:
     std::string name_;
+
     VOV4 vertices_;
     VOV4 normals_;
     VOV4 tangents_;
-
+    // This vov stores all the vertices after projection
+    VOV4 vertices_projected_;
     // TODO: Gotta make VOV2 first...
     // VOV2 texcoords_;
     
