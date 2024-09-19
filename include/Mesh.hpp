@@ -22,6 +22,10 @@ namespace nogl
     private:
     std::string name_;
     VOV4 vertices_;
+    VOV4 normals_;
+    VOV4 tangents_;
+    VOV4 texcoords_;
+    // Stored as flattened+packed triplets. Stored in CCW, note that glTF requires it.
     std::unique_ptr<unsigned[]> indices_;
   };
 }
