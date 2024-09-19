@@ -28,8 +28,10 @@ It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths wit
   - [x] Refer to [glTF](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html) for docs(Ongoing).
   - [x] Make a JSON parser, integral part of glTF.
   - [x] Look for any leaks and stuff in the JSON parser.
+  - [x] Bare bones load models into a Scene object using utilities I made.
+  - [ ] Load camera info into the Scene too or at least implement logic for cameras.
   - [ ] Make a PNG parser, I ain't dealing with it myself so with libpng.
-  - [ ] Load models into a Scene object using utilities you made.
+  - [ ] Texture support, TEXCOORDS_n and shii.
   - [ ] Optional - Add support for glTF text version.
 - [ ] Rendering.
   - [ ] TODO
