@@ -39,7 +39,7 @@ int main()
 
   // nogl::Logger::Begin() << "Scene: " << json.root()["meshes"][0]["name"].children_n() << nogl::Logger::End();
 
-  // nogl::Scene scene("cube.glb");
+  nogl::Scene scene("../data/cube.glb");
   nogl::Image img("../data/test.jpg");
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
@@ -57,11 +57,12 @@ int main()
 
   nogl::VOV4 vov(100'000);
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
-  nogl::Minion::vovs.push_back(&vov);
+  nogl::Minion::scene = &scene;
+  nogl::Minion::camera_node = scene.main_camera_node();
 
   char title[128];
   unsigned title_set_time = ~0;
-  unsigned avg_frame_time = 16;
+  unsigned avg_frame_time = 32;
   nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {

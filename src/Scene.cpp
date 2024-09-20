@@ -284,6 +284,25 @@ namespace nogl
       }
     }
 
+    // TODO: Cameras
+    
+    if (cameras_.empty())
+    {
+      cameras_.push_back(Camera());
+      auto& camera = cameras_.back();
+      camera.zfar_ = 1000.0f;
+      camera.znear_ = 0.01f;
+      camera.yfov_ = 80.0f;
+      camera.aspect_ratio_ = 16.0f / 9.0f;
+      camera.RecalculateMatrix();
+
+      nodes_.push_back(Node());
+      auto& node = nodes_.back();
+      node.data() = &camera;
+
+      main_camera_node_ = &node;
+    }
+
     delete [] json_chunk;
     delete [] bin_chunk;
   }

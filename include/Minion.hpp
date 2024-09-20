@@ -37,7 +37,7 @@ namespace nogl
     static bool alive;
 
     static Scene* scene;
-    static const M4x4* projection_matrix;
+    static Node* camera_node;
     
     using UniquePtr = std::unique_ptr<Minion[], void(*)(Minion*)>;
 

@@ -15,7 +15,7 @@ namespace nogl
 
   // Various Minion statics.
   Scene* Minion::scene = nullptr;
-  const M4x4* Minion::projection_matrix = &kDefaultMatrix;
+  Node* Minion::camera_node = nullptr;
   bool Minion::alive = true;
   uint8_t Minion::total_n = 0;
   Bell Minion::begin_bells[2];
@@ -104,23 +104,28 @@ namespace nogl
         break;
       }
       
-      if (scene != nullptr)
+      if (scene != nullptr && camera_node != nullptr)
       {
         for (auto& mesh : Minion::scene->meshes_)
         {
-          VOV4* in_vov = &mesh.vertices_;
-          VOV4* out_vov = &mesh.vertices_projected_;
+          VOV4& in_vov = mesh.vertices_;
+          VOV4& out_vov = mesh.vertices_projected_;
 
-          // Determining the from and to, in the vov4
-          unsigned v4_per_align = in_vov->kAlign / sizeof (V4);
-          unsigned chunk_size = (in_vov->n() / v4_per_align) / Minion::total_n;
-          chunk_size *= v4_per_align; // Back to 1 vector scale instead of 2. Necessary to do rounding,
+          // Calculate how many vectors in a chunk, no rounding
+          unsigned chunk_size = in_vov.n() / Minion::total_n;
+          
+          // Round it up to how the vectors per 256 bits
+          unsigned v4_per_256 = in_vov.kAlign / sizeof (V4);
+          chunk_size /= v4_per_256;
+          chunk_size *= v4_per_256;
+
+          // Determining the `from` and `to`, in the vov4
           unsigned from = chunk_size * index;
           unsigned to;
-          // The last minion will need to deal with some rounding error from chunk_size 
+          // The last minion will need to deal with rounding from the fiasco before 
           if (index == Minion::total_n - 1)
           {
-            to = in_vov->n();
+            to = in_vov.n();
           }
           else
           {
@@ -128,12 +133,8 @@ namespace nogl
           }
 
           // Now for multiplication
-          const M4x4* matrix = Minion::projection_matrix;
-          if (matrix == nullptr)
-          {
-            matrix = &kDefaultMatrix;
-          }
-          in_vov->Multiply(*out_vov, *matrix, from, to);
+          const M4x4& matrix = std::get<Camera*>(camera_node->data())->matrix();
+          in_vov.Multiply(out_vov, matrix, from, to);
         }
       }
 
