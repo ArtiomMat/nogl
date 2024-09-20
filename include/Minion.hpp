@@ -4,6 +4,7 @@
 #include "Bell.hpp"
 #include "Atomic.hpp"
 #include "math.hpp"
+#include "Scene.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -35,7 +36,7 @@ namespace nogl
     // Should only be interfaced with when the minions are not working.
     static bool alive;
 
-    static std::list<VOV4*> vovs;
+    static Scene* scene;
     static const M4x4* projection_matrix;
     
     using UniquePtr = std::unique_ptr<Minion[], void(*)(Minion*)>;

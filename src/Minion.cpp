@@ -14,7 +14,7 @@ namespace nogl
   });
 
   // Various Minion statics.
-  std::list<VOV4*> Minion::vovs;
+  Scene* Minion::scene = nullptr;
   const M4x4* Minion::projection_matrix = &kDefaultMatrix;
   bool Minion::alive = true;
   uint8_t Minion::total_n = 0;
@@ -104,31 +104,37 @@ namespace nogl
         break;
       }
       
-      for (VOV4* v : Minion::vovs)
+      if (scene != nullptr)
       {
-        // Determining the from and to, in the vov4
-        unsigned v4_per_align = v->kAlign / sizeof (V4);
-        unsigned chunk_size = (v->n() / v4_per_align) / Minion::total_n;
-        chunk_size *= v4_per_align; // Back to 1 vector scale instead of 2. Necessary to do rounding,
-        V4* from = v->begin() + (chunk_size * index);
-        V4* to;
-        // The last minion will need to deal with some rounding error from chunk_size 
-        if (index == Minion::total_n - 1)
+        for (auto& mesh : Minion::scene->meshes_)
         {
-          to = v->end();
-        }
-        else
-        {
-          to = from + chunk_size;
-        }
+          VOV4* in_vov = &mesh.vertices_;
+          VOV4* out_vov = &mesh.vertices_projected_;
 
-        // Now for multiplication
-        const M4x4* matrix = Minion::projection_matrix;
-        if (matrix == nullptr)
-        {
-          matrix = &kDefaultMatrix;
+          // Determining the from and to, in the vov4
+          unsigned v4_per_align = in_vov->kAlign / sizeof (V4);
+          unsigned chunk_size = (in_vov->n() / v4_per_align) / Minion::total_n;
+          chunk_size *= v4_per_align; // Back to 1 vector scale instead of 2. Necessary to do rounding,
+          unsigned from = chunk_size * index;
+          unsigned to;
+          // The last minion will need to deal with some rounding error from chunk_size 
+          if (index == Minion::total_n - 1)
+          {
+            to = in_vov->n();
+          }
+          else
+          {
+            to = from + chunk_size;
+          }
+
+          // Now for multiplication
+          const M4x4* matrix = Minion::projection_matrix;
+          if (matrix == nullptr)
+          {
+            matrix = &kDefaultMatrix;
+          }
+          in_vov->Multiply(*out_vov, *matrix, from, to);
         }
-        v->Multiply(*matrix, from, to);
       }
 
       RingDone();

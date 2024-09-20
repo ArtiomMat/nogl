@@ -9,14 +9,19 @@
 
 namespace nogl
 {
+  class Minion;
   // A wrapper for GLB files. Meant to store the full scene state provided by a GLB file.
   // As of now GLTF files are not supported.
   class Scene
   {
+    friend class Minion;
+    
     public:
     // Throws `FileException` variant if something fails.
     Scene(const char* path);
     ~Scene();
+
+    const std::vector<Mesh>& meshes() { return meshes_; }
 
     private:
     std::string name_;

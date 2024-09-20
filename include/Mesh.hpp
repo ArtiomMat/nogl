@@ -10,11 +10,13 @@ namespace nogl
 {
   class Node;
   class Scene;
+  class Minion;
   // Right about now a "mesh" diverges from glTF format, a mesh is defined as a set of various buffers and information that help represent a complete 3D model.
   class Mesh
   {
     friend class Scene;
     friend class Node;
+    friend class Minion;
 
     public:
     Mesh() = default;

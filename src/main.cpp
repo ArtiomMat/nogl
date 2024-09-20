@@ -40,7 +40,7 @@ int main()
   // nogl::Logger::Begin() << "Scene: " << json.root()["meshes"][0]["name"].children_n() << nogl::Logger::End();
 
   // nogl::Scene scene("cube.glb");
-  nogl::Image img("../data/test.png");
+  nogl::Image img("../data/test.jpg");
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 

@@ -90,7 +90,7 @@ namespace nogl
 
         for (unsigned j = 0; j < 3; j++)
         {
-          first[j] = (i_first[j] * i_first[3] + first[j] * (255 - i_first[3])) / 255;
+          first[j] = ((unsigned)i_first[j] * i_first[3] + (unsigned)first[j] * ((unsigned)255 - i_first[3])) / 255;
         }
       }
 

@@ -7,8 +7,10 @@
 
 namespace nogl
 {
-  Image::Image(const char* path)
+  void _Image::Open(const char* path, bool bgra)
   {
+    unsigned bpp = bgra ? 4 : 1;
+
     unsigned path_len = strlen(path) + 1;
     wchar_t wpath[path_len];
     {
@@ -55,7 +57,7 @@ namespace nogl
 
     hr = converter->Initialize(
       frame,
-      GUID_WICPixelFormat32bppBGRA,
+      bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat8bppGray,
       WICBitmapDitherTypeNone,
       nullptr,
       0.0f, // TODO: IDK if it's supposed to be 1 or 0, it's "alpha threshold".
@@ -67,13 +69,13 @@ namespace nogl
     }
 
     data_ = std::unique_ptr<uint8_t[]>(
-      new (std::align_val_t(8)) unsigned char[width_ * height_ * 4]
+      new (std::align_val_t(8)) unsigned char[width_ * height_ * bpp]
     );
 
     hr = converter->CopyPixels(
       nullptr,
-      width_ * 4,
-      width_ * height_ * 4,
+      width_ * bpp,
+      width_ * height_ * bpp,
       data_.get()
     );
     if (FAILED(hr))

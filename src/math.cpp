@@ -33,12 +33,16 @@ namespace nogl
     );
   }
 
-  void VOV4::Multiply(const M4x4& m, V4* from, V4* to) noexcept
+  void VOV4::Multiply(VOV4& output, const M4x4& m, unsigned from, unsigned to) noexcept
   {
     // We do the same thing in V4 but 2 for 1 essentially
     // NOTE: We jump 2 vectors ofc, not 1, but just hu.
-    for (V4* ptr = from; ptr < to; ptr += (kAlign / sizeof(V4)))
+    for (unsigned vec = from; vec < to; vec += (kAlign / sizeof(V4)))
+    // for (V4* in_ptr = from; in_ptr < to; in_ptr += (kAlign / sizeof(V4)))
     {
+      const V4* in_ptr = buffer_.get() + vec;
+      V4* out_ptr = output.buffer_.get() + vec;
+
       __m256 res = _mm256_setzero_ps();
 
       for (unsigned i = 0; i < 4; ++i)
@@ -49,16 +53,16 @@ namespace nogl
           _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
         );
 
-        // a is the i-th components COPIED all over from ptr[0] and b is same but for ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
-        __m128 a = _mm_load1_ps(&ptr[0].p_[i]);
-        __m128 b = _mm_load1_ps(&ptr[1].p_[i]);
+        // a is the i-th components COPIED all over from in_ptr[0] and b is same but for in_ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
+        __m128 a = _mm_load1_ps(&in_ptr[0].p_[i]);
+        __m128 b = _mm_load1_ps(&in_ptr[1].p_[i]);
         __m256 ab = _mm256_set_m128(b, a);
 
         ab = _mm256_mul_ps(ab, cols);
         res = _mm256_add_ps(res, ab);
       }
 
-      _mm256_store_ps(ptr->p_, res);
+      _mm256_store_ps(out_ptr->p_, res);
     }
   }
 }
