@@ -55,26 +55,29 @@ int main()
     0,0,1,0,
   });
 
-  nogl::VOV4 vov(100'000);
-  vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
   nogl::Minion::scene = &scene;
   nogl::Minion::camera_node = scene.main_camera_node();
 
   char title[128];
   unsigned title_set_time = ~0;
   unsigned avg_frame_time = 32;
+  unsigned avg_minion_time = avg_frame_time;
+  unsigned avg_draw_time = avg_frame_time;
   nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {
+    nogl::Clock::BeginMeasure();
+
     nogl::Minion::RingBegin();
     
     ctx.HandleEvents();
     ctx.Clear();
     ctx.PutImage(img, -50, 0);
+    ctx.Refresh();
     
     nogl::Minion::WaitDone();
-    
-    ctx.Refresh();
+
+    avg_minion_time = (avg_minion_time + nogl::Clock::EndMeasure()) / 2;
     
     clock.SleepRemainder();
 
@@ -89,6 +92,8 @@ int main()
       avg_frame_time = clock.frame_time;
     }
   }
+
+  nogl::Logger::Begin() << "Average minion time: " << avg_minion_time << nogl::Logger::End();
  
   return 0;
 }

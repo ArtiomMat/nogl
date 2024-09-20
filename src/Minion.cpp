@@ -21,7 +21,7 @@ namespace nogl
   Bell Minion::begin_bells[2];
   std::unique_ptr<Bell[]> Minion::done_bells;
 
-  Minion::UniquePtr Minion::OpenMinions()
+  Minion::UniquePtr Minion::OpenMinions(unsigned n)
   { 
     // Already have minions? Return nullptr equivalent
     if (Minion::total_n > 0)
@@ -29,7 +29,7 @@ namespace nogl
       return Minion::UniquePtr(nullptr, [] (Minion*) {});
     }
 
-    Minion::total_n = Thread::logical_cores() - 1;
+    Minion::total_n = n;
 
     // The lambda here defines the deleter, very complex stuff I know
     Minion::UniquePtr minions(new Minion[Minion::total_n], [] (Minion* m) {
@@ -81,15 +81,15 @@ namespace nogl
     return begin_bell_i;
   }
 
+  void Minion::WaitBegin()
+  {
+    Minion::begin_bells[begin_bell_i_].Wait();
+  }
+
   void Minion::RingDone()
   {
     Minion::done_bells[index].Ring();
     begin_bell_i_ = !begin_bell_i_; // Swap begin_bell.
-  }
-
-  void Minion::WaitBegin()
-  {
-    Minion::begin_bells[begin_bell_i_].Wait();
   }
 
   int Minion::Start()

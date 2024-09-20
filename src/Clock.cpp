@@ -3,6 +3,8 @@
 
 namespace nogl
 {
+  thread_local unsigned long long Clock::measure;
+
   Clock::Clock(unsigned _target_frame_time) : target_frame_time(_target_frame_time)
   {
     t0_ = global_now();

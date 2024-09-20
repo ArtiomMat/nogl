@@ -40,10 +40,13 @@ namespace nogl
     static Node* camera_node;
     
     using UniquePtr = std::unique_ptr<Minion[], void(*)(Minion*)>;
+    
+    // You have control over the minions, but be cautious.
+    static UniquePtr OpenMinions(unsigned n);
 
-    // Returns an array of minions, you can check the number by going `Minion::total_n`, it will likely be `Thread::logical_cores()`. If there are already minions, return a nullptr as unique_ptr.
-    // To free it prematurely just call reset(), it will have logic like flipping `alive`, and freeing other stuff, ofc this will be automatic if you want to.
-    static UniquePtr OpenMinions();
+    // Returns an array of minions, you can check the number by going `Minion::total_n`, it will close to `Thread::logical_cores()`. If there are already minions, return a nullptr as unique_ptr.
+    // To free it prematurely just call `reset()` on the unique pointer, it will have logic like flipping `alive`, and freeing other stuff, ofc this will be automatic if you want to.
+    static UniquePtr OpenMinions() { return OpenMinions(Thread::logical_cores() - 1); }
     // Wait for all minions to ring done_bell, and reset them it too because if they reset it leads to unexpected behaviour. Must not be called in the minion thread, will lead to deadlock.
     // Essentially, this function allows you to wait for the minions to finish what they were assigned. After this function, it is expected you use `RingBegin()` when you are ready for minions to keep going.
     // MUST be called after calling `RingBegin()` in the loop, otherwise main and minions get out of sync on `begin_bells`.
