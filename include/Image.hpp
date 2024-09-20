@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Exception.hpp"
 #include <memory>
 
 namespace nogl
@@ -13,13 +14,13 @@ namespace nogl
 
     // Stored in BGRA format, to be compatible with `Context`.
     // Aligned to 32 bytes to be SIMD-friendly.
-    unsigned char* data() { return data_.get(); }
-    unsigned width() { return width_; }
-    unsigned height() { return height_; }
+    const uint8_t* data() const { return data_.get(); }
+    unsigned width() const { return width_; }
+    unsigned height() const { return height_; }
 
     private:
     // Read `data()`
-    std::unique_ptr<unsigned char[]> data_;
+    std::unique_ptr<uint8_t[]> data_;
     unsigned width_, height_;
   };
 }

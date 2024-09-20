@@ -7,12 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # The cross platform files
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
+# set(GLOBAL_LIBRARIES -lpng -lzlib)
+
 # Add the platform source files and append them
 if(WIN32)
   set(LIBRARIES -lopengl32 -lws2_32 -lole32 -lcomctl32 -lgdi32 -lwindowscodecs)
   file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/win32/*.cpp")
 elseif(UNIX)
-  set(LIBRARIES -lGL -lm -lpng)
+  set(LIBRARIES -lGL -lm)
   file(GLOB PLATFORM_SOURCES "${CMAKE_SOURCE_DIR}/src/unix/*.cpp")
 endif()
 list(APPEND SOURCES ${PLATFORM_SOURCES})
@@ -28,6 +30,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 target_link_options(${PROJECT_NAME} PRIVATE ${PLATFORM_LINKS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES})
+target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBRARIES} ${GLOBAL_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)

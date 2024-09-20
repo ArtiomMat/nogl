@@ -39,7 +39,8 @@ int main()
 
   // nogl::Logger::Begin() << "Scene: " << json.root()["meshes"][0]["name"].children_n() << nogl::Logger::End();
 
-  nogl::Scene scene("cube.glb");
+  // nogl::Scene scene("cube.glb");
+  nogl::Image img("../data/test.png");
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
@@ -54,7 +55,7 @@ int main()
     0,0,1,0,
   });
 
-  nogl::VOV4 vov(10'000);
+  nogl::VOV4 vov(100'000);
   vov = nogl::V4((const float[]) { 1, 2, 3, 0 });
   nogl::Minion::vovs.push_back(&vov);
 
@@ -68,6 +69,7 @@ int main()
     
     ctx.HandleEvents();
     ctx.Clear();
+    ctx.PutImage(img, -50, 0);
     
     nogl::Minion::WaitDone();
     

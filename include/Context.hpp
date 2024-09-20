@@ -10,6 +10,7 @@
 #include <memory>
 #include <cstdint>
 
+#include "Image.hpp"
 #include "Exception.hpp"
 
 namespace nogl
@@ -82,6 +83,8 @@ namespace nogl
 
     inline unsigned width() const { return width_; }
     inline unsigned height() const { return height_; }
+
+    void PutImage(const Image& i, int x, int y);
 
     private:
     // Essentially has 4 copies in BGRX format. Cached.
