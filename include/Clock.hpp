@@ -26,11 +26,11 @@ namespace nogl
     // Resets where the frame began, should be put right before loop to avoid possibly not sleeping on first frame. But not a major issue.
     void BeginLoop();
 
-    static void BeginMeasure() { measure = global_now(); }
-    static unsigned EndMeasure() { return global_now() - measure; }
+    static void BeginMeasure() { measure_ = global_now(); }
+    static unsigned EndMeasure() { return global_now() - measure_; }
 
     private:
-    static thread_local unsigned long long measure;
+    static thread_local unsigned long long measure_;
 
     // `global_now()` when the object was constructed.
     unsigned long long t0_;

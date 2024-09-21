@@ -4,9 +4,12 @@
 
 namespace nogl
 {
-
   unsigned long long Clock::global_now()
   {
-    return GetTickCount64();
+    LARGE_INTEGER t, freq;
+    QueryPerformanceFrequency(&freq); 
+    QueryPerformanceCounter(&t);
+
+    return (t.QuadPart * 1000) / freq.QuadPart;
   }
 }

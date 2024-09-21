@@ -5,7 +5,7 @@ namespace nogl
 {
   Bell::Bell()
   { 
-    hevent = CreateEvent(nullptr, true, false, nullptr);
+    hevent = CreateEventW(nullptr, true, false, nullptr);
   } 
   Bell::~Bell()
   { 

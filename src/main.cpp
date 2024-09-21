@@ -31,13 +31,6 @@ int main()
     nogl::Logger::Begin() << "CPU does not support correct SIMD. Can't proceed." << nogl::Logger::End();
     return 1;
   }
-  
-  // std::ifstream t("test.json");
-  // std::stringstream buffer;
-  // buffer << t.rdbuf();
-  // nogl::JSON json(buffer.str().c_str());
-
-  // nogl::Logger::Begin() << "Scene: " << json.root()["meshes"][0]["name"].children_n() << nogl::Logger::End();
 
   nogl::Scene scene("../data/cube.glb");
   nogl::Image img("../data/test.jpg");
@@ -63,22 +56,19 @@ int main()
   unsigned avg_frame_time = 32;
   unsigned avg_minion_time = avg_frame_time;
   unsigned avg_draw_time = avg_frame_time;
+  unsigned long long measure = nogl::Clock::global_now();
   nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {
-    nogl::Clock::BeginMeasure();
-
     nogl::Minion::RingBegin();
-    
+
     ctx.HandleEvents();
     ctx.Clear();
-    ctx.PutImage(img, -50, 0);
+    ctx.PutImage(img, 0, 0);
     ctx.Refresh();
     
     nogl::Minion::WaitDone();
 
-    avg_minion_time = (avg_minion_time + nogl::Clock::EndMeasure()) / 2;
-    
     clock.SleepRemainder();
 
     // Displaying FPS on title
@@ -91,9 +81,8 @@ int main()
       ctx.set_title(title);
       avg_frame_time = clock.frame_time;
     }
-  }
 
-  nogl::Logger::Begin() << "Average minion time: " << avg_minion_time << nogl::Logger::End();
+  }
  
   return 0;
 }

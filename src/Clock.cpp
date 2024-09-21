@@ -3,10 +3,11 @@
 
 namespace nogl
 {
-  thread_local unsigned long long Clock::measure;
+  thread_local unsigned long long Clock::measure_;
 
-  Clock::Clock(unsigned _target_frame_time) : target_frame_time(_target_frame_time)
+  Clock::Clock(unsigned _target_frame_time)
   {
+    target_frame_time = _target_frame_time;
     t0_ = global_now();
   }
   
@@ -29,7 +30,6 @@ namespace nogl
     {
       Thread::Sleep(sleep_time);
       frame_time = target_frame_time;
-      return sleep_time;
     }
     else
     {

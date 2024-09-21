@@ -59,14 +59,6 @@ namespace nogl
     return minions;
   }
   
-  void Minion::WaitDone()
-  {
-    nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
-    for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
-    {
-      nogl::Minion::done_bells[i].Reset();
-    }
-  }
 
   unsigned Minion::RingBegin()
   {
@@ -78,18 +70,25 @@ namespace nogl
     nogl::Minion::begin_bells[begin_bell_i].Ring();
 
     begin_bell_i = !begin_bell_i; // Swap
-    return begin_bell_i;
+    return !begin_bell_i;
+  }
+  void Minion::WaitDone()
+  {
+    nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
+    for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
+    {
+      nogl::Minion::done_bells[i].Reset();
+    }
   }
 
   void Minion::WaitBegin()
   {
     Minion::begin_bells[begin_bell_i_].Wait();
+    begin_bell_i_ = !begin_bell_i_; // Swap begin_bell.
   }
-
   void Minion::RingDone()
   {
     Minion::done_bells[index].Ring();
-    begin_bell_i_ = !begin_bell_i_; // Swap begin_bell.
   }
 
   int Minion::Start()

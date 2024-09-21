@@ -11,11 +11,11 @@ namespace nogl
   {
     public:
     Image* base_color = nullptr;
-    Image* metal = nullptr;
-    Image* rough = nullptr;
-    Image* emissive = nullptr;
-    Image* occlusion = nullptr;
     Image* normal = nullptr;
+    GrayImage* metal = nullptr;
+    GrayImage* rough = nullptr;
+    GrayImage* emissive = nullptr;
+    GrayImage* occlusion = nullptr;
 
     
     private:
