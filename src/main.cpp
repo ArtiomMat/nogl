@@ -32,7 +32,7 @@ int main()
     return 1;
   }
 
-  nogl::Scene scene("../data/cube.glb");
+  nogl::Scene scene("../data/cube2.glb");
   nogl::Image img("../data/test.jpg");
 
   nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
@@ -61,7 +61,6 @@ int main()
 
     for (nogl::V4& v : scene.meshes()[0].vertices_projected())
     {
-      // std::cout << (float)v[0] << "," << (float)v[1] << "," << (float)v[2] << "," << (float)v[3] << '\n';
       unsigned x = (v[0]/2 + 0.5) * ctx.width();
       unsigned y = (v[1]/2 + 0.5) * ctx.height();
       if (x > ctx.width() || y > ctx.height())

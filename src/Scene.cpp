@@ -249,6 +249,10 @@ namespace nogl
             break;
 
             case 3:
+            // if (vov == &mesh.vertices_)
+            // {
+            //   Logger::Begin() << first_comp[0] << Logger::End();
+            // }
             f[0] = first_comp[0];
             f[1] = first_comp[1];
             f[2] = first_comp[2];
