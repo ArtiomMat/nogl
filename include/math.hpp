@@ -278,10 +278,13 @@ namespace nogl
 
     void operator *=(const M4x4& m) noexcept { Multiply(*this, m, 0, n_); }
     
-    // Multiplies all vectors by `matrix`(as if our vectors are 1x4 matrices), stores results in `output`.
+    // Multiplies all vectors by `matrix`(as if our vectors are 1x4 matrices), stores results in `output`(can be `*this`).
     // From `from` up to `to`(not including the V4 at `to` though).
     // Huge note: The address in bytes of `from` & `to` must be aligned to `kAlign`.
     void Multiply(VOV4& output, const M4x4& m, unsigned from, unsigned to) noexcept;
+    
+    // Divides each vector by its own w component(4th component), stores results in `output`(can be `*this`).
+    void DivideByW(VOV4& output, unsigned from, unsigned to);
 
     // A chunk is a piece that a single Minion may process at once.
     // unsigned chunk_size(unsigned total_n) { return (n_ / (kAlign / sizeof (V4))) / total_n; }
@@ -293,7 +296,7 @@ namespace nogl
 
     // Returns the vector at index `i`, avoid copying it, because then it will not be that vector.
     // NOTE: The object returned directly references the actual vector from this VOV, so any operation you do on the  object affects that vector here. 
-    V4& v(unsigned i) noexcept { return buffer_[i]; }
+    V4& operator [](unsigned i) noexcept { return buffer_[i]; }
 
     private:
     // See `n()`

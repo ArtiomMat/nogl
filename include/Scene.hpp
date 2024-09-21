@@ -21,7 +21,7 @@ namespace nogl
     Scene(const char* path);
     ~Scene();
 
-    const std::vector<Mesh>& meshes() { return meshes_; }
+    std::vector<Mesh>& meshes() { return meshes_; }
     const std::vector<Node>& nodes() { return nodes_; }
 
     Node* main_camera_node() { return main_camera_node_; }

@@ -41,19 +41,12 @@ int main()
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  nogl::M4x4 matrix((const float[]){
-    4,0,0,0,
-    0,4,0,0,
-    0,0,4,0,
-    0,0,1,0,
-  });
-
   nogl::Minion::scene = &scene;
   nogl::Minion::camera_node = scene.main_camera_node();
 
   char title[128];
   unsigned title_set_time = ~0;
-  unsigned avg_frame_time = 32;
+  unsigned avg_frame_time = 16;
   nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {
@@ -62,20 +55,33 @@ int main()
 
     ctx.HandleEvents();
     ctx.Clear();
-    ctx.PutImage(img, 0, 0);
-    ctx.Refresh();
+    // ctx.PutImage(img, 0, 0);
     
     nogl::Minion::WaitDone();
 
+    for (nogl::V4& v : scene.meshes()[0].vertices_projected())
+    {
+      // std::cout << (float)v[0] << "," << (float)v[1] << "," << (float)v[2] << "," << (float)v[3] << '\n';
+      unsigned x = (v[0]/2 + 0.5) * ctx.width();
+      unsigned y = (v[1]/2 + 0.5) * ctx.height();
+      if (x > ctx.width() || y > ctx.height())
+      {
+        continue;
+      }
+      ctx.data()[(x + y * ctx.width()) * 4 + 1] = 255;
+    }
+    ctx.Refresh();
+    avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;
+
     clock.SleepRemainder();
 
+
     // Displaying FPS on title
-    avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;
     title_set_time += clock.frame_time;
     if (title_set_time >= 3000)
     {
       title_set_time = 0;
-      sprintf(title, "NOGL - %u FPS", 1000/avg_frame_time);
+      sprintf(title, "NOGL - %ums", avg_frame_time);
       ctx.set_title(title);
       avg_frame_time = clock.frame_time;
     }

@@ -33,12 +33,33 @@ namespace nogl
     );
   }
 
+  void VOV4::DivideByW(VOV4& output, unsigned from, unsigned to)
+  {
+    for (unsigned vec = from; vec < to; vec += (kAlign / sizeof(V4)))
+    {
+      const V4* in_ptr = buffer_.get() + vec;
+      V4* out_ptr = output.buffer_.get() + vec;
+      
+      // Load the 2 vectors into the register
+      __m128 a = _mm_load_ps(in_ptr[0].p_);
+      __m128 b = _mm_load_ps(in_ptr[1].p_);
+      __m256 ab = _mm256_set_m128(b, a);
+
+      // Load the w components all over the 2 parts of the register
+      a = _mm_set1_ps(in_ptr[0].p_[3]);
+      b = _mm_set1_ps(in_ptr[1].p_[3]);
+      __m256 w = _mm256_set_m128(b, a);
+
+      ab = _mm256_div_ps(ab, w);
+      _mm256_store_ps(out_ptr->p_, ab);
+    }
+  }
+  
   void VOV4::Multiply(VOV4& output, const M4x4& m, unsigned from, unsigned to) noexcept
   {
     // We do the same thing in V4 but 2 for 1 essentially
     // NOTE: We jump 2 vectors ofc, not 1, but just hu.
     for (unsigned vec = from; vec < to; vec += (kAlign / sizeof(V4)))
-    // for (V4* in_ptr = from; in_ptr < to; in_ptr += (kAlign / sizeof(V4)))
     {
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
@@ -54,8 +75,8 @@ namespace nogl
         );
 
         // a is the i-th components COPIED all over from in_ptr[0] and b is same but for in_ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
-        __m128 a = _mm_load1_ps(&in_ptr[0].p_[i]);
-        __m128 b = _mm_load1_ps(&in_ptr[1].p_[i]);
+        __m128 a = _mm_set1_ps(in_ptr[0].p_[i]);
+        __m128 b = _mm_set1_ps(in_ptr[1].p_[i]);
         __m256 ab = _mm256_set_m128(b, a);
 
         ab = _mm256_mul_ps(ab, cols);

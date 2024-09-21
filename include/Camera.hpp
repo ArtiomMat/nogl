@@ -45,7 +45,7 @@ namespace nogl
       struct
       {
         float aspect_ratio_;
-        float yfov_;
+        float yfov_; // BIT NOTE: RADIANS!!!!
       };
       // For ortho
       // struct

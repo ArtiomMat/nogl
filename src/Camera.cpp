@@ -6,14 +6,11 @@ namespace nogl
 {
   void Camera::RecalculateMatrix()
   {
-    float it = 1.0f / tanf(yfov_ / 2.0f);
-    float znmzf = znear_ - zfar_;
-
     float m[] = {
-      it / aspect_ratio_, 0, 0, 0,
-      0, it, 0, 0,
-      0, 0, - (znear_ + zfar_) / znmzf, (2 * znear_ * zfar_) / znmzf,
-      0, 0, 1, 0,
+      1 / (tanf(yfov_ / 2) * aspect_ratio_), 0, 0, 0,
+      0, 1 / tanf(yfov_ / 2), 0, 0,
+      0, 0, - (znear_ + zfar_) / (zfar_ - znear_), - (2 * zfar_ * znear_) / (zfar_ - znear_),
+      0, 0, -1, 0,
     };
     matrix_ = m;
   }

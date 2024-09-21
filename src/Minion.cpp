@@ -134,6 +134,7 @@ namespace nogl
           // Now for multiplication
           const M4x4& matrix = std::get<Camera*>(camera_node->data())->matrix();
           in_vov.Multiply(out_vov, matrix, from, to);
+          out_vov.DivideByW(out_vov, from, to);
         }
       }
 

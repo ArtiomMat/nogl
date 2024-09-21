@@ -8,7 +8,7 @@ namespace nogl
 {
   Scene::Scene(const char* path)
   {
-    std::ifstream f(path);
+    std::ifstream f(path, std::ios::in | std::ios::binary);
     if (!f.is_open())
     {
       throw OpenException("Opening glTF file.");
@@ -35,7 +35,7 @@ namespace nogl
     }
 
     // Skip length
-    f.seekg(4, std::ios_base::seekdir::_S_cur);
+    f.read(buf, sizeof (i));
 
     // JSON chunk
     char* json_chunk;
@@ -48,7 +48,7 @@ namespace nogl
     }
     json_chunk_len = LilE(i);
     // Test if it's JSON, because has to be first
-    f.read(buf, sizeof (i));
+    f.read(buf, sizeof (buf));
     if (f.fail() || strncmp("JSON", buf, sizeof(buf)))
     {
       throw ReadException("JSON chunk not first.");
@@ -191,16 +191,16 @@ namespace nogl
         unsigned components_n = 3; // How many components per vector in the glTF format, not the VOV
         float f[4] = {0,0,0,1}; // A buffer for copying into the vov easily. Value of the 4th component is set up below, not supposed to be 1 for non positional vectors.
         // Choose VOV from the mesh based on the primitive
-        VOV4& vov = mesh.vertices_;
+        VOV4* vov = &mesh.vertices_;
 
         if (attrib.key() == "NORMAL")
         {
-          vov = mesh.normals_;
+          vov = &mesh.normals_;
           f[3] = 0;
         }
         else if (attrib.key() == "TANGENTS")
         {
-          vov = mesh.tangents_;
+          vov = &mesh.tangents_;
           f[3] = 0;
         }
         // else if (attrib.key() == "TEXCOORD_0")
@@ -209,11 +209,7 @@ namespace nogl
         //   desired_type = "VEC2";
         //   components_n = 2;
         // }
-        else if (attrib.key() == "POSITION")
-        {
-          // Just a special thing real quick
-        }
-        else
+        else if (attrib.key() != "POSITION")
         {
           Logger::Begin() << name_ << ": Skipping unsupported attribute key: " << attrib.key() << '.' << Logger::End();
           continue;
@@ -228,7 +224,7 @@ namespace nogl
         {
           throw ReadException("Bad accessor type/componentType.");
         }
-        vov.Reallocate(accessor["count"].number());
+        vov->Reallocate(accessor["count"].number());
 
         auto& buffer_view = jsonr["bufferViews"][accessor["bufferView"].number()];
 
@@ -256,7 +252,7 @@ namespace nogl
             f[0] = first_comp[0];
             f[1] = first_comp[1];
             f[2] = first_comp[2];
-            vov.v(vec) = f;
+            (*vov)[vec] = f;
             break;
           }
         }
@@ -292,8 +288,8 @@ namespace nogl
       auto& camera = cameras_.back();
       camera.zfar_ = 1000.0f;
       camera.znear_ = 0.01f;
-      camera.yfov_ = 80.0f;
-      camera.aspect_ratio_ = 16.0f / 9.0f;
+      camera.yfov_ = 1.39626f; // 80 degrees
+      camera.aspect_ratio_ = 4.0f / 3.0f;
       camera.RecalculateMatrix();
 
       nodes_.push_back(Node());
