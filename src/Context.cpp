@@ -62,7 +62,7 @@ namespace nogl
     }
     else
     {
-      copy_width = i_width_ - copy_x;
+      copy_width = i_width_;
     }
   }
 
@@ -81,11 +81,11 @@ namespace nogl
 
     unsigned x_start = std::max(x, 0);
     unsigned y_start = std::max(y, 0);
-    for (unsigned y = y_start; copy_y < copy_height; ++y, ++copy_y)
+    for (unsigned y = y_start, iy = copy_y; iy < copy_height; ++y, ++iy)
     {
       for (unsigned x = x_start, ix = copy_x; ix < copy_width; ++x, ++ix)
       {
-        const uint8_t* i_first = &i.data()[(ix + copy_y * i.width()) * 4];
+        const uint8_t* i_first = &i.data()[(ix + iy * i.width()) * 4];
         uint8_t* first = &data_[(x + y * width_) * 4];
 
         for (unsigned j = 0; j < 3; j++)
