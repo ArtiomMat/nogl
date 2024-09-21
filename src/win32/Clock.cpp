@@ -11,5 +11,6 @@ namespace nogl
     QueryPerformanceCounter(&t);
 
     return (t.QuadPart * 1000) / freq.QuadPart;
+    // return GetTickCount64();
   }
 }

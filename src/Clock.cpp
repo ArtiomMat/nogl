@@ -30,6 +30,8 @@ namespace nogl
     {
       Thread::Sleep(sleep_time);
       frame_time = target_frame_time;
+      // HISTORY: This bug was sitting here for so long, and caused 30% cpu usage for so long, because begin_frame_time_ was updated half the time. I had to keep it to show just how many problems it caused, and it took so long to notice, and when I did, was a HUGE pain fix. This just shows you kids, NEVER underestimate you own stupidity.
+      // return frame_time;
     }
     else
     {

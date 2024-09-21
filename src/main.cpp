@@ -54,12 +54,10 @@ int main()
   char title[128];
   unsigned title_set_time = ~0;
   unsigned avg_frame_time = 32;
-  unsigned avg_minion_time = avg_frame_time;
-  unsigned avg_draw_time = avg_frame_time;
-  unsigned long long measure = nogl::Clock::global_now();
   nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {
+    nogl::Clock::BeginMeasure();
     nogl::Minion::RingBegin();
 
     ctx.HandleEvents();
@@ -72,7 +70,7 @@ int main()
     clock.SleepRemainder();
 
     // Displaying FPS on title
-    avg_frame_time = (avg_frame_time + clock.frame_time) / 2;
+    avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;
     title_set_time += clock.frame_time;
     if (title_set_time >= 3000)
     {
@@ -81,7 +79,6 @@ int main()
       ctx.set_title(title);
       avg_frame_time = clock.frame_time;
     }
-
   }
  
   return 0;
