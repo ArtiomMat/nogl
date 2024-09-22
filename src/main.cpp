@@ -24,6 +24,37 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
+template <typename T>
+void FindMinMax(T& min, T& max, T a, T b, T c)
+{
+  if (a > b)
+  {
+    if (c > a)
+    {
+      min = b;
+      max = c;
+    }
+    else // c <= a
+    {
+      max = a;
+      min = c > b ? b : c;
+    }
+  }
+  else // b >= a
+  {
+    if (c > b)
+    {
+      min = a;
+      max = c;
+    }
+    else // c <= b
+    {
+      max = b;
+      min = c > a ? a : c;
+    }
+  }
+}
+
 int main()
 {
   if (!nogl::Thread::has_simd())
