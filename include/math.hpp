@@ -304,5 +304,50 @@ namespace nogl
     // MUST BE ALIGNED TO `kAlign`
     std::unique_ptr<V4[]> buffer_ = nullptr;
   };
+
+  template <typename T>
+  void FindMinMax(T& min, T& max, T a, T b, T c)
+  {
+    if (a > b)
+    {
+      if (c > a)
+      {
+        min = b;
+        max = c;
+      }
+      else // c <= a
+      {
+        max = a;
+        min = c > b ? b : c;
+      }
+    }
+    else // b >= a
+    {
+      if (c > b)
+      {
+        min = a;
+        max = c;
+      }
+      else // c <= b
+      {
+        max = b;
+        min = c > a ? a : c;
+      }
+    }
+  }
+
+  template <typename T>
+  T ClipValue(T v, T min, T max)
+  {
+    if (v < min)
+    {
+      return min;
+    }
+    else if (v > max)
+    {
+      return max;
+    }
+    return v;
+  }
 }
 
