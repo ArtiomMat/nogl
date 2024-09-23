@@ -3,7 +3,8 @@ Idk really if it will be a library or a standalone.\
 It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths with it and replace it with NO GRAPHICS LIBRARY!
 
 # Current state
-![Projecting vertices and rendering them takes 3ms(personal milestone tbh)](screenshots/screenshot-23-09-24.png)
+As of 2024-09-23, projecting vertices and rendering them takes 3ms(personal milestone tbh).
+![Rendering low poly model's vertices at 3ms](screenshots/screenshot-23-09-24.png)
 
 # Roadmap(TODO)
 - [x] Basics.
