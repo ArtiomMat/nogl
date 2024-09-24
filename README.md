@@ -3,8 +3,8 @@ Idk really if it will be a library or a standalone.\
 It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths with it and replace it with NO GRAPHICS LIBRARY!
 
 # Current state
-As of 2024-09-23, projecting vertices and rendering them takes 3ms(personal milestone tbh).
-![Rendering low poly model's vertices at 3ms](screenshots/screenshot-23-09-24.png)
+As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no face culling yet(got work to do).
+![Rendering mid-poly model's triangles at 17ms](screenshots/screenshot-25-09-24.png)
 
 # Roadmap(TODO)
 - [x] Basics.
@@ -33,12 +33,15 @@ As of 2024-09-23, projecting vertices and rendering them takes 3ms(personal mile
   - [x] Make a JSON parser, integral part of glTF.
   - [x] Look for any leaks and stuff in the JSON parser.
   - [x] Bare bones load models into a Scene object using utilities I made.
-  - [ ] Load camera info into the Scene too or at least implement logic for cameras.
-  - [ ] Make a PNG parser, I ain't dealing with it myself so with libpng.
+  - [x] Load camera info into the Scene too or at least implement logic for cameras.
+  - [x] Make a PNG parser, I ain't dealing with it myself so with libpng.
   - [ ] Texture support, TEXCOORDS_n and shii.
   - [ ] Optional - Add support for glTF text version.
 - [ ] Rendering.
-  - [ ] TODO
+  - [x] Projecting model's vertices into screen space(Very optimized because screen space scaling is in the projection matrix!).
+  - [x] Rendering vertices themselves.
+  - [x] Rendering triangles, basic incremental half-spaced method.
+  - [x] Advanced block based triangle rendering.
 - [ ] Advanced shading to prepare for next step.
   - [ ] Specular highlighting.
   - [ ] Metallic shaders.

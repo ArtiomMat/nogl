@@ -628,8 +628,10 @@ namespace nogl
     }
 
     SkipWS();
+    // FIXME: Issues here when reading gltf file, some models actually reach this.
     if (s_[si_] != 0)
     {
+      // Logger::Begin() << (unsigned)s_[si_]  << Logger::End();
       throw Error("Junk after closing global container.", this);
     }
   }

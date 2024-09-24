@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <vector>
 #include <string>
 #include <list>
 #include <memory>
@@ -19,10 +21,12 @@ namespace nogl
     friend class Minion;
 
     public:
+
     Mesh() = default;
 
     const VOV4& vertices_projected() const { return vertices_projected_; }
     const VOV4& vertices() const { return vertices_; }
+    const std::vector<std::array<unsigned, 3>>& indices() const { return indices_; }
 
     private:
     std::string name_;
@@ -36,6 +40,6 @@ namespace nogl
     // VOV2 texcoords_;
     
     // Stored as flattened+packed triplets. Stored in CCW, note that glTF requires it.
-    std::unique_ptr<unsigned[]> indices_;
+    std::vector<std::array<unsigned, 3>> indices_;
   };
 }

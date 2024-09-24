@@ -1,7 +1,9 @@
 #include <immintrin.h>
 
 #include "Atomic.hpp"
+#include "math.hpp"
 #include "Context.hpp"
+#include <iostream>
 
 namespace nogl
 {
@@ -99,6 +101,69 @@ namespace nogl
       //   i.data() + (copy_x + copy_y * i.width()) * 4,
       //   copy_width * 4
       // );
+    }
+  }
+
+  void Context::PutTriangle(
+    float _ax, float _ay, float az,
+    float _bx, float _by, float bz,
+    float _cx, float _cy, float cz
+  )
+  {
+    int ax=_ax,bx=_bx,cx=_cx;
+    int ay=_ay,by=_by,cy=_cy;
+    int min_x, min_y, max_x, max_y;
+
+    // Finding the triangle rectangle
+    FindMinMax(min_x, max_x, ax, bx, cx);
+    FindMinMax(min_y, max_y, ay, by, cy);
+
+    // Clipping the rectangle
+    min_x = ClipValue(min_x, 0, (int)width_-1);
+    min_y = ClipValue(min_y, 0, (int)height_-1);
+    max_x = ClipValue(max_x, 0, (int)width_-1);
+    max_y = ClipValue(max_y, 0, (int)height_-1);
+    
+    // Half space function constants
+    const int
+    I0 = ay - by,
+    J0 = bx - ax,
+    K0 = ax*by - ay*bx,
+
+    I1 = by - cy,
+    J1 = cx - bx,
+    K1 = bx*cy - by*cx,
+
+    I2 = cy - ay,
+    J2 = ax - cx,
+    K2 = cx*ay - cy*ax;
+
+    // Initial(and future) evaluations of the edge functions
+    int
+    fy0 = I0*min_x + J0*min_y + K0,
+    fy1 = I1*min_x + J1*min_y + K1,
+    fy2 = I2*min_x + J2*min_y + K2;
+
+    // Actual loop, increment by Ji every time
+    for (int y = min_y; y <= max_y; ++y, fy0 += J0, fy1 += J1, fy2 += J2)
+    {
+      int
+      fx0 = fy0,
+      fx1 = fy1,
+      fx2 = fy2;
+      // Increment by Ii every step
+      for (int x = min_x; x <= max_x; ++x, fx0 += I0, fx1 += I1, fx2 += I2)
+      {
+        if (fx0 >= 0 && fx1 >= 0 && fx2 >= 0)
+        {
+          data_[(x + y * width_)*4 + 1] = 255;
+          // data_[(x + y * width_)*4 + 2] = 0;
+        }
+        // else if (data_[(x + y * width_)*4 + 1] != 255)
+        // {
+        //   data_[(x + y * width_)*4 + 2] = 255;
+        // }
+      }
     }
   }
 }

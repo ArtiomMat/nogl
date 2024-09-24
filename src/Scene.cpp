@@ -54,12 +54,13 @@ namespace nogl
       throw ReadException("JSON chunk not first.");
     }
     // Allocate the chunk in memory and read it
-    json_chunk = new char[json_chunk_len];
+    json_chunk = new char[json_chunk_len+1];
     f.read(json_chunk, json_chunk_len);
     if (f.fail())
     {
       throw ReadException("JSON reading failed.");
     }
+    json_chunk[json_chunk_len] = 0; // EYEYEYEYEYEYEY
 
     // BIN chunk
     // FIXME: bin_chunk access is usually unsafe, because relying on the gltf file, so gotta wrap it in std::vector some time and use .at() instead of []
@@ -142,7 +143,8 @@ namespace nogl
           throw ReadException("Bad indices accessor type/componentType.");
         }
 
-        mesh.indices_.reset(new unsigned[3 * static_cast<unsigned>(accessor["count"].number())]);
+
+        mesh.indices_.resize(static_cast<unsigned>(accessor["count"].number()));
 
         auto& buffer_view = jsonr["bufferViews"][accessor["bufferView"].number()];
 
@@ -168,15 +170,15 @@ namespace nogl
           {
             // Just straight copy
             case sizeof (uint32_t):
-            memcpy(mesh.indices_.get() + comp, bin_chunk + byte, component_size * 3);
+            memcpy(&mesh.indices_[0] + comp, bin_chunk + byte, component_size * 3);
             break;
             
             // Need conversion
             case sizeof (uint16_t):
             uint16_t* first_comp = reinterpret_cast<uint16_t*>(bin_chunk + byte);
-            mesh.indices_[comp + 0] = first_comp[0];
-            mesh.indices_[comp + 1] = first_comp[1];
-            mesh.indices_[comp + 2] = first_comp[2];
+            mesh.indices_[comp][0] = first_comp[0];
+            mesh.indices_[comp][1] = first_comp[1];
+            mesh.indices_[comp][2] = first_comp[2];
             break;
           }
         }
