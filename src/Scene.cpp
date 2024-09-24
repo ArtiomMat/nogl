@@ -6,7 +6,7 @@
 
 namespace nogl
 {
-  Scene::Scene(const char* path)
+  Scene::Scene(const char* path, Context& ctx)
   {
     std::ifstream f(path, std::ios::in | std::ios::binary);
     if (!f.is_open())
@@ -293,8 +293,6 @@ namespace nogl
       camera.zfar_ = 1000.0f;
       camera.znear_ = 0.01f;
       camera.yfov_ = 1.39626f; // 80 degrees
-      camera.aspect_ratio_ = 4.0f / 3.0f;
-      camera.RecalculateMatrix();
 
       nodes_.push_back(Node());
       auto& node = nodes_.back();
@@ -302,9 +300,20 @@ namespace nogl
 
       main_camera_node = &node;
     }
+    UpdateCameras(ctx);
 
     delete [] json_chunk;
     delete [] bin_chunk;
+  }
+
+  void Scene::UpdateCameras(Context& ctx)
+  {
+    for (Camera& camera : cameras_)
+    {
+      camera.width_ = ctx.width();
+      camera.height_ = ctx.height();
+      camera.RecalculateMatrix();
+    }
   }
 
   Scene::~Scene()

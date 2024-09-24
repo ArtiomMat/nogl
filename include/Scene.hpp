@@ -6,6 +6,7 @@
 #include "Exception.hpp"
 #include "Node.hpp"
 #include "JSON.hpp"
+#include "Context.hpp"
 
 namespace nogl
 {
@@ -21,11 +22,15 @@ namespace nogl
     Node* main_camera_node;
 
     // Throws `FileException` variant if something fails.
-    Scene(const char* path);
+    // Any subsequent resizing of `ctx` will require a call to `UpdateCameras`.
+    Scene(const char* path, Context& ctx);
     ~Scene();
 
     const std::vector<Mesh>& meshes() const { return meshes_; }
     const std::vector<Node>& nodes() const { return nodes_; }
+
+    // Loop through the cameras and tie them to `ctx`, the cameras depend on the width and height of the context for optimization purposes, so this is very important, otherwise rendering will have incorrect screen-space scaling.
+    void UpdateCameras(Context& ctx);
 
     private:
     std::string name_;

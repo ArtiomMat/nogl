@@ -27,12 +27,6 @@ namespace nogl
     void set_znear(float znear);
 
     void set_yfov(float yfov);
-    void set_aspect_ratio(float aspect_ratio);
-    // Can set it using context
-    void set_aspect_ratio(Context& ctx)
-    {
-      set_aspect_ratio(ctx.width() / ctx.height());
-    }
 
     private:
     void RecalculateMatrix();
@@ -44,8 +38,8 @@ namespace nogl
       // For perspective
       struct
       {
-        float aspect_ratio_;
-        float yfov_; // BIT NOTE: RADIANS!!!!
+        float yfov_;
+        float width_, height_; // BIT NOTE: RADIANS!!!!
       };
       // For ortho
       // struct

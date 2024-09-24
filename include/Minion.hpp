@@ -51,14 +51,14 @@ namespace nogl
     // Must only be interfaced with when the minions are not working.
     static bool alive;
 
+    // Information in scene must remain untouched until the minions have rung their done bells.
     static Scene* scene;
-    static Node* camera_node;
 
     // You have control over the minions, but be cautious.
-    static UniqueArray Spawn(unsigned n);
+    static UniqueArray SpawnMinions(unsigned n);
     // Returns an array of minions, you can check the number by going `Minion::minions_n_`, it will close to `Thread::logical_cores()`. If there are already minions, or `Thread::index` is not 0, returns a wrapped `nullptr`.
     // To free it prematurely just call `reset()` on the unique pointer, it will have logic like flipping `alive`, and freeing other stuff, ofc this will be automatic if you want to.
-    static UniqueArray Spawn() { return Spawn(Thread::logical_cores() - 1); }
+    static UniqueArray SpawnMinions() { return SpawnMinions(Thread::logical_cores() - 1); }
     // Wait for all minions to ring done_bell, and reset them it too because if they reset it leads to unexpected behaviour. Must not be called in the minion thread, will lead to deadlock.
     // Essentially, this function allows you to wait for the minions to finish what they were assigned. After this function, it is expected you use `RingBegin()` when you are ready for minions to keep going.
     // MUST be called after calling `RingBegin()` in the loop, otherwise main and minions get out of sync on `begin_bells_`.
@@ -69,8 +69,6 @@ namespace nogl
     static unsigned RingBegin();
 
     private:
-    static UniqueArray minions;
-    
     static uint8_t minions_n_;
 
     // A bell from the main thread to all threads to begin work.

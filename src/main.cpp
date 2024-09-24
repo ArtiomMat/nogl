@@ -36,12 +36,11 @@ int main()
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  nogl::Scene scene("../data/cube2.glb");
+  nogl::Scene scene("../data/cube2.glb", ctx);
   // nogl::Image img("../data/test.jpg");
 
-  auto minions = nogl::Wizard::Spawn();
+  auto minions = nogl::Wizard::SpawnMinions();
   nogl::Wizard::scene = &scene;
-  nogl::Wizard::camera_node = scene.main_camera_node;
 
   char title[128];
   unsigned title_set_time = ~0;
@@ -60,8 +59,11 @@ int main()
 
     for (const nogl::V4& v : scene.meshes()[0].vertices_projected())
     {
-      unsigned x = (v[0]/2 + 0.5) * ctx.width();
-      unsigned y = (v[1]/2 + 0.5) * ctx.height();
+      // Additional transformations? A THING OF THE PAST WITH ARTIOM'S NOGL!
+      // unsigned x = (v[0]/2 + 0.5) * ctx.width();
+      // unsigned y = (v[1]/2 + 0.5) * ctx.height();
+      unsigned x = v[0];
+      unsigned y = v[1];
       if (x >= ctx.width() || y >= ctx.height() || v[2] > 1 || v[2] < 0)
       {
         continue;

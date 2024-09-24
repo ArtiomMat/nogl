@@ -8,13 +8,12 @@ namespace nogl
 {
   // Various wizard statics.
   Scene* Wizard::scene = nullptr;
-  Node* Wizard::camera_node = nullptr;
   bool Wizard::alive = true;
   uint8_t Wizard::minions_n_ = 0;
   Bell Wizard::begin_bells_[2];
   std::unique_ptr<Bell[]> Wizard::done_bells_;
 
-  Wizard::UniqueArray Wizard::Spawn(unsigned n)
+  Wizard::UniqueArray Wizard::SpawnMinions(unsigned n)
   { 
     // Already have minions? Return nullptr equivalent
     if (Thread::index() != 0 || Wizard::minions_n_ > 0)
@@ -96,7 +95,7 @@ namespace nogl
         break;
       }
       
-      if (Wizard::scene != nullptr && Wizard::camera_node != nullptr)
+      if (Wizard::scene != nullptr && Wizard::scene->main_camera_node != nullptr)
       {
         for (auto& mesh : Wizard::scene->meshes_)
         {
@@ -125,7 +124,7 @@ namespace nogl
           }
 
           // Now for multiplication
-          const M4x4& matrix = std::get<Camera*>(Wizard::camera_node->data())->matrix();
+          const M4x4& matrix = std::get<Camera*>(Wizard::scene->main_camera_node->data())->matrix();
           in_vov.Multiply(out_vov, matrix, from, to);
           out_vov.DivideByW(out_vov, from, to);
         }

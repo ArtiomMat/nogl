@@ -6,11 +6,12 @@ namespace nogl
 {
   void Camera::RecalculateMatrix()
   {
-    // float a = context_->width() / context_->height();
-    // The matrix is slightly different from your classic perspective projection matrix, in that the width and height are baked into it in such a way that what we actually get is a range of -width/2 to width/2 and same for height, then the job of the rasterizer is to also add to each vertex [width/2, height/2, 0, 0], this speeds things up a little.
+    float a = width_ / height_;
+    // The matrix is slightly different from your classic perspective projection matrix, in that the width and height are baked into it in such a way that what we actually get is a range of 0 to width, and same for height.
+    // For width: This is done by first slapping width_/2 on the dividend, and then on the z's column we put -width_/2, this way we add z*-width_/2, so when we divide by w which is just -z, we get width/2 added to the x axis, which essentially shifts the x component range -width_/2..width_/2 to 0..width_.
     float m[] = {
-      1 / (tanf(yfov_ / 2) * aspect_ratio_), 0, 0, 0,
-      0, 1 / tanf(yfov_ / 2), 0, 0,
+      (width_/2) / (tanf(yfov_ / 2) * a), 0, -width_/2, 0,
+      0, (height_/2) / tanf(yfov_ / 2), -height_/2, 0,
       0, 0, - (znear_ + zfar_) / (zfar_ - znear_), - (2 * zfar_ * znear_) / (zfar_ - znear_),
       0, 0, -1, 0,
     };
@@ -31,11 +32,6 @@ namespace nogl
   void Camera::set_yfov(float yfov)
   {
     yfov_ = yfov;
-    RecalculateMatrix();
-  }
-  void Camera::set_aspect_ratio(float a)
-  {
-    aspect_ratio_ = a;
     RecalculateMatrix();
   }
 }
