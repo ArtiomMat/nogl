@@ -1,3 +1,4 @@
+// Also contains Wizard class.
 #pragma once
 
 #include "Thread.hpp"
@@ -32,26 +33,19 @@ namespace nogl
 
     int Start();
 
-    // Waits for `begin_bells`, has internal logic for bell switching.
+    // Waits for `begin_bells_`, has internal logic for bell switching.
     void WaitBegin();
     // Rings that the minion is done.
     void RingDone();
   };
 
-  // A wizard creates minions,  tiny rascals
+  // A wizard spawns and manages minions, the tiny rascals.
   class Wizard
   {
+    friend class Minion;
+
     public:
     using UniqueArray = std::unique_ptr<Minion[], void(*)(Minion*)>;
-
-    static uint8_t minions_n;
-    // A bell from the main thread to all threads to begin work.
-    // Double bell design because otherwise no way to deterministically stop minions from accidentally beginning again.
-    // This technique does require very careful management of bells, if the main thread or the other threads desychronize the current begin bell it is mental.
-    static Bell begin_bells[2];
-    // SoA not AoS so it can be waited for with optimized `Bell::MultiWait()`.
-    // A bell from the minion thread that it is done, after all done_bells are rung the main thread also swaps to other begin_bell, resets manually each done_bell, and proceeds.
-    static std::unique_ptr<Bell[]> done_bells;
     
     // The main thread may set it to false any time, signaling that THE WIZARD HAS DIED! clean-up->exit to all threads.
     // Must only be interfaced with when the minions are not working.
@@ -62,19 +56,31 @@ namespace nogl
 
     // You have control over the minions, but be cautious.
     static UniqueArray Spawn(unsigned n);
-    // Returns an array of minions, you can check the number by going `Minion::minions_n`, it will close to `Thread::logical_cores()`. If there are already minions, or `Thread::index` is not 0, returns a wrapped `nullptr`.
+    // Returns an array of minions, you can check the number by going `Minion::minions_n_`, it will close to `Thread::logical_cores()`. If there are already minions, or `Thread::index` is not 0, returns a wrapped `nullptr`.
     // To free it prematurely just call `reset()` on the unique pointer, it will have logic like flipping `alive`, and freeing other stuff, ofc this will be automatic if you want to.
     static UniqueArray Spawn() { return Spawn(Thread::logical_cores() - 1); }
     // Wait for all minions to ring done_bell, and reset them it too because if they reset it leads to unexpected behaviour. Must not be called in the minion thread, will lead to deadlock.
     // Essentially, this function allows you to wait for the minions to finish what they were assigned. After this function, it is expected you use `RingBegin()` when you are ready for minions to keep going.
-    // MUST be called after calling `RingBegin()` in the loop, otherwise main and minions get out of sync on `begin_bells`.
+    // MUST be called after calling `RingBegin()` in the loop, otherwise main and minions get out of sync on `begin_bells_`.
     static void WaitDone();
     // Rings appropriate `begin_bell`, has internal logic that takes care of switching bells.
-    // MUST be called before calling `WaitDone()` in the loop, otherwise main and minions get out of sync on `begin_bells`.
+    // MUST be called before calling `WaitDone()` in the loop, otherwise main and minions get out of sync on `begin_bells_`.
     // Returns index of the begin bell rung this time to signal begin of work.
     static unsigned RingBegin();
 
     private:
+    static UniqueArray minions;
+    
+    static uint8_t minions_n_;
+
+    // A bell from the main thread to all threads to begin work.
+    // Double bell design because otherwise no way to deterministically stop minions from accidentally beginning again.
+    // This technique does require very careful management of bells, if the main thread or the other threads desychronize the current begin bell it is mental.
+    static Bell begin_bells_[2];
+    // SoA not AoS so it can be waited for with optimized `Bell::MultiWait()`.
+    // A bell from the minion thread that it is done, after all `done_bells_` are rung the main thread also swaps to other begin_bell, resets manually each done_bell, and proceeds.
+    static std::unique_ptr<Bell[]> done_bells_;
+
     // This is what is called when a thread is opened.
     // A pointer is used cuz we don't want to copy.
     static int _Start(Minion*& m) { return m->Start(); }

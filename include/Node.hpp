@@ -21,7 +21,7 @@ namespace nogl
 
     Node() = default;
 
-    Variant& data() { return data_; }
+    const Variant& data() { return data_; }
 
     private:
     std::string name_;

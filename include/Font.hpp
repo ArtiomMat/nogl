@@ -33,7 +33,7 @@ namespace nogl
     void Open(const char* fp, Priority priority);
 
     // Returns nullptr if the glyph is invalid or failed to read
-    char* glyph(unsigned g) noexcept;
+    const char* glyph(unsigned g) noexcept;
 
     private:
     Priority priority; // Priority

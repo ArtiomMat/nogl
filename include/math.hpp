@@ -70,6 +70,7 @@ namespace nogl
 
     // Make sure it's [0]-[3] and not above!
     float& operator[](unsigned i) noexcept { return p_[i]; }
+    float operator[](unsigned i) const noexcept { return p_[i]; }
     
     void operator =(const float p[4]) noexcept
     {
@@ -122,7 +123,7 @@ namespace nogl
       _mm_store_ps(p_, res);
     }
 
-    float sum() noexcept
+    float sum() const noexcept
     {
       // __m128 vec_128 = _mm_load_ps(p_);
       // vec_128 = _mm_hadd_ps(vec_128, vec_128);
@@ -138,7 +139,7 @@ namespace nogl
     }
     
     // Returns dot product. Note that this takes the W component into account.
-    float Dot(const V4& o)
+    float Dot(const V4& o) const
     {
       __m128 a = _mm_load_ps(p_);
       __m128 b = _mm_load_ps(o.p_);
@@ -182,7 +183,7 @@ namespace nogl
     }
 
     // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3. If you know for sure that W component is 0 then you can call this, it will be slightly faster.
-    float magnitude(int mask) noexcept
+    float magnitude(int mask) const noexcept
     {
       __m128 vec_128 = _mm_load_ps(p_);
       // Load the vector to begin calculating the inverse magnitude
@@ -193,12 +194,12 @@ namespace nogl
       return __builtin_sqrtf(_mm_cvtss_f32(mag_128));
     }
 
-    float magnitude() noexcept
+    float magnitude() const noexcept
     {
       return magnitude(0b1111'1111);
     }
 
-    float magnitude3() noexcept
+    float magnitude3() const noexcept
     {
       return magnitude(0b0111'0111);
     }
@@ -298,12 +299,15 @@ namespace nogl
 
     // The number of vectors, not bytes, not floats, remember that before you refer to it as something else.
     unsigned n() const noexcept { return n_; }
-    V4* begin() const noexcept { return buffer_.get(); }
-    V4* end() const noexcept { return buffer_.get() + n_; }
+    const V4* begin() const noexcept { return buffer_.get(); }
+    const V4* end() const noexcept { return buffer_.get() + n_; }
+    V4* begin() noexcept { return buffer_.get(); }
+    V4* end() noexcept { return buffer_.get() + n_; }
 
     // Returns the vector at index `i`, avoid copying it, because then it will not be that vector.
     // NOTE: The object returned directly references the actual vector from this VOV, so any operation you do on the  object affects that vector here. 
     V4& operator [](unsigned i) noexcept { return buffer_[i]; }
+    const V4& operator [](unsigned i) const noexcept { return buffer_[i]; }
 
     private:
     // See `n()`

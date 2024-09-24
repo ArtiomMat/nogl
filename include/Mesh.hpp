@@ -21,8 +21,8 @@ namespace nogl
     public:
     Mesh() = default;
 
-    VOV4& vertices_projected() { return vertices_projected_; }
-    VOV4& vertices() { return vertices_; }
+    const VOV4& vertices_projected() const { return vertices_projected_; }
+    const VOV4& vertices() const { return vertices_; }
 
     private:
     std::string name_;

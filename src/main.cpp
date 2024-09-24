@@ -36,12 +36,12 @@ int main()
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  nogl::Scene scene("./scifi.glb");
+  nogl::Scene scene("../data/cube2.glb");
   // nogl::Image img("../data/test.jpg");
 
   auto minions = nogl::Wizard::Spawn();
   nogl::Wizard::scene = &scene;
-  nogl::Wizard::camera_node = scene.main_camera_node();
+  nogl::Wizard::camera_node = scene.main_camera_node;
 
   char title[128];
   unsigned title_set_time = ~0;
@@ -58,7 +58,7 @@ int main()
     
     nogl::Wizard::WaitDone();
 
-    for (nogl::V4& v : scene.meshes()[0].vertices_projected())
+    for (const nogl::V4& v : scene.meshes()[0].vertices_projected())
     {
       unsigned x = (v[0]/2 + 0.5) * ctx.width();
       unsigned y = (v[1]/2 + 0.5) * ctx.height();

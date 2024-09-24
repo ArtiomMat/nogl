@@ -298,9 +298,9 @@ namespace nogl
 
       nodes_.push_back(Node());
       auto& node = nodes_.back();
-      node.data() = &camera;
+      node.data_ = &camera;
 
-      main_camera_node_ = &node;
+      main_camera_node = &node;
     }
 
     delete [] json_chunk;

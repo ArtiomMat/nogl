@@ -10,39 +10,39 @@ namespace nogl
   Scene* Wizard::scene = nullptr;
   Node* Wizard::camera_node = nullptr;
   bool Wizard::alive = true;
-  uint8_t Wizard::minions_n = 0;
-  Bell Wizard::begin_bells[2];
-  std::unique_ptr<Bell[]> Wizard::done_bells;
+  uint8_t Wizard::minions_n_ = 0;
+  Bell Wizard::begin_bells_[2];
+  std::unique_ptr<Bell[]> Wizard::done_bells_;
 
   Wizard::UniqueArray Wizard::Spawn(unsigned n)
   { 
     // Already have minions? Return nullptr equivalent
-    if (Thread::index() != 0 || Wizard::minions_n > 0)
+    if (Thread::index() != 0 || Wizard::minions_n_ > 0)
     {
       return Wizard::UniqueArray(nullptr, [] (Minion*) {});
     }
 
-    Wizard::minions_n = n;
+    Wizard::minions_n_ = n;
 
     // The lambda here defines the deleter, very complex stuff I know
-    Wizard::UniqueArray minions(new Minion[Wizard::minions_n], [] (Minion* m) {
+    Wizard::UniqueArray minions(new Minion[Wizard::minions_n_], [] (Minion* m) {
       // XXX: I am unsure just how much of a bad hack this is, it's a hack, because the loop should terminate with WaitDone() called, so we need just one more cycle to end this, I am scared though that one day it may break.
       Wizard::RingBegin();
       Wizard::WaitDone();
 
       // Some stuff to force them to work one more time
       Wizard::alive = false;
-      Wizard::begin_bells[0].Ring();
-      Wizard::begin_bells[1].Ring();
+      Wizard::begin_bells_[0].Ring();
+      Wizard::begin_bells_[1].Ring();
       delete m;
       
       Logger::Begin() << "Minions closed." << Logger::End();
     });
 
-    Wizard::done_bells.reset(new Bell[Wizard::minions_n]);
+    Wizard::done_bells_.reset(new Bell[Wizard::minions_n_]);
     
     // Open all minions
-    for (unsigned i = 0; i < Wizard::minions_n; ++i)
+    for (unsigned i = 0; i < Wizard::minions_n_; ++i)
     {
       minions[i].index = i;
       minions[i].thread.Open(Wizard::_Start, &minions[i]);
@@ -58,30 +58,30 @@ namespace nogl
     static uint8_t begin_bell_i = 0;
 
     // Reset the other bell, to avoid premature begin
-    Wizard::begin_bells[!begin_bell_i].Reset();
+    Wizard::begin_bells_[!begin_bell_i].Reset();
     // Ring the actual bell, time for work!
-    Wizard::begin_bells[begin_bell_i].Ring();
+    Wizard::begin_bells_[begin_bell_i].Ring();
 
     begin_bell_i = !begin_bell_i; // Swap
     return !begin_bell_i;
   }
   void Wizard::WaitDone()
   {
-    Bell::MultiWait(Wizard::done_bells.get(), Wizard::minions_n);
-    for (unsigned i = 0; i < Wizard::minions_n; ++i)
+    Bell::MultiWait(Wizard::done_bells_.get(), Wizard::minions_n_);
+    for (unsigned i = 0; i < Wizard::minions_n_; ++i)
     {
-      Wizard::done_bells[i].Reset();
+      Wizard::done_bells_[i].Reset();
     }
   }
 
   void Minion::WaitBegin()
   {
-    Wizard::begin_bells[begin_bell_i_].Wait();
+    Wizard::begin_bells_[begin_bell_i_].Wait();
     begin_bell_i_ = !begin_bell_i_; // Swap begin_bell.
   }
   void Minion::RingDone()
   {
-    Wizard::done_bells[index].Ring();
+    Wizard::done_bells_[index].Ring();
   }
 
   int Minion::Start()
@@ -104,7 +104,7 @@ namespace nogl
           VOV4& out_vov = mesh.vertices_projected_;
 
           // Calculate how many vectors in a chunk, no rounding
-          unsigned chunk_size = in_vov.n() / Wizard::minions_n;
+          unsigned chunk_size = in_vov.n() / Wizard::minions_n_;
           
           // Round it up to how the vectors per 256 bits
           unsigned v4_per_256 = in_vov.kAlign / sizeof (V4);
@@ -115,7 +115,7 @@ namespace nogl
           unsigned from = chunk_size * index;
           unsigned to;
           // The last minion will need to deal with rounding from the fiasco before 
-          if (index == Wizard::minions_n - 1)
+          if (index == Wizard::minions_n_ - 1)
           {
             to = in_vov.n();
           }

@@ -161,7 +161,7 @@ namespace nogl
     width = (_type == PSF1 ? 8 : psf2.width);
   }
 
-  char* Font::glyph(unsigned g) noexcept
+  const char* Font::glyph(unsigned g) noexcept
   {
     if (g > glyphs_n)
     {
