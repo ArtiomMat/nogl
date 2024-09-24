@@ -85,6 +85,14 @@ namespace nogl
     inline unsigned height() const { return height_; }
 
     void PutImage(const Image& i, int x, int y);
+    // Float may be in any range, however:
+    // 0,0 <= x,y <= w-1.0f,h-1.0f are considered in bounds.
+    // 0 <= z <= 1 is considered in bounds.
+    void PutTriangle(
+      float ax, float ay, float az,
+      float bx, float by, float bz,
+      float cx, float cy, float cz
+    );
 
     private:
     // Essentially has 4 copies in BGRX format. Cached.

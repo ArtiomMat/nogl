@@ -69,10 +69,11 @@ namespace nogl
       for (unsigned i = 0; i < 4; ++i)
       {
         // Load the matrix column into both 128 parts of the AVX
-        __m128 col = _mm_load_ps(m.p_[i]);
-        __m256 cols = reinterpret_cast<__m256>(
-          _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
-        );
+        // __m128 col = _mm_load_ps(m.p_[i]);
+        // __m256 cols = reinterpret_cast<__m256>(
+        //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
+        // );
+        __m256 cols = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(m.p_[i]));
 
         // a is the i-th components COPIED all over from in_ptr[0] and b is same but for in_ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
         __m128 a = _mm_set1_ps(in_ptr[0].p_[i]);
@@ -84,6 +85,24 @@ namespace nogl
       }
 
       _mm256_store_ps(out_ptr->p_, res);
+    }
+  }
+
+  void VOV4::Add(VOV4& output, const V4& v, unsigned from, unsigned to)
+  {
+    for (unsigned vec = from; vec < to; vec += (kAlign / sizeof(V4)))
+    {
+      const V4* in_ptr = buffer_.get() + vec;
+      V4* out_ptr = output.buffer_.get() + vec;
+
+      __m128 a = _mm_load_ps(in_ptr[0].p_);
+      __m128 b = _mm_load_ps(in_ptr[1].p_);
+      __m256 ab = _mm256_set_m128(b, a);
+
+      __m256 cd = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(v.p_));
+
+      ab = _mm256_add_ps(ab, cd);
+      _mm256_store_ps(out_ptr->p_, ab);
     }
   }
 }

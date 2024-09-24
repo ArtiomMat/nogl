@@ -36,7 +36,7 @@ namespace nogl
     Thread() { hthread_ = nullptr; }
     ~Thread() { Join(); }
     
-    // Copies `i` to an internally managed buffer.
+    // NOTE: Copies `i` to an internally managed buffer. So if you need the buffer to be a reference, you will need to use pointers to your data structure.
     template <typename I>
     void Open(int (*start)(I& i),const I& i)
     {

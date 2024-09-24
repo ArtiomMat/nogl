@@ -24,26 +24,24 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
-
 int main()
 {
   if (!nogl::Thread::has_simd())
   {
-    nogl::Logger::Begin() << "CPU does not support correct SIMD. Can't proceed." << nogl::Logger::End();
+    nogl::Logger::Begin() << "CPU does not support required SIMD. Can't proceed." << nogl::Logger::End();
     return 1;
   }
-
-  nogl::Scene scene("../data/cube2.glb");
-  nogl::Image img("../data/test.jpg");
-
-  nogl::Minion::UniquePtr minions = nogl::Minion::OpenMinions();
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  nogl::Minion::scene = &scene;
-  nogl::Minion::camera_node = scene.main_camera_node();
+  nogl::Scene scene("./scifi.glb");
+  // nogl::Image img("../data/test.jpg");
+
+  auto minions = nogl::Wizard::Spawn();
+  nogl::Wizard::scene = &scene;
+  nogl::Wizard::camera_node = scene.main_camera_node();
 
   char title[128];
   unsigned title_set_time = ~0;
@@ -52,19 +50,19 @@ int main()
   while (run_loop)
   {
     nogl::Clock::BeginMeasure();
-    nogl::Minion::RingBegin();
+    nogl::Wizard::RingBegin();
 
     ctx.HandleEvents();
     ctx.Clear();
     // ctx.PutImage(img, 0, 0);
     
-    nogl::Minion::WaitDone();
+    nogl::Wizard::WaitDone();
 
     for (nogl::V4& v : scene.meshes()[0].vertices_projected())
     {
       unsigned x = (v[0]/2 + 0.5) * ctx.width();
       unsigned y = (v[1]/2 + 0.5) * ctx.height();
-      if (x > ctx.width() || y > ctx.height())
+      if (x >= ctx.width() || y >= ctx.height() || v[2] > 1 || v[2] < 0)
       {
         continue;
       }

@@ -137,7 +137,7 @@ namespace nogl
       _mm_store_ps(p_, vec_128);
     }
     
-    // Returns dot product. Note that this takes the 4-th component into account.
+    // Returns dot product. Note that this takes the W component into account.
     float Dot(const V4& o)
     {
       __m128 a = _mm_load_ps(p_);
@@ -146,8 +146,8 @@ namespace nogl
     }
 
     // In this context, `this` is the vector, `o` is right vector, so `this`x`o`. The result is put in `this`.
-    // Does not utilize the 4-th component, since cross product is only valid for 3D in our case.
-    // 4-th component is zeroed out, because there is no defined opearation on it.
+    // Does not utilize the W component, since cross product is only valid for 3D in our case.
+    // W component is zeroed out, because there is no defined opearation on it.
     void Cross(const V4& o)
     {
       // We use the 3 per-component formulas, in order.
@@ -168,7 +168,7 @@ namespace nogl
 
     void Normalize(int mask) noexcept;
     
-    // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`. If you know for sure that 4-th component is 0 then you can call this, it will be slightly faster.
+    // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`. If you know for sure that W component is 0 then you can call this, it will be slightly faster.
     void Normalize() noexcept
     {
       Normalize(0b1111'1111);
@@ -181,7 +181,7 @@ namespace nogl
       Normalize(0b0111'0111);
     }
 
-    // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3. If you know for sure that 4-th component is 0 then you can call this, it will be slightly faster.
+    // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3. If you know for sure that W component is 0 then you can call this, it will be slightly faster.
     float magnitude(int mask) noexcept
     {
       __m128 vec_128 = _mm_load_ps(p_);
@@ -229,7 +229,7 @@ namespace nogl
 
     // NOTE: Erases all previous data if existed.
     void Reallocate(unsigned n);
-    // Assuming v is the size of `n()`, copies float triplets into the VOV with the 4th component being `0`.
+    // Assuming v is the size of `n()`, copies float triplets into the VOV with the W component being `0`.
     // NOTE: Since V3 is only aligned to 8 bytes and is 12 bytes, it makes for a challenging copy.
     // void operator =(V3* v)
     // {
@@ -279,12 +279,19 @@ namespace nogl
     void operator *=(const M4x4& m) noexcept { Multiply(*this, m, 0, n_); }
     
     // Multiplies all vectors by `matrix`(as if our vectors are 1x4 matrices), stores results in `output`(can be `*this`).
-    // From `from` up to `to`(not including the V4 at `to` though).
+    // From `from` up to `to`(exclusive).
     // Huge note: The address in bytes of `from` & `to` must be aligned to `kAlign`.
     void Multiply(VOV4& output, const M4x4& m, unsigned from, unsigned to) noexcept;
     
-    // Divides each vector by its own w component(4th component), stores results in `output`(can be `*this`).
+    // Divides each vector by its own W component, stores results in `output`(can be `*this`).
     void DivideByW(VOV4& output, unsigned from, unsigned to);
+
+    // Adds all vectors with `v`, stores results in `output`(can be `*this`).
+    // From `from` up to `to`(exclusive).
+    // Huge note: The address in bytes of `from` & `to` must be aligned to `kAlign`.
+    void Add(VOV4& output, const V4& v, unsigned from, unsigned to);
+    // Same as `Add()` for V4, refers to `v` as if it's `V4::p()`.
+    // void Add(VOV4& output, const float v[4], unsigned from, unsigned to);
 
     // A chunk is a piece that a single Minion may process at once.
     // unsigned chunk_size(unsigned total_n) { return (n_ / (kAlign / sizeof (V4))) / total_n; }

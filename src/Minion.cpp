@@ -6,53 +6,46 @@
 
 namespace nogl
 {
-  static const M4x4 kDefaultMatrix((const float[]){
-    1,0,0,0,
-    0,1,0,0,
-    0,0,1,0,
-    0,0,0,1,
-  });
+  // Various wizard statics.
+  Scene* Wizard::scene = nullptr;
+  Node* Wizard::camera_node = nullptr;
+  bool Wizard::alive = true;
+  uint8_t Wizard::minions_n = 0;
+  Bell Wizard::begin_bells[2];
+  std::unique_ptr<Bell[]> Wizard::done_bells;
 
-  // Various Minion statics.
-  Scene* Minion::scene = nullptr;
-  Node* Minion::camera_node = nullptr;
-  bool Minion::alive = true;
-  uint8_t Minion::total_n = 0;
-  Bell Minion::begin_bells[2];
-  std::unique_ptr<Bell[]> Minion::done_bells;
-
-  Minion::UniquePtr Minion::OpenMinions(unsigned n)
+  Wizard::UniqueArray Wizard::Spawn(unsigned n)
   { 
     // Already have minions? Return nullptr equivalent
-    if (Minion::total_n > 0)
+    if (Thread::index() != 0 || Wizard::minions_n > 0)
     {
-      return Minion::UniquePtr(nullptr, [] (Minion*) {});
+      return Wizard::UniqueArray(nullptr, [] (Minion*) {});
     }
 
-    Minion::total_n = n;
+    Wizard::minions_n = n;
 
     // The lambda here defines the deleter, very complex stuff I know
-    Minion::UniquePtr minions(new Minion[Minion::total_n], [] (Minion* m) {
+    Wizard::UniqueArray minions(new Minion[Wizard::minions_n], [] (Minion* m) {
       // XXX: I am unsure just how much of a bad hack this is, it's a hack, because the loop should terminate with WaitDone() called, so we need just one more cycle to end this, I am scared though that one day it may break.
-      Minion::RingBegin();
-      Minion::WaitDone();
+      Wizard::RingBegin();
+      Wizard::WaitDone();
 
       // Some stuff to force them to work one more time
-      Minion::alive = false;
-      Minion::begin_bells[0].Ring();
-      Minion::begin_bells[1].Ring();
+      Wizard::alive = false;
+      Wizard::begin_bells[0].Ring();
+      Wizard::begin_bells[1].Ring();
       delete m;
       
       Logger::Begin() << "Minions closed." << Logger::End();
     });
 
-    Minion::done_bells.reset(new Bell[Minion::total_n]);
+    Wizard::done_bells.reset(new Bell[Wizard::minions_n]);
     
     // Open all minions
-    for (unsigned i = 0; i < Minion::total_n; ++i)
+    for (unsigned i = 0; i < Wizard::minions_n; ++i)
     {
       minions[i].index = i;
-      minions[i].thread.Open(Minion::_Start, &minions[i]);
+      minions[i].thread.Open(Wizard::_Start, &minions[i]);
     }
 
     Logger::Begin() << "Minions opened." << Logger::End();
@@ -60,35 +53,35 @@ namespace nogl
   }
   
 
-  unsigned Minion::RingBegin()
+  unsigned Wizard::RingBegin()
   {
     static uint8_t begin_bell_i = 0;
 
     // Reset the other bell, to avoid premature begin
-    nogl::Minion::begin_bells[!begin_bell_i].Reset();
+    Wizard::begin_bells[!begin_bell_i].Reset();
     // Ring the actual bell, time for work!
-    nogl::Minion::begin_bells[begin_bell_i].Ring();
+    Wizard::begin_bells[begin_bell_i].Ring();
 
     begin_bell_i = !begin_bell_i; // Swap
     return !begin_bell_i;
   }
-  void Minion::WaitDone()
+  void Wizard::WaitDone()
   {
-    nogl::Bell::MultiWait(nogl::Minion::done_bells.get(), nogl::Minion::total_n);
-    for (unsigned i = 0; i < nogl::Minion::total_n; ++i)
+    Bell::MultiWait(Wizard::done_bells.get(), Wizard::minions_n);
+    for (unsigned i = 0; i < Wizard::minions_n; ++i)
     {
-      nogl::Minion::done_bells[i].Reset();
+      Wizard::done_bells[i].Reset();
     }
   }
 
   void Minion::WaitBegin()
   {
-    Minion::begin_bells[begin_bell_i_].Wait();
+    Wizard::begin_bells[begin_bell_i_].Wait();
     begin_bell_i_ = !begin_bell_i_; // Swap begin_bell.
   }
   void Minion::RingDone()
   {
-    Minion::done_bells[index].Ring();
+    Wizard::done_bells[index].Ring();
   }
 
   int Minion::Start()
@@ -98,20 +91,20 @@ namespace nogl
     {
       WaitBegin();
 
-      if (!Minion::alive)
+      if (!Wizard::alive)
       {
         break;
       }
       
-      if (scene != nullptr && camera_node != nullptr)
+      if (Wizard::scene != nullptr && Wizard::camera_node != nullptr)
       {
-        for (auto& mesh : Minion::scene->meshes_)
+        for (auto& mesh : Wizard::scene->meshes_)
         {
           VOV4& in_vov = mesh.vertices_;
           VOV4& out_vov = mesh.vertices_projected_;
 
           // Calculate how many vectors in a chunk, no rounding
-          unsigned chunk_size = in_vov.n() / Minion::total_n;
+          unsigned chunk_size = in_vov.n() / Wizard::minions_n;
           
           // Round it up to how the vectors per 256 bits
           unsigned v4_per_256 = in_vov.kAlign / sizeof (V4);
@@ -122,7 +115,7 @@ namespace nogl
           unsigned from = chunk_size * index;
           unsigned to;
           // The last minion will need to deal with rounding from the fiasco before 
-          if (index == Minion::total_n - 1)
+          if (index == Wizard::minions_n - 1)
           {
             to = in_vov.n();
           }
@@ -132,7 +125,7 @@ namespace nogl
           }
 
           // Now for multiplication
-          const M4x4& matrix = std::get<Camera*>(camera_node->data())->matrix();
+          const M4x4& matrix = std::get<Camera*>(Wizard::camera_node->data())->matrix();
           in_vov.Multiply(out_vov, matrix, from, to);
           out_vov.DivideByW(out_vov, from, to);
         }
