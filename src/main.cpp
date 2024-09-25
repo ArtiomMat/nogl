@@ -79,8 +79,11 @@ int main()
     }
     ctx.Refresh();
     avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;
-
-    clock.SleepRemainder();
+    
+    if (clock.SleepRemainder() < 0)
+    {
+      nogl::Thread::Sleep(5); // For now rest for the CPU is more important
+    }
 
 
     // Displaying FPS on title
