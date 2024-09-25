@@ -120,6 +120,8 @@ namespace nogl
         _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(xmm.data_))
       );
     }
+    // Puts `low` on low part, `high` on high part.
+    YMM(const XMM& low, const XMM& high) { data_ = _mm256_set_m128(high.data_, low.data_); }
     // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
     // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
     YMM(const float* f) { data_ = _mm256_load_ps(f); }
@@ -392,7 +394,7 @@ namespace nogl
   {
     public:
 
-    static constexpr unsigned kAlign = sizeof(__m256); // Using the 256-bit AVX/SSE SIMD
+    static constexpr unsigned kAlign = sizeof(YMM); // Using the 256-bit AVX/SSE SIMD
 
     // n is the number of the vectors.
     VOV4(unsigned n = 0)
@@ -418,10 +420,10 @@ namespace nogl
     // Set every single vector, and every one of its components to `f`.
     void operator =(float f) noexcept
     {
-      __m256 filler = _mm256_set1_ps(f);
+      YMM filler = f;
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        _mm256_store_ps(ptr->p_, filler);
+        filler.Store(ptr->p_);
       }
     }
     // Assume f is the size of `4*n()`, so it contains all the vectors necessary flattened into an array.
@@ -429,18 +431,20 @@ namespace nogl
     {
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        _mm256_store_ps(ptr->p_, _mm256_load_ps(f));
+        YMM(f).Store(ptr->p_);
       }
     }
     void operator =(const V4& v) noexcept
     {
-      __m128 v128 = _mm_load_ps(v.p_);
-      __m256 v256 = reinterpret_cast<__m256>(
-        _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(v128))
-      );
+      // __m128 v128 = _mm_load_ps(v.p_);
+      // __m256 v256 = reinterpret_cast<__m256>(
+      //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(v128))
+      // );
+      YMM v256;
+      v256.Broadcast4Floats(v.p_);
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        _mm256_store_ps(ptr->p_, v256);
+        v256.Store(ptr->p_);
       }
     }
     // Copies vectors from `other` to `this`, the number of vectors is whoever has a smaller `n`.
@@ -448,10 +452,7 @@ namespace nogl
     {
       for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof (V4)))
       {
-        _mm256_store_ps(
-          buffer_[off].p_,
-          _mm256_load_ps(other.buffer_[off].p_)
-        );
+        YMM(other.buffer_[off].p_).Store(buffer_[off].p_);
       }
     }
 

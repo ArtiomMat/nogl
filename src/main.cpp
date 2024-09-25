@@ -75,13 +75,13 @@ int main()
       //   continue;
       // }
       // ctx.data()[(x + y * ctx.width()) * 4 + 1] = 255;
-      if (scene.meshes()[0].normals()[tri[0]].Dot((const float[]) {-1,0.5,0.3,0}) > 0)
-      {
+      // if (scene.meshes()[0].normals()[tri[0]].DotProduct((const float[]) {0,0,1,0}) > 0)
+      // {
         ctx.PutTriangle(
           vertices_projected[tri[0]][0], vertices_projected[tri[0]][1], vertices_projected[tri[0]][2],
           vertices_projected[tri[1]][0], vertices_projected[tri[1]][1], vertices_projected[tri[1]][2],
           vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2]);
-      }
+      // }
     }
     ctx.Refresh();
     avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;

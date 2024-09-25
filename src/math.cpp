@@ -4,6 +4,7 @@ namespace nogl
 {
   void V4::Normalize(int mask) noexcept
   {
+    // TODO: Can't XMM-ize this because _mm_dp_ps -> _mm_rsqrt_ps is faster than DotProduct -> convert back to XMM -> rsqrt it. So gotta rethink design?
     // Load the vector to begin calculating the inverse magnitude
     __m128 vec_128 = _mm_load_ps(p_);
     __m128 inv_mag_128;
@@ -41,17 +42,17 @@ namespace nogl
       V4* out_ptr = output.buffer_.get() + vec;
       
       // Load the 2 vectors into the register
-      __m128 a = _mm_load_ps(in_ptr[0].p_);
-      __m128 b = _mm_load_ps(in_ptr[1].p_);
-      __m256 ab = _mm256_set_m128(b, a);
+      XMM a(in_ptr[0].p_);
+      XMM b(in_ptr[1].p_);
+      YMM ab(a,b);
 
       // Load the w components all over the 2 parts of the register
-      a = _mm_set1_ps(in_ptr[0].p_[3]);
-      b = _mm_set1_ps(in_ptr[1].p_[3]);
-      __m256 w = _mm256_set_m128(b, a);
+      a = in_ptr[0].p_[3];
+      b = in_ptr[1].p_[3];
+      YMM w(a,b);
 
-      ab = _mm256_div_ps(ab, w);
-      _mm256_store_ps(out_ptr->p_, ab);
+      ab /= w;
+      ab.Store(out_ptr->p_);
     }
   }
   
@@ -64,7 +65,8 @@ namespace nogl
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      __m256 res = _mm256_setzero_ps();
+      YMM res;
+      res.SetZero();
 
       for (unsigned i = 0; i < 4; ++i)
       {
@@ -73,18 +75,19 @@ namespace nogl
         // __m256 cols = reinterpret_cast<__m256>(
         //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
         // );
-        __m256 cols = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(m.p_[i]));
+        YMM cols;
+        cols.Broadcast4Floats(m.p_[i]);
 
         // a is the i-th components COPIED all over from in_ptr[0] and b is same but for in_ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
-        __m128 a = _mm_set1_ps(in_ptr[0].p_[i]);
-        __m128 b = _mm_set1_ps(in_ptr[1].p_[i]);
-        __m256 ab = _mm256_set_m128(b, a);
+        XMM a(in_ptr[0].p_[i]);
+        XMM b(in_ptr[1].p_[i]);
+        YMM ab(a, b);
 
-        ab = _mm256_mul_ps(ab, cols);
-        res = _mm256_add_ps(res, ab);
+        ab *= cols;
+        res += ab;
       }
 
-      _mm256_store_ps(out_ptr->p_, res);
+      res.Store(out_ptr->p_);
     }
   }
 
@@ -95,14 +98,15 @@ namespace nogl
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      __m128 a = _mm_load_ps(in_ptr[0].p_);
-      __m128 b = _mm_load_ps(in_ptr[1].p_);
-      __m256 ab = _mm256_set_m128(b, a);
+      XMM a(in_ptr[0].p_);
+      XMM b(in_ptr[1].p_);
+      YMM ab(a, b);
 
-      __m256 cd = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(v.p_));
+      YMM cd;
+      cd.Broadcast4Floats(v.p_);
 
-      ab = _mm256_add_ps(ab, cd);
-      _mm256_store_ps(out_ptr->p_, ab);
+      ab += cd;
+      ab.Store(out_ptr->p_);
     }
   }
 

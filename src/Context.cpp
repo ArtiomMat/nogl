@@ -9,6 +9,7 @@ namespace nogl
 {
   void Context::Clear() noexcept
   {
+    // TODO: Shit now an XMM<uint8_t> and templates????
     __m256i loaded_clear_color = _mm256_load_si256(reinterpret_cast<__m256i*>(clear_color_c256_));
     
     uint8_t* end = data() + (width() * height()) * 4;
@@ -34,14 +35,15 @@ namespace nogl
 
   void Context::ClearZ() noexcept
   {
-    __m256 set = _mm256_set1_ps(1.0f);
+    YMM set;
+    set.SetZero();
     
     float* end = zdata() + (width() * height());
 
     for (float* ptr = zdata(); ptr < end; ptr+=sizeof(__m256))
     {
       // It's aligned for sure!
-      _mm256_store_ps(ptr, set);
+      set.Store(ptr);
     }
   }
 
