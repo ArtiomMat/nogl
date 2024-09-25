@@ -16,6 +16,7 @@ namespace nogl
   // A very lightweight wrapper for __m128.
   // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
   // At any time, on x64 there should be at most 16 active instances, on i386 8.
+  // NOTE: As of 26/09/2024 I gained X2 performance boost from making these classes, no fucking clue how. Perhaps God.
   class XMM
   {
     friend class YMM;
