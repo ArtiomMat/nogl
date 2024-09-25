@@ -156,13 +156,10 @@ namespace nogl
       {
         if (fx0 >= 0 && fx1 >= 0 && fx2 >= 0)
         {
+          data_[(x + y * width_)*4 + 0] = 255;
           data_[(x + y * width_)*4 + 1] = 255;
-          // data_[(x + y * width_)*4 + 2] = 0;
+          data_[(x + y * width_)*4 + 2] = 255;
         }
-        // else if (data_[(x + y * width_)*4 + 1] != 255)
-        // {
-        //   data_[(x + y * width_)*4 + 2] = 255;
-        // }
       }
     }
   }

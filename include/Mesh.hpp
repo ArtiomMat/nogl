@@ -26,6 +26,7 @@ namespace nogl
 
     const VOV4& vertices_projected() const { return vertices_projected_; }
     const VOV4& vertices() const { return vertices_; }
+    const VOV4& normals() const { return normals_; }
     const std::vector<std::array<unsigned, 3>>& indices() const { return indices_; }
 
     private:

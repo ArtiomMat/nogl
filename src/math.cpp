@@ -105,4 +105,25 @@ namespace nogl
       _mm256_store_ps(out_ptr->p_, ab);
     }
   }
+
+  __m128 Q4::Multiply(__m128 left, __m128 right)
+  {
+    // left*right = (left[3]*right[3] - dot3(left, right)) + (left[3]*vec3(right) + right[3]*vec3(left) + cross(left, right))
+  }
+
+  void V4::operator *=(const Q4& other) noexcept
+  {
+    // __m128 a = _mm_load_ps(p_);
+    // __m128 b = _mm_load_ps(other.p_);
+
+    // __m128 sign = reinterpret_cast<__m128>(_mm_set_epi32(0,0,0,1<<31));
+
+    // // Calculating the new x component
+    // __m128 x = _mm_mul_ps(
+    //   a,
+    //   _mm_shuffle_ps(b, b, _MM_SHUFFLE(0,1,2,3))
+    // );
+
+    // x = _mm_xor_ps(x, reinterpret_cast<__m128>(_mm_set_epi64x(0,1<<63)));
+  }
 }

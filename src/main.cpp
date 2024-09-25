@@ -32,12 +32,16 @@ int main()
     return 1;
   }
 
+  nogl::V4 v(1, 2, 3);
+  nogl::Q4 q;
+  v *= q;
+  nogl::Logger::Begin() << v[1] << nogl::Logger::End();
+
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
   nogl::Scene scene("./scifi.glb", ctx);
-  std::cout << scene.meshes()[0].indices().size() << '\n';
   // nogl::Image img("../data/test.jpg");
 
   auto minions = nogl::Wizard::SpawnMinions();
@@ -71,11 +75,13 @@ int main()
       //   continue;
       // }
       // ctx.data()[(x + y * ctx.width()) * 4 + 1] = 255;
-
-      ctx.PutTriangle(
-        vertices_projected[tri[0]][0], vertices_projected[tri[0]][1], vertices_projected[tri[0]][2],
-        vertices_projected[tri[1]][0], vertices_projected[tri[1]][1], vertices_projected[tri[1]][2],
-        vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2]);
+      if (scene.meshes()[0].normals()[tri[0]].Dot((const float[]) {-1,0.5,0.3,0}) > 0)
+      {
+        ctx.PutTriangle(
+          vertices_projected[tri[0]][0], vertices_projected[tri[0]][1], vertices_projected[tri[0]][2],
+          vertices_projected[tri[1]][0], vertices_projected[tri[1]][1], vertices_projected[tri[1]][2],
+          vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2]);
+      }
     }
     ctx.Refresh();
     avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;

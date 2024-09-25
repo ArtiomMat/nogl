@@ -11,8 +11,96 @@
 
 namespace nogl
 {
+  // A very lightweight wrapper for __m128.
+  // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
+  // At any time, on x64 there should be at most 16 active instances, on i386 8.
+  class F4
+  {
+    public:
+    F4() = default;
+    // 4 floats will be loaded. f must be aligned, if not, use `LoadUnaligned()`.
+    F4(const float* f) { data_ = _mm_load_ps(f); }
+    // Sets all 4 components to f.
+    F4(float f) { data_ = _mm_set1_ps(f); }
+    // AVOID CONFUSION: Parameters are in ltr order. E.g `x` is set as the `[0]` component, but in intel intrinsics it would have been the `[3]` component.
+    F4(float x, float y, float z, float w) { data_ = _mm_set_ps(w, z, y, x); }
+
+    ~F4() = default;
+
+    float sum() const
+    {
+      __m128 tmp = _mm_hadd_ps(data_, data_);
+      tmp = _mm_hadd_ps(data_, data_);
+      return _mm_cvtss_f32(tmp);
+    }
+    float DotProduct(const F4& other) const
+    {
+      return _mm_cvtss_f32(
+        _mm_dp_ps(data_, other.data_, 0xFF)
+      );
+    }
+    // The `[3]` component is left in the crossfire, the resulting `[3]` in the returned F4 is `0`.
+    F4 CrossProduct(const F4& other) const
+    {
+      // Setup the subtracted values
+      __m128 left = _mm_mul_ps(
+        _mm_shuffle_ps(data_,data_, _MM_SHUFFLE(3,0,2,1)),
+        _mm_shuffle_ps(other.data_,other.data_, _MM_SHUFFLE(3,1,0,2))
+      );
+      // Setup the subtracting values
+      __m128 right = _mm_mul_ps(
+        _mm_shuffle_ps(data_,data_, _MM_SHUFFLE(3,1,0,2)),
+        _mm_shuffle_ps(other.data_,other.data_, _MM_SHUFFLE(3,0,2,1))
+      );
+
+      return _mm_sub_ps(left, right);
+    }
+    // Will add more stuff now.
+    void SetZero() { data_ = _mm_setzero_ps(); }
+    void LoadUnaligned(float* f) { data_ = _mm_loadu_ps(f); }
+    // The parameters determine to which index each of their respective component will be moved.
+    // e.g `x` equals `3` will move the `[0]` component to `[3]` by the end of the operation.
+    constexpr F4 Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+
+    F4 operator +(const F4& other) const { return _mm_add_ps(data_, other.data_); }
+    F4& operator +=(const F4& other) { data_ = _mm_add_ps(data_, other.data_); return *this; }
+    
+    F4 operator -(const F4& other) const { return _mm_sub_ps(data_, other.data_); }
+    F4& operator -=(const F4& other) { data_ = _mm_sub_ps(data_, other.data_); return *this; }
+
+    F4 operator *(const F4& other) const { return _mm_mul_ps(data_, other.data_); }
+    F4& operator *=(const F4& other) { data_ = _mm_mul_ps(data_, other.data_); return *this; }
+
+    F4 operator /(const F4& other) const { return _mm_div_ps(data_, other.data_); }
+    F4& operator /=(const F4& other) { data_ = _mm_div_ps(data_, other.data_); return *this; }
+
+    bool operator ==(const F4& other) const
+    {
+      return _mm_movemask_ps(
+        _mm_cmp_ps(data_, other.data_, _CMP_EQ_OQ)
+      ) == 0xF;
+    }
+
+    // This operation is not recommended for purposes other than debugging.
+    constexpr float operator [](uint8_t i) const
+    {
+      return _mm_cvtss_f32(
+        _mm_shuffle_ps(
+          data_, data_,
+          _MM_SHUFFLE(3,2,1,i)
+        )
+      );
+    }
+
+    private:
+    F4(__m128 data) { data_ = data; }
+
+    __m128 data_;
+  };
+
   class VOV4;
   class V4;
+  class Q4;
 
   class alignas(32) M4x4
   {
@@ -84,6 +172,8 @@ namespace nogl
       __m128 b = _mm_load_ps(other.p_);
       _mm_store_ps(p_, _mm_mul_ps(a, b));
     }
+    // Multiplying by quaternion, which in other words rotates the vector.
+    void operator *=(const Q4& other) noexcept;
     void operator /=(const V4& other) noexcept
     {
       __m128 a = _mm_load_ps(p_);
@@ -148,20 +238,22 @@ namespace nogl
 
     // In this context, `this` is the vector, `o` is right vector, so `this`x`o`. The result is put in `this`.
     // Does not utilize the W component, since cross product is only valid for 3D in our case.
-    // W component is zeroed out, because there is no defined opearation on it.
+    // W component is in `this` is left untouched.
     void Cross(const V4& o)
     {
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(o.p_);
       // We use the 3 per-component formulas, in order.
 
       // Setup the subtracted values
       __m128 left = _mm_mul_ps(
-        _mm_set_ps(0, p_[0], p_[2], p_[1]),
-        _mm_set_ps(0, o.p_[1], o.p_[0], o.p_[2])
+        _mm_shuffle_ps(a,a, _MM_SHUFFLE(3,0,2,1)),
+        _mm_shuffle_ps(b,b, _MM_SHUFFLE(3,1,0,2))
       );
       // Setup the subtracting values
       __m128 right = _mm_mul_ps(
-        _mm_set_ps(0, p_[1], p_[0], p_[2]),
-        _mm_set_ps(0, o.p_[0], o.p_[2], o.p_[1])
+        _mm_shuffle_ps(a,a, _MM_SHUFFLE(3,1,0,2)),
+        _mm_shuffle_ps(b,b, _MM_SHUFFLE(3,0,2,1))
       );
       // Now do the subtraction and store it back
       _mm_store_ps(p_, _mm_sub_ps(left, right));
@@ -183,7 +275,7 @@ namespace nogl
     }
 
     // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3. If you know for sure that W component is 0 then you can call this, it will be slightly faster.
-    float magnitude(int mask) const noexcept
+    float magnitude(int mask = 0b1111'1111) const noexcept
     {
       __m128 vec_128 = _mm_load_ps(p_);
       // Load the vector to begin calculating the inverse magnitude
@@ -192,11 +284,6 @@ namespace nogl
       mag_128 = _mm_dp_ps(vec_128, vec_128, mask);
 
       return __builtin_sqrtf(_mm_cvtss_f32(mag_128));
-    }
-
-    float magnitude() const noexcept
-    {
-      return magnitude(0b1111'1111);
     }
 
     float magnitude3() const noexcept
@@ -315,6 +402,25 @@ namespace nogl
     // MUST BE ALIGNED TO `kAlign`
     std::unique_ptr<V4[]> buffer_ = nullptr;
   };
+
+
+  // Welcome to quaternions! [x,y,z,w], where w is the real(angle) part.
+  // In actuality is just a smartass normalized V4.
+  class alignas(16) Q4 : private V4
+  {
+    friend V4;
+    public:
+    // General multiply, because without it-it gets pretty copy intensive, memory wise.
+    // Note: of course the order of the parameters matters.
+    static __m128 Multiply(__m128 left, __m128 right);
+
+    // Magnitude of the quaternion.
+    float norm()
+    {
+      return V4::magnitude();
+    }
+  };
+
 
   template <typename T>
   void FindMinMax(T& min, T& max, T a, T b, T c)

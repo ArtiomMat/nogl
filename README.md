@@ -3,7 +3,7 @@ Idk really if it will be a library or a standalone.\
 It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths with it and replace it with NO GRAPHICS LIBRARY!
 
 # Current state
-As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no face culling yet(got work to do).
+As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no face culling yet(got work to do).\
 ![Rendering mid-poly model's triangles at 17ms](screenshots/screenshot-25-09-24.png)
 
 # Roadmap(TODO)
