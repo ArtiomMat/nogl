@@ -11,21 +11,25 @@
 
 namespace nogl
 {
+  class YMM;
+
   // A very lightweight wrapper for __m128.
   // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
   // At any time, on x64 there should be at most 16 active instances, on i386 8.
-  class F4
+  class XMM
   {
-    public:
-    F4() = default;
-    // 4 floats will be loaded. f must be aligned, if not, use `LoadUnaligned()`.
-    F4(const float* f) { data_ = _mm_load_ps(f); }
-    // Sets all 4 components to f.
-    F4(float f) { data_ = _mm_set1_ps(f); }
-    // AVOID CONFUSION: Parameters are in ltr order. E.g `x` is set as the `[0]` component, but in intel intrinsics it would have been the `[3]` component.
-    F4(float x, float y, float z, float w) { data_ = _mm_set_ps(w, z, y, x); }
+    friend class YMM;
 
-    ~F4() = default;
+    public:
+    XMM() = default;
+    // 4 floats will be loaded. `f` must be aligned to 128 bits, if not, use `LoadUnaligned()`.
+    XMM(const float* f) { data_ = _mm_load_ps(f); }
+    // Sets all 4 components as `f`.
+    XMM(float f) { data_ = _mm_set1_ps(f); }
+    // AVOID CONFUSION: Parameters are in ltr order. E.g `x` is set as the `[0]` component, but in intel intrinsics it would have been the `[3]` component.
+    XMM(float x, float y, float z, float w) { data_ = _mm_set_ps(w, z, y, x); }
+
+    ~XMM() = default;
 
     float sum() const
     {
@@ -33,14 +37,14 @@ namespace nogl
       tmp = _mm_hadd_ps(data_, data_);
       return _mm_cvtss_f32(tmp);
     }
-    float DotProduct(const F4& other) const
+    float DotProduct(const XMM& other) const
     {
       return _mm_cvtss_f32(
         _mm_dp_ps(data_, other.data_, 0xFF)
       );
     }
-    // The `[3]` component is left in the crossfire, the resulting `[3]` in the returned F4 is `0`.
-    F4 CrossProduct(const F4& other) const
+    // The `[3]` component is left in the crossfire, the resulting `[3]` in the returned XMM is `0`.
+    XMM CrossProduct(const XMM& other) const
     {
       // Setup the subtracted values
       __m128 left = _mm_mul_ps(
@@ -57,24 +61,27 @@ namespace nogl
     }
     // Will add more stuff now.
     void SetZero() { data_ = _mm_setzero_ps(); }
-    void LoadUnaligned(float* f) { data_ = _mm_loadu_ps(f); }
+    void LoadUnaligned(const float* f) { data_ = _mm_loadu_ps(f); }
     // The parameters determine to which index each of their respective component will be moved.
     // e.g `x` equals `3` will move the `[0]` component to `[3]` by the end of the operation.
-    constexpr F4 Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+    constexpr XMM Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+    // Stores to 128 ALIGNED 8 float array!
+    void Store(float* f) const { _mm_store_ps(f, data_); }
+    void StoreUnaligned(float* f) const { _mm_storeu_ps(f, data_); }
 
-    F4 operator +(const F4& other) const { return _mm_add_ps(data_, other.data_); }
-    F4& operator +=(const F4& other) { data_ = _mm_add_ps(data_, other.data_); return *this; }
+    XMM operator +(const XMM& other) const { return _mm_add_ps(data_, other.data_); }
+    XMM& operator +=(const XMM& other) { data_ = _mm_add_ps(data_, other.data_); return *this; }
     
-    F4 operator -(const F4& other) const { return _mm_sub_ps(data_, other.data_); }
-    F4& operator -=(const F4& other) { data_ = _mm_sub_ps(data_, other.data_); return *this; }
+    XMM operator -(const XMM& other) const { return _mm_sub_ps(data_, other.data_); }
+    XMM& operator -=(const XMM& other) { data_ = _mm_sub_ps(data_, other.data_); return *this; }
 
-    F4 operator *(const F4& other) const { return _mm_mul_ps(data_, other.data_); }
-    F4& operator *=(const F4& other) { data_ = _mm_mul_ps(data_, other.data_); return *this; }
+    XMM operator *(const XMM& other) const { return _mm_mul_ps(data_, other.data_); }
+    XMM& operator *=(const XMM& other) { data_ = _mm_mul_ps(data_, other.data_); return *this; }
 
-    F4 operator /(const F4& other) const { return _mm_div_ps(data_, other.data_); }
-    F4& operator /=(const F4& other) { data_ = _mm_div_ps(data_, other.data_); return *this; }
+    XMM operator /(const XMM& other) const { return _mm_div_ps(data_, other.data_); }
+    XMM& operator /=(const XMM& other) { data_ = _mm_div_ps(data_, other.data_); return *this; }
 
-    bool operator ==(const F4& other) const
+    bool operator ==(const XMM& other) const
     {
       return _mm_movemask_ps(
         _mm_cmp_ps(data_, other.data_, _CMP_EQ_OQ)
@@ -93,9 +100,93 @@ namespace nogl
     }
 
     private:
-    F4(__m128 data) { data_ = data; }
+    XMM(__m128 data) { data_ = data; }
 
     __m128 data_;
+  };
+
+  // A very lightweight wrapper for __m256.
+  // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
+  // Usually YMM is an extension of existing XMM registers, so only 16 of these and XMM's can exist on x64, on i386 only 8.
+  class YMM
+  {
+    public:
+    YMM() = default;
+    // Broadcasts `xmm` into both 128 bit parts of the YMM.
+    // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
+    YMM(const XMM& xmm)
+    {
+      data_ = reinterpret_cast<__m256>(
+        _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(xmm.data_))
+      );
+    }
+    // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
+    // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
+    YMM(const float* f) { data_ = _mm256_load_ps(f); }
+    // Sets all 8 components as `f`.
+    YMM(float f) { data_ = _mm256_set1_ps(f); }
+    // AVOID CONFUSION: Parameters are in ltr order. E.g `x` is set as the `[0]` component, but in intel intrinsics it would have been the `[3]` component.
+    YMM(float x, float y, float z, float w, float x1, float y1, float z1, float w1) { data_ = _mm256_set_ps(x, y, z, w, x1, y1, z1, w1); }
+
+    ~YMM() = default;
+
+    float sum() const
+    {
+      __m256 tmp = _mm256_permute2f128_ps(data_ , data_ , 1);
+      tmp = _mm256_add_ps(data_, tmp);
+      tmp = _mm256_hadd_ps(tmp, tmp);
+      tmp = _mm256_hadd_ps(tmp, tmp);
+      return _mm256_cvtss_f32(tmp);
+    }
+    float DotProduct(const YMM& other) const
+    {
+      return _mm256_cvtss_f32(
+        _mm256_dp_ps(data_, other.data_, 0xFF)
+      );
+    }
+    // Will add more stuff now.
+    void SetZero() { data_ = _mm256_setzero_ps(); }
+    void LoadUnaligned(const float* f) { data_ = _mm256_loadu_ps(f); }
+    // Broadcasts 4 128 BITS ALIGNED floats.
+    void Broadcast4Floats(const float* f) { data_ = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(f)); }
+    // Stores to 256 ALIGNED 8 float array!
+    void Store(float* f) const { _mm256_store_ps(f, data_); }
+    void StoreUnaligned(float* f) const { _mm256_storeu_ps(f, data_); }
+
+    YMM operator +(const YMM& other) const { return _mm256_add_ps(data_, other.data_); }
+    YMM& operator +=(const YMM& other) { data_ = _mm256_add_ps(data_, other.data_); return *this; }
+    
+    YMM operator -(const YMM& other) const { return _mm256_sub_ps(data_, other.data_); }
+    YMM& operator -=(const YMM& other) { data_ = _mm256_sub_ps(data_, other.data_); return *this; }
+
+    YMM operator *(const YMM& other) const { return _mm256_mul_ps(data_, other.data_); }
+    YMM& operator *=(const YMM& other) { data_ = _mm256_mul_ps(data_, other.data_); return *this; }
+
+    YMM operator /(const YMM& other) const { return _mm256_div_ps(data_, other.data_); }
+    YMM& operator /=(const YMM& other) { data_ = _mm256_div_ps(data_, other.data_); return *this; }
+
+    bool operator ==(const YMM& other) const
+    {
+      return _mm256_movemask_ps(
+        _mm256_cmp_ps(data_, other.data_, _CMP_EQ_OQ)
+      ) == 0xF;
+    }
+
+    // This operation is not recommended for purposes other than debugging.
+    // constexpr float operator [](uint8_t i) const
+    // {
+    //   return _mm_cvtss_f32(
+    //     _mm_shuffle_ps(
+    //       data_, data_,
+    //       _MM_SHUFFLE(3,2,1,i)
+    //     )
+    //   );
+    // }
+
+    private:
+    YMM(__m256 data) { data_ = data; }
+
+    __m256 data_;
   };
 
   class VOV4;
@@ -229,7 +320,7 @@ namespace nogl
     }
     
     // Returns dot product. Note that this takes the W component into account.
-    float Dot(const V4& o) const
+    float DotProduct(const V4& o) const
     {
       __m128 a = _mm_load_ps(p_);
       __m128 b = _mm_load_ps(o.p_);
@@ -239,7 +330,7 @@ namespace nogl
     // In this context, `this` is the vector, `o` is right vector, so `this`x`o`. The result is put in `this`.
     // Does not utilize the W component, since cross product is only valid for 3D in our case.
     // W component is in `this` is left untouched.
-    void Cross(const V4& o)
+    void CrossProduct(const V4& o)
     {
       __m128 a = _mm_load_ps(p_);
       __m128 b = _mm_load_ps(o.p_);
