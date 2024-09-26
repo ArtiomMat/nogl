@@ -3,28 +3,36 @@
 // #include <immintrin.h>
 #include <immintrin.h>
 #include <xmmintrin.h>
+#include <emmintrin.h>
 
 #include <type_traits>
 #include <cstdint>
 
 namespace nogl
 {
-  // template <typename T>
-  // using xmm_t = typename std::conditional<
-  //   std::is_same<T, float>::value || std::is_same<T, double>::value, // condition
-  //   __m128, // if true
-  //   __m128i // else
-  // >::type;
-
-  // inline __m128 _mm_load(const float *__P) { return _mm_load_ps(__P); }
-  // inline __m128i _mm_load(const unsigned char *__P) { return _mm_loadu_epi8(__P); }
-
-  // inline __m128 _mm_set1(float __F) { return _mm_set1_ps(__F); }
-  // inline __m128i _mm_set1(unsigned char __F) { return _mm_set1_epi8(__F); }
-
-  // inline unsigned char _mm_cvtss(const unsigned char *__P) { return _mm_loadu_epi8(__P); }
-
   class YMM;
+
+  template <typename P, typename M>
+  class _XMM
+  {
+    
+  };
+
+  inline __m128i _mm_load(const uint8_t *__P) { return _mm_loadu_epi8(__P); }
+  inline __m128i _mm_set1(uint8_t __F) { return _mm_set1_epi8(__F); }
+  inline __m128i _mm_add(__m128i a, __m128i b) { return _mm_add_epi8(a, b); }
+  inline __m128i _mm_sub(__m128i a, __m128i b) { return _mm_sub_epi8(a, b); }
+  
+  inline __m128 _mm_load(const float *__P) { return _mm_load_ps(__P); }
+  inline __m128 _mm_set1(float __F) { return _mm_set1_ps(__F); }
+  inline __m128 _mm_add(__m128 a, __m128 b) { return _mm_add_ps(a, b); }
+  inline __m128 _mm_sub(__m128 a, __m128 b) { return _mm_sub_ps(a, b); }
+  inline __m128 _mm_mul(__m128 a, __m128 b) { return _mm_mul_ps(a, b); }
+  inline __m128 _mm_div(__m128 a, __m128 b) { return _mm_div_ps(a, b); }
+  inline __m128 _mm_hadd(__m128 a, __m128 b) { return _mm_hadd_ps(a, b); }
+  inline __m128 _mm_dp(__m128 a, __m128 b, int imm8) { return _mm_dp_ps(a, b, imm8); }
+  inline __m128 _mm_dp(__m128 a, __m128 b, int imm8) { return _mm_dp_ps(a, b, imm8); }
+  // inline float _mm_cvtss(__m128 a) { return _mm_dp_ps(a, b, imm8); }
 
   // A very lightweight wrapper for __m128.
   // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
