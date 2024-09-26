@@ -5,9 +5,9 @@ namespace nogl
   void V4::Normalize(int mask) noexcept
   {
     // Load the vector to begin calculating the inverse magnitude
-    XMM vec_128(p_);
+    XMM<float> vec_128(p_);
     
-    XMM inv_mag_128 = vec_128.DotProduct(vec_128).ISquareRoot();
+    XMM<float> inv_mag_128 = vec_128.DotProduct(vec_128).ISquareRoot();
 
     // Reload it into the register but this time for all its components.
     inv_mag_128 = inv_mag_128.Shuffle(0,0,0,0);
@@ -36,14 +36,14 @@ namespace nogl
       V4* out_ptr = output.buffer_.get() + vec;
       
       // Load the 2 vectors into the register
-      XMM a(in_ptr[0].p_);
-      XMM b(in_ptr[1].p_);
-      YMM ab(a,b);
+      XMM<float> a(in_ptr[0].p_);
+      XMM<float> b(in_ptr[1].p_);
+      YMM<float> ab(a,b);
 
       // Load the w components all over the 2 parts of the register
       a = in_ptr[0].p_[3];
       b = in_ptr[1].p_[3];
-      YMM w(a,b);
+      YMM<float> w(a,b);
 
       ab /= w;
       ab.Store(out_ptr->p_);
@@ -59,7 +59,7 @@ namespace nogl
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      YMM res;
+      YMM<float> res;
       res.ZeroOut();
 
       for (unsigned i = 0; i < 4; ++i)
@@ -69,13 +69,13 @@ namespace nogl
         // __m256 cols = reinterpret_cast<__m256>(
         //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
         // );
-        YMM cols;
+        YMM<float> cols;
         cols.Broadcast4Floats(m.p_[i]);
 
         // a is the i-th components COPIED all over from in_ptr[0] and b is same but for in_ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
-        XMM a(in_ptr[0].p_[i]);
-        XMM b(in_ptr[1].p_[i]);
-        YMM ab(a, b);
+        XMM<float> a(in_ptr[0].p_[i]);
+        XMM<float> b(in_ptr[1].p_[i]);
+        YMM<float> ab(a, b);
 
         ab *= cols;
         res += ab;
@@ -92,11 +92,11 @@ namespace nogl
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      XMM a(in_ptr[0].p_);
-      XMM b(in_ptr[1].p_);
-      YMM ab(a, b);
+      XMM<float> a(in_ptr[0].p_);
+      XMM<float> b(in_ptr[1].p_);
+      YMM<float> ab(a, b);
 
-      YMM cd;
+      YMM<float> cd;
       cd.Broadcast4Floats(v.p_);
 
       ab += cd;

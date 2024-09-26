@@ -9,15 +9,14 @@ namespace nogl
 {
   void Context::Clear() noexcept
   {
-    // TODO: Shit now an XMM<uint8_t> and templates????
-    __m256i loaded_clear_color = _mm256_load_si256(reinterpret_cast<__m256i*>(clear_color_c256_));
+    YMM<uint8_t> loaded_clear_color(clear_color_c256_);
     
     uint8_t* end = data() + (width() * height()) * 4;
 
     for (uint8_t* ptr = data(); ptr < end; ptr+=sizeof(__m256i))
     {
       // Unaligned store because as of now I am unsure how to properly ensure alignment of data.
-      _mm256_storeu_si256(reinterpret_cast<__m256i*>(ptr), loaded_clear_color);
+      loaded_clear_color.Store(ptr);
       // This is apparently an AVX512 ;-;
       // _mm256_storeu_epi32((void*)ptr, loaded_clear_color);
     }
@@ -35,7 +34,7 @@ namespace nogl
 
   void Context::ClearZ() noexcept
   {
-    YMM set;
+    YMM<float> set;
     set.ZeroOut();
     
     float* end = zdata() + (width() * height());

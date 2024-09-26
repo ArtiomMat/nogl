@@ -10,38 +10,37 @@
 
 namespace nogl
 {
+  template <typename T>
   class YMM;
-
-  template <typename P, typename M>
-  class _XMM
-  {
-    
-  };
-
-  inline __m128i _mm_load(const uint8_t *__P) { return _mm_loadu_epi8(__P); }
-  inline __m128i _mm_set1(uint8_t __F) { return _mm_set1_epi8(__F); }
-  inline __m128i _mm_add(__m128i a, __m128i b) { return _mm_add_epi8(a, b); }
-  inline __m128i _mm_sub(__m128i a, __m128i b) { return _mm_sub_epi8(a, b); }
-  
-  inline __m128 _mm_load(const float *__P) { return _mm_load_ps(__P); }
-  inline __m128 _mm_set1(float __F) { return _mm_set1_ps(__F); }
-  inline __m128 _mm_add(__m128 a, __m128 b) { return _mm_add_ps(a, b); }
-  inline __m128 _mm_sub(__m128 a, __m128 b) { return _mm_sub_ps(a, b); }
-  inline __m128 _mm_mul(__m128 a, __m128 b) { return _mm_mul_ps(a, b); }
-  inline __m128 _mm_div(__m128 a, __m128 b) { return _mm_div_ps(a, b); }
-  inline __m128 _mm_hadd(__m128 a, __m128 b) { return _mm_hadd_ps(a, b); }
-  inline __m128 _mm_dp(__m128 a, __m128 b, int imm8) { return _mm_dp_ps(a, b, imm8); }
-  inline __m128 _mm_dp(__m128 a, __m128 b, int imm8) { return _mm_dp_ps(a, b, imm8); }
-  // inline float _mm_cvtss(__m128 a) { return _mm_dp_ps(a, b, imm8); }
 
   // A very lightweight wrapper for __m128.
   // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
   // At any time, on x64 there should be at most 16 active instances, on i386 8.
   // NOTE: As of 26/09/2024 I gained X2 performance boost from making these classes, no fucking clue how. Perhaps God.
+  template <typename T>
   class XMM
-  {
-    friend class YMM;
+  {};
 
+  // inline __m128i _mm_load(const uint8_t *__P) { return _mm_loadu_epi8(__P); }
+  // inline __m128i _mm_set1(uint8_t __F) { return _mm_set1_epi8(__F); }
+  // inline __m128i _mm_add(__m128i a, __m128i b) { return _mm_add_epi8(a, b); }
+  // inline __m128i _mm_sub(__m128i a, __m128i b) { return _mm_sub_epi8(a, b); }
+  
+  // inline __m128 _mm_load(const float *__P) { return _mm_load_ps(__P); }
+  // inline __m128 _mm_set1(float __F) { return _mm_set1_ps(__F); }
+  // inline __m128 _mm_add(__m128 a, __m128 b) { return _mm_add_ps(a, b); }
+  // inline __m128 _mm_sub(__m128 a, __m128 b) { return _mm_sub_ps(a, b); }
+  // inline __m128 _mm_mul(__m128 a, __m128 b) { return _mm_mul_ps(a, b); }
+  // inline __m128 _mm_div(__m128 a, __m128 b) { return _mm_div_ps(a, b); }
+  // inline __m128 _mm_hadd(__m128 a, __m128 b) { return _mm_hadd_ps(a, b); }
+  // inline __m128 _mm_dp(__m128 a, __m128 b, int imm8) { return _mm_dp_ps(a, b, imm8); }
+  // inline __m128 _mm_dp(__m128 a, __m128 b, int imm8) { return _mm_dp_ps(a, b, imm8); }
+  // inline float _mm_cvtss(__m128 a) { return _mm_dp_ps(a, b, imm8); }
+
+  template <>
+  class XMM<float>
+  {
+    friend class YMM<float>;
     public:
     XMM() = default;
     // 4 floats will be loaded. `f` must be aligned to 128 bits, if not, use `LoadUnaligned()`.
@@ -148,5 +147,36 @@ namespace nogl
     XMM(__m128 data) { data_ = data; }
 
     __m128 data_;
+  };
+
+  // The very basic stuff for simple setting and getting of YMM integral values. Base for YMM<int,unsigned, etc>
+  template <typename T>
+  class _XMMsi128
+  {
+    public:
+    _XMMsi128() = default;
+    // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
+    // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
+    _XMMsi128(const T* f) { data_ = _mm_load_si128(reinterpret_cast<const __m128i*>(f)); }
+    // Sets all 8 components as `f`.
+    _XMMsi128(T f) { data_ = _mm_set1_epi8(f); }
+
+    void LoadUnaligned(const T* f) { data_ = _mm_loadu_si128(reinterpret_cast<const __m128i*>(f)); }
+    // Sets all the components to their equivalent 0 value.
+    void ZeroOut() { data_ = _mm_setzero_si128(); }
+    // Stores to 256 ALIGNED 8 float array!
+    void Store(T* f) const { _mm_store_si128(reinterpret_cast<__m128i*>(f), data_); }
+    void StoreUnaligned(T* f) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(f), data_); }
+
+    protected:
+    _XMMsi128(__m128i data) { data_ = data; }
+
+    __m128i data_;
+  };
+  
+  template <>
+  class XMM<uint8_t> : public _XMMsi128<uint8_t>
+  {
+    friend class YMM<uint8_t>;
   };
 }

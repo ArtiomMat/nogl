@@ -36,8 +36,8 @@ int main()
   // nogl::Q4 q;
   // v *= q;
   {
-    nogl::XMM q(32,4,41,3.3f), p(3,15.3,2,1);
-    q = q.QuaternionMultiply(p);
+    nogl::XMM<float> q(32,4,41,3.3f), p(3,15.3,2,1);
+    q = q.QuaternionMultiply(p); // -577.4,113.49,525.2,-235.9
     nogl::Logger::Begin() << q[0] << ',' << q[1] << ',' << q[2] << ',' << q[3] << ',' << nogl::Logger::End();
   }
 

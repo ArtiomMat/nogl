@@ -2,12 +2,12 @@
 
 namespace nogl
 {
-  YMM YMM::QuaternionMultiply(const YMM& b)
+  YMM<float> YMM<float>::QuaternionMultiply(const YMM<float>& b)
   {
     // We essentially do the exact same thing as XMM.
-    YMM& a = *this;
+    YMM<float>& a = *this;
 
-    YMM s = a * b;
+    YMM<float> s = a * b;
     // s -= 
   }
 }

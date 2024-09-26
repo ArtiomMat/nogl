@@ -12,20 +12,27 @@ namespace nogl
   // A very lightweight wrapper for __m256.
   // Use these with great care, too many can cause register pressure and thus spillage to memory, this WILL make things slower.
   // Usually YMM is an extension of existing XMM registers, so only 16 of these and XMM's can exist on x64, on i386 only 8.
+  template <typename T>
   class YMM
+  {
+
+  };
+
+  template <>
+  class YMM<float>
   {
     public:
     YMM() = default;
     // Broadcasts `xmm` into both 128 bit parts of the YMM.
     // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
-    YMM(const XMM& xmm)
+    YMM(const XMM<float>& xmm)
     {
       data_ = reinterpret_cast<__m256>(
         _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(xmm.data_))
       );
     }
     // Puts `low` on low part, `high` on high part.
-    YMM(const XMM& low, const XMM& high) { data_ = _mm256_set_m128(high.data_, low.data_); }
+    YMM(const XMM<float>& low, const XMM<float>& high) { data_ = _mm256_set_m128(high.data_, low.data_); }
     // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
     // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
     YMM(const float* f) { data_ = _mm256_load_ps(f); }
@@ -50,11 +57,11 @@ namespace nogl
         _mm256_dp_ps(data_, other.data_, 0xFF)
       );
     }
-    // Sets all the components to their equivalent 0 value.
-    void ZeroOut() { data_ = _mm256_setzero_ps(); }
-    void LoadUnaligned(const float* f) { data_ = _mm256_loadu_ps(f); }
     // Broadcasts 4 128 BITS ALIGNED floats.
     void Broadcast4Floats(const float* f) { data_ = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(f)); }
+    void LoadUnaligned(const float* f) { data_ = _mm256_loadu_ps(f); }
+    // Sets all the components to their equivalent 0 value.
+    void ZeroOut() { data_ = _mm256_setzero_ps(); }
     // Stores to 256 ALIGNED 8 float array!
     void Store(float* f) const { _mm256_store_ps(f, data_); }
     void StoreUnaligned(float* f) const { _mm256_storeu_ps(f, data_); }
@@ -104,45 +111,32 @@ namespace nogl
     __m256 data_;
   };
 
-  // `XMM` equivalent for integer ari
-  // class YMMu8
-  // {
-  //   public:
-  //   YMM() = default;
-  //   // Broadcasts `xmm` into both 128 bit parts of the YMM.
-  //   // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
-  //   YMM(const XMM& xmm)
-  //   {
-  //     data_ = reinterpret_cast<__m256>(
-  //       _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(xmm.data_))
-  //     );
-  //   }
-  //   // Puts `low` on low part, `high` on high part.
-  //   YMM(const XMM& low, const XMM& high) { data_ = _mm256_set_m128(high.data_, low.data_); }
-  //   // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
-  //   // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
-  //   YMM(const float* f) { data_ = _mm256_load_ps(f); }
-  //   // Sets all 8 components as `f`.
-  //   YMM(float f) { data_ = _mm256_set1_ps(f); }
+  // The very basic stuff for simple setting and getting of YMM integral values. Base for YMM<int,unsigned, etc>
+  template <typename T>
+  class _YMMsi256
+  {
+    public:
+    _YMMsi256() = default;
+    // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
+    // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
+    _YMMsi256(const T* f) { data_ = _mm256_load_si256(reinterpret_cast<const __m256i*>(f)); }
+    // Sets all 8 components as `f`.
+    _YMMsi256(T f) { data_ = _mm256_set1_epi8(f); }
 
-  //   // Stores to 256 ALIGNED 8 uint8_t array!
-  //   void Store(uint8_t* f) const { _mm256_storeu_epi8(f, data_); }
-  //   void StoreUnaligned(uint8_t* f) const { _mm256_storeu_epi8(f, data_); }
+    void LoadUnaligned(const T* f) { data_ = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(f)); }
+    // Sets all the components to their equivalent 0 value.
+    void ZeroOut() { data_ = _mm256_setzero_si256(); }
+    // Stores to 256 ALIGNED 8 float array!
+    void Store(T* f) const { _mm256_store_si256(reinterpret_cast<__m256i*>(f), data_); }
+    void StoreUnaligned(T* f) const { _mm256_storeu_si256(reinterpret_cast<__m256i*>(f), data_); }
 
-  //   YMMu8 operator +(const YMMu8& other) const { return _mm256_add_epi8(data_, other.data_); }
-  //   YMMu8& operator +=(const YMMu8& other) { data_ = _mm256_add_epi8(data_, other.data_); return *this; }
-    
-  //   YMMu8 operator -(const YMMu8& other) const { return _mm256_sub_epi8(data_, other.data_); }
-  //   YMMu8& operator -=(const YMMu8& other) { data_ = _mm256_sub_epi8(data_, other.data_); return *this; }
+    protected:
+    _YMMsi256(__m256i data) { data_ = data; }
 
-  //   YMMu8 operator *(const YMMu8& other) const { return _mm256_mul_epi8(data_, other.data_); }
-  //   YMMu8& operator *=(const YMMu8& other) { data_ = _mm256_mul_epi8(data_, other.data_); return *this; }
+    __m256i data_;
+  };
 
-  //   YMMu8 operator /(const YMMu8& other) const { return _mm256_div_epi8(data_, other.data_); }
-  //   YMMu8& operator /=(const YMMu8& other) { data_ = _mm256_div_epi8(data_, other.data_); return *this; }
-  //   private:
-  //   YMMu8(__m128i data) { data_ = data; }
-
-  //   __m256i data_;
-  // };
+  template <>
+  class YMM<uint8_t> : public _YMMsi256<uint8_t>
+  {};
 }

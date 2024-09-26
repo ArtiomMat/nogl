@@ -217,7 +217,7 @@ namespace nogl
   {
     public:
 
-    static constexpr unsigned kAlign = sizeof(YMM); // Using the 256-bit AVX/SSE SIMD
+    static constexpr unsigned kAlign = sizeof(YMM<float>); // Using the 256-bit AVX/SSE SIMD
 
     // n is the number of the vectors.
     VOV4(unsigned n = 0)
@@ -243,7 +243,7 @@ namespace nogl
     // Set every single vector, and every one of its components to `f`.
     void operator =(float f) noexcept
     {
-      YMM filler = f;
+      YMM<float> filler = f;
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
         filler.Store(ptr->p_);
@@ -254,7 +254,7 @@ namespace nogl
     {
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        YMM(f).Store(ptr->p_);
+        YMM<float>(f).Store(ptr->p_);
       }
     }
     void operator =(const V4& v) noexcept
@@ -263,7 +263,7 @@ namespace nogl
       // __m256 v256 = reinterpret_cast<__m256>(
       //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(v128))
       // );
-      YMM v256;
+      YMM<float> v256;
       v256.Broadcast4Floats(v.p_);
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
@@ -275,7 +275,7 @@ namespace nogl
     {
       for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof (V4)))
       {
-        YMM(other.buffer_[off].p_).Store(buffer_[off].p_);
+        YMM<float>(other.buffer_[off].p_).Store(buffer_[off].p_);
       }
     }
 
