@@ -5,21 +5,14 @@ namespace nogl
 {
   XMM XMM::QuaternionMultiply(const XMM& b)
   {
-    /*
-    a*b = 
-      (a[3]*b[3] - dot3(a, b))
-      +
-      (a[3]*vec3(b) + b[3]*vec3(a) + cross(a, b))
-    */
     XMM& a = *this;
 
-    // Scalar part
+    // Scalar part (a[3]*b[3] - dot3(a, b))
     XMM s = a * b; // a[3]*b[3] is what we care about
-    s = s.Insert(s, 0, 3); // Move that to the 0th component
-    s -= a.DotProduct(b, 1,1,1,0); // Ignore the w component in dot product
-    Logger::Begin() << a.DotProduct(b, 1,1,1,0).x() << Logger::End();
+    // Manual dot product mask, because it allows us to avoid using redundant Insert to the 0th component of a*b.
+    s -= XMM(_mm_dp_ps(a.data_, b.data_, 0b0111'1000));
 
-    // Vector part
+    // Vector part (a[3]*vec3(b) + b[3]*vec3(a) + cross(a, b))
     XMM tmp;
     XMM v;
     // Scalar multiplication part
@@ -32,6 +25,6 @@ namespace nogl
     v += a.CrossProduct(b);
 
     // The combination of the vector part and the scalar part
-    return v.Insert(s, 3, 0);
+    return v.Insert(s, 3, 3);
   }
 }

@@ -58,6 +58,15 @@ namespace nogl
     // Stores to 256 ALIGNED 8 float array!
     void Store(float* f) const { _mm256_store_ps(f, data_); }
     void StoreUnaligned(float* f) const { _mm256_storeu_ps(f, data_); }
+    // A new *theoretical* XMM is created where it's [[0],[1],high[2],high[3]], this XMM's components are reffered to below:
+    // The parameters determine to which other component each of their respective component will be equal to.
+    // e.g `x` equals `3` will put the theoretical XMM's `[3]` component to `[0]` by the end of the operation.
+    // constexpr XMM Shuffle(const XMM& high, uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm256_shuffle_ps(data_, high.data_, _MM_SHUFFLE(w,z,y,x)); }
+    // Calls other `Shuffle()` but with `high` being *this.
+    // constexpr XMM Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+
+    // Multiplies 2 quaternions stored in this YMM, with the 2 quaternions stored in `b`. Same as `XMM::QuaternionMultiply()` but optimized to perform multiplication in bulk.
+    YMM QuaternionMultiply(const YMM& b);
 
     YMM operator +(const YMM& other) const { return _mm256_add_ps(data_, other.data_); }
     YMM& operator +=(const YMM& other) { data_ = _mm256_add_ps(data_, other.data_); return *this; }
@@ -94,4 +103,46 @@ namespace nogl
 
     __m256 data_;
   };
+
+  // `XMM` equivalent for integer ari
+  // class YMMu8
+  // {
+  //   public:
+  //   YMM() = default;
+  //   // Broadcasts `xmm` into both 128 bit parts of the YMM.
+  //   // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
+  //   YMM(const XMM& xmm)
+  //   {
+  //     data_ = reinterpret_cast<__m256>(
+  //       _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(xmm.data_))
+  //     );
+  //   }
+  //   // Puts `low` on low part, `high` on high part.
+  //   YMM(const XMM& low, const XMM& high) { data_ = _mm256_set_m128(high.data_, low.data_); }
+  //   // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
+  //   // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
+  //   YMM(const float* f) { data_ = _mm256_load_ps(f); }
+  //   // Sets all 8 components as `f`.
+  //   YMM(float f) { data_ = _mm256_set1_ps(f); }
+
+  //   // Stores to 256 ALIGNED 8 uint8_t array!
+  //   void Store(uint8_t* f) const { _mm256_storeu_epi8(f, data_); }
+  //   void StoreUnaligned(uint8_t* f) const { _mm256_storeu_epi8(f, data_); }
+
+  //   YMMu8 operator +(const YMMu8& other) const { return _mm256_add_epi8(data_, other.data_); }
+  //   YMMu8& operator +=(const YMMu8& other) { data_ = _mm256_add_epi8(data_, other.data_); return *this; }
+    
+  //   YMMu8 operator -(const YMMu8& other) const { return _mm256_sub_epi8(data_, other.data_); }
+  //   YMMu8& operator -=(const YMMu8& other) { data_ = _mm256_sub_epi8(data_, other.data_); return *this; }
+
+  //   YMMu8 operator *(const YMMu8& other) const { return _mm256_mul_epi8(data_, other.data_); }
+  //   YMMu8& operator *=(const YMMu8& other) { data_ = _mm256_mul_epi8(data_, other.data_); return *this; }
+
+  //   YMMu8 operator /(const YMMu8& other) const { return _mm256_div_epi8(data_, other.data_); }
+  //   YMMu8& operator /=(const YMMu8& other) { data_ = _mm256_div_epi8(data_, other.data_); return *this; }
+  //   private:
+  //   YMMu8(__m128i data) { data_ = data; }
+
+  //   __m256i data_;
+  // };
 }
