@@ -36,7 +36,7 @@ namespace nogl
   void Context::ClearZ() noexcept
   {
     YMM set;
-    set.SetZero();
+    set.ZeroOut();
     
     float* end = zdata() + (width() * height());
 

@@ -32,10 +32,14 @@ int main()
     return 1;
   }
 
-  nogl::V4 v(1, 2, 3);
-  nogl::Q4 q;
-  v *= q;
-  nogl::Logger::Begin() << v[1] << nogl::Logger::End();
+  // nogl::V4 v(1, 2, 3);
+  // nogl::Q4 q;
+  // v *= q;
+  {
+    nogl::XMM q(32,4,41,3.3f), p(3,15.3,2,1);
+    q = q.QuaternionMultiply(p);
+    nogl::Logger::Begin() << q[0] << ',' << q[1] << ',' << q[2] << ',' << q[3] << ',' << nogl::Logger::End();
+  }
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);

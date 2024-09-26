@@ -4,22 +4,16 @@ namespace nogl
 {
   void V4::Normalize(int mask) noexcept
   {
-    // TODO: Can't XMM-ize this because _mm_dp_ps -> _mm_rsqrt_ps is faster than DotProduct -> convert back to XMM -> rsqrt it. So gotta rethink design?
     // Load the vector to begin calculating the inverse magnitude
-    __m128 vec_128 = _mm_load_ps(p_);
-    __m128 inv_mag_128;
+    XMM vec_128(p_);
     
-    // Dot product
-    inv_mag_128 = _mm_dp_ps(vec_128, vec_128, mask);
+    XMM inv_mag_128 = vec_128.DotProduct(vec_128).ISquareRoot();
 
-    // Apply inverse square root and retrieve, don't care about the rest of the component
-    inv_mag_128 = _mm_rsqrt_ps(inv_mag_128);
-    float inv_mag = _mm_cvtss_f32(inv_mag_128);
     // Reload it into the register but this time for all its components.
-    inv_mag_128 = _mm_set1_ps(inv_mag);
+    inv_mag_128 = inv_mag_128.Shuffle(0,0,0,0);
     // Finally the moment we were all waiting for
-    vec_128 = _mm_mul_ps(vec_128, inv_mag_128);
-    _mm_store_ps(p_, vec_128);
+    vec_128 *= inv_mag_128;
+    vec_128.Store(p_);
   }
 
   void VOV4::Reallocate(unsigned n)
@@ -66,7 +60,7 @@ namespace nogl
       V4* out_ptr = output.buffer_.get() + vec;
 
       YMM res;
-      res.SetZero();
+      res.ZeroOut();
 
       for (unsigned i = 0; i < 4; ++i)
       {
