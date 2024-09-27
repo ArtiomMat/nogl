@@ -127,6 +127,12 @@ namespace nogl
     XMM operator /(const XMM& other) const { return _mm_div_ps(data_, other.data_); }
     XMM& operator /=(const XMM& other) { data_ = _mm_div_ps(data_, other.data_); return *this; }
 
+    XMM operator -() const
+    {
+      __m128 zero = _mm_setzero_ps();
+      return _mm_sub_ps(zero, data_);
+    }
+
     bool operator ==(const XMM& other) const
     {
       return _mm_movemask_ps(
