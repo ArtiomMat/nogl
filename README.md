@@ -24,6 +24,8 @@ As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no 
   - [x] Matrix math for perspective projection.
   - [x] Various vector arithmetic using SIMD: normalization, dot, cross, etc.
   - [x] Refector hot functions like multiplication with matrices for multi-thread support.
+  - [x] Create SIMD primitives like XMM and YMM.
+  - [x] Integrate XMM and YMM into the math utility.
   - [ ] Polish up.
 - [ ] Multi-threading.
   - [x] Minions, split work between each other, like multiplying VOVs.

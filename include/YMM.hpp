@@ -57,7 +57,7 @@ namespace nogl
     {
       return _mm256_dp_ps(data_, other.data_, (x << 4) | (y << 5) | (z << 6) | (w << 7) | 1);
     }
-    // Does dot product as if the YMM is 2 XMMs. This is essentially 2 `XMM::CrossProduct()` but in one shot.
+    // Does cross product as if the YMM is 2 XMMs. This is essentially 2 `XMM::CrossProduct()` but in one shot.
     YMM CrossProduct(const YMM& other) const
     {
       // NOTE: Shuffles are for each lane as if 2 __m128.
@@ -89,10 +89,23 @@ namespace nogl
     // // Calls other `Shuffle()` but with `high` being *this.
     constexpr YMM Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm256_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
     // Blending is like inserting but it doesn't actually take one element from the `b`, rather it takes the corresponding element from `b` specified by whether the bits are `1`(copy) or `0`(ignore). Note that the lowest bit is the first element of the first lane, highest is the last element of the second lane.
-    constexpr YMM Blend(const YMM& b, const int mask) { return _mm256_blend_ps(data_, b.data_, mask); }
+    constexpr YMM Blend(const YMM& b, const int mask) const { return _mm256_blend_ps(data_, b.data_, mask); }
 
-    // Multiplies 2 quaternions stored in this YMM, with the 2 quaternions stored in `b`. Same as `XMM::QuaternionMultiply()` but optimized to perform multiplication in bulk.
-    YMM QuaternionMultiply(const YMM& b);
+    // Multiplies 2 quaternions stored in this YMM, with the 2 quaternions stored in `b`. Same as `XMM::QMultiply()` but optimized to perform multiplication in bulk.
+    YMM QMultiply(const YMM& b) const;
+    // YMM equivalent for `XMM::QVMultiply()`, just like `QMultiply()`
+    YMM QVMultiply(const YMM& b) const;
+    // Get the 2 quaternion conjugates, if the 2 lanes were quaternions.
+    YMM QConjugate() const
+    {
+      __m256 zero = _mm256_setzero_ps();
+      return _mm256_blend_ps(data_, _mm256_sub_ps(zero, data_), 0b0111'0111);
+    }
+    // Sandwich operation on the vectors in the 2 lanes with the 2 lanes in `q` quaternion.
+    YMM QVSandwich(const YMM& q) const
+    {
+      return q.QVMultiply(*this).QMultiply(q.QConjugate());
+    }
 
     YMM operator +(const YMM& other) const { return _mm256_add_ps(data_, other.data_); }
     YMM& operator +=(const YMM& other) { data_ = _mm256_add_ps(data_, other.data_); return *this; }
@@ -111,6 +124,12 @@ namespace nogl
       return _mm256_movemask_ps(
         _mm256_cmp_ps(data_, other.data_, _CMP_EQ_OQ)
       ) == 0xF;
+    }
+
+    YMM operator -() const
+    {
+      __m256 zero = _mm256_setzero_ps();
+      return _mm256_sub_ps(zero, data_);
     }
 
     // constexpr float operator [](uint8_t i) const

@@ -107,13 +107,26 @@ namespace nogl
     void StoreUnaligned(float* f) const { _mm_storeu_ps(f, data_); }
 
     // Inserts component at `b[bi]` into `*this[i]`.
-    constexpr XMM Insert(const XMM& b, const uint8_t i, const uint8_t bi) { return _mm_insert_ps(data_, b.data_, ((i << 4) | (bi << 6))); }
+    constexpr XMM Insert(const XMM& b, const uint8_t i, const uint8_t bi) const { return _mm_insert_ps(data_, b.data_, ((i << 4) | (bi << 6))); }
     // Blending is like inserting but it doesn't actually take one element from the `b`, rather it takes the corresponding element from `b` specified by whether the bits are `1`(copy) or `0`(ignore). Note that the lowest bit is the first element, highest is the last element.
-    constexpr XMM Blend(const XMM& b, const int mask) { return _mm_blend_ps(data_, b.data_, mask); }
+    constexpr XMM Blend(const XMM& b, const int mask) const { return _mm_blend_ps(data_, b.data_, mask); }
 
     // Considers `*this` as the left quaternion, and `b` as the right quaternion, in the multiplication.
     // The quaternions's XMM components are `[x,y,z,w]` where `w` is the real part, `x, y, z` are the scalars of `i, j, k` respectively.
-    XMM QuaternionMultiply(const XMM& b);
+    XMM QMultiply(const XMM& b) const;
+    // `QMultiply()` but optimized for quaternion-vector multiplication. w is ignored, because vector is known to have w=0. Multiplication order `*this` with `b` as vector, what is what is important.
+    XMM QVMultiply(const XMM& b) const;
+    // Get the 2 quaternion conjugates, if the 2 lanes were quaternions.
+    XMM QConjugate() const
+    {
+      __m128 zero = _mm_setzero_ps();
+      return _mm_blend_ps(data_, _mm_sub_ps(zero, data_), 0b0111);
+    }
+    // Sandwich operation on the vector with the `q` quaternion.
+    XMM QVSandwich(const XMM& q) const
+    {
+      return q.QVMultiply(*this).QMultiply(q.QConjugate());
+    }
 
     XMM operator +(const XMM& other) const { return _mm_add_ps(data_, other.data_); }
     XMM& operator +=(const XMM& other) { data_ = _mm_add_ps(data_, other.data_); return *this; }
