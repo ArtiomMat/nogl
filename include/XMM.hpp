@@ -108,6 +108,8 @@ namespace nogl
 
     // Inserts component at `b[bi]` into `*this[i]`.
     constexpr XMM Insert(const XMM& b, const uint8_t i, const uint8_t bi) { return _mm_insert_ps(data_, b.data_, ((i << 4) | (bi << 6))); }
+    // Blending is like inserting but it doesn't actually take one element from the `b`, rather it takes the corresponding element from `b` specified by whether the bits are `1`(copy) or `0`(ignore). Note that the lowest bit is the first element, highest is the last element.
+    constexpr XMM Blend(const XMM& b, const int mask) { return _mm_blend_ps(data_, b.data_, mask); }
 
     // Considers `*this` as the left quaternion, and `b` as the right quaternion, in the multiplication.
     // The quaternions's XMM components are `[x,y,z,w]` where `w` is the real part, `x, y, z` are the scalars of `i, j, k` respectively.
@@ -141,6 +143,8 @@ namespace nogl
           _MM_SHUFFLE(3,2,1,i)
         )
       );
+
+      return _mm_extract_ps(data_, i % 4);
     }
 
     private:

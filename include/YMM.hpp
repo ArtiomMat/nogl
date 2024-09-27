@@ -23,7 +23,7 @@ namespace nogl
   {
     public:
     YMM() = default;
-    // Broadcasts `xmm` into both 128 bit parts of the YMM.
+    // Broadcasts `xmm` into both 128 bit lanes of the YMM.
     // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
     YMM(const XMM<float>& xmm)
     {
@@ -31,7 +31,7 @@ namespace nogl
         _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(xmm.data_))
       );
     }
-    // Puts `low` on low part, `high` on high part.
+    // Puts `low` on low lane, `high` on high lane.
     YMM(const XMM<float>& low, const XMM<float>& high) { data_ = _mm256_set_m128(high.data_, low.data_); }
     // 8 floats will be loaded. `f` must be aligned to 256 bits, if not, use `LoadUnaligned()`.
     // If you want 4 floats to be broadcast use `Broadcast4Floats()`.
@@ -39,7 +39,7 @@ namespace nogl
     // Sets all 8 components as `f`.
     YMM(float f) { data_ = _mm256_set1_ps(f); }
     // AVOID CONFUSION: Parameters are in ltr order. E.g `x` is set as the `[0]` component, but in intel intrinsics it would have been the `[3]` component.
-    YMM(float x, float y, float z, float w, float x1, float y1, float z1, float w1) { data_ = _mm256_set_ps(x, y, z, w, x1, y1, z1, w1); }
+    YMM(float x, float y, float z, float w, float x1, float y1, float z1, float w1) { data_ = _mm256_set_ps(w1,z1,y1,x1, w,z,y,x); }
 
     ~YMM() = default;
 
@@ -51,11 +51,28 @@ namespace nogl
       tmp = _mm256_hadd_ps(tmp, tmp);
       return _mm256_cvtss_f32(tmp);
     }
-    float DotProduct(const YMM& other) const
+    // Does dot product as if the YMM is 2 XMMs, and stores the result in each of those XMM's `x()`.
+    // This is essentially 2 `XMM::DotProduct()` but in one shot.
+    constexpr YMM DotProduct(const YMM& other, const uint8_t x = 1, const uint8_t y = 1, const uint8_t z = 1, const uint8_t w = 1) const
     {
-      return _mm256_cvtss_f32(
-        _mm256_dp_ps(data_, other.data_, 0xFF)
+      return _mm256_dp_ps(data_, other.data_, (x << 4) | (y << 5) | (z << 6) | (w << 7) | 1);
+    }
+    // Does dot product as if the YMM is 2 XMMs. This is essentially 2 `XMM::CrossProduct()` but in one shot.
+    YMM CrossProduct(const YMM& other) const
+    {
+      // NOTE: Shuffles are for each lane as if 2 __m128.
+      // Setup the subtracted values
+      __m256 left = _mm256_mul_ps(
+        _mm256_shuffle_ps(data_,data_, _MM_SHUFFLE(3,0,2,1)),
+        _mm256_shuffle_ps(other.data_,other.data_, _MM_SHUFFLE(3,1,0,2))
       );
+      // Setup the subtracting values
+      __m256 right = _mm256_mul_ps(
+        _mm256_shuffle_ps(data_,data_, _MM_SHUFFLE(3,1,0,2)),
+        _mm256_shuffle_ps(other.data_,other.data_, _MM_SHUFFLE(3,0,2,1))
+      );
+
+      return _mm256_sub_ps(left, right);
     }
     // Broadcasts 4 128 BITS ALIGNED floats.
     void Broadcast4Floats(const float* f) { data_ = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(f)); }
@@ -65,12 +82,14 @@ namespace nogl
     // Stores to 256 ALIGNED 8 float array!
     void Store(float* f) const { _mm256_store_ps(f, data_); }
     void StoreUnaligned(float* f) const { _mm256_storeu_ps(f, data_); }
-    // A new *theoretical* XMM is created where it's [[0],[1],high[2],high[3]], this XMM's components are reffered to below:
-    // The parameters determine to which other component each of their respective component will be equal to.
-    // e.g `x` equals `3` will put the theoretical XMM's `[3]` component to `[0]` by the end of the operation.
-    // constexpr XMM Shuffle(const XMM& high, uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm256_shuffle_ps(data_, high.data_, _MM_SHUFFLE(w,z,y,x)); }
-    // Calls other `Shuffle()` but with `high` being *this.
-    // constexpr XMM Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+    // A new *theoretical* YMM is created where it's [[0],[1],[2],[3],high[4],high[5],high[6],high[7]], this YMM's components are reffered to below:
+    // Consider this as `XMM::Suffle()` on the two lanes if we were to split the YMM.
+    // e.g `x` equals `3` will put the theoretical first XMM's `[3]` component into `[0]` by the end of the operation, and the second XMM's `high[3]` into `high[0]`.
+    constexpr YMM Shuffle(const YMM& high, uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm256_shuffle_ps(data_, high.data_, _MM_SHUFFLE(w,z,y,x)); }
+    // // Calls other `Shuffle()` but with `high` being *this.
+    constexpr YMM Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm256_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+    // Blending is like inserting but it doesn't actually take one element from the `b`, rather it takes the corresponding element from `b` specified by whether the bits are `1`(copy) or `0`(ignore). Note that the lowest bit is the first element of the first lane, highest is the last element of the second lane.
+    constexpr YMM Blend(const YMM& b, const int mask) { return _mm256_blend_ps(data_, b.data_, mask); }
 
     // Multiplies 2 quaternions stored in this YMM, with the 2 quaternions stored in `b`. Same as `XMM::QuaternionMultiply()` but optimized to perform multiplication in bulk.
     YMM QuaternionMultiply(const YMM& b);
@@ -94,7 +113,6 @@ namespace nogl
       ) == 0xF;
     }
 
-    // This operation is not recommended for purposes other than debugging.
     // constexpr float operator [](uint8_t i) const
     // {
     //   return _mm_cvtss_f32(
@@ -104,6 +122,12 @@ namespace nogl
     //     )
     //   );
     // }
+
+    // This operation is not recommended for purposes other than debugging.
+    constexpr float operator[](uint8_t i) const
+    {
+      return _mm_extract_ps(_mm256_extractf128_ps(data_, i >> 2), i % 4);
+    }
 
     private:
     YMM(__m256 data) { data_ = data; }

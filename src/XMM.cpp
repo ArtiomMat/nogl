@@ -25,6 +25,6 @@ namespace nogl
     v += a.CrossProduct(b);
 
     // The combination of the vector part and the scalar part
-    return v.Insert(s, 3, 3);
+    return v.Blend(s, 0b1000);
   }
 }

@@ -36,9 +36,14 @@ int main()
   // nogl::Q4 q;
   // v *= q;
   {
-    nogl::XMM<float> q(32,4,41,3.3f), p(3,15.3,2,1);
+    float ymmf[8];
+    nogl::XMM<float> q1(32,4,41,3.3f), p1(3,15.3,2,1);
+    nogl::YMM<float> q = q1, p = p1;
+
     q = q.QuaternionMultiply(p); // -577.4,113.49,525.2,-235.9
-    nogl::Logger::Begin() << q[0] << ',' << q[1] << ',' << q[2] << ',' << q[3] << ',' << nogl::Logger::End();
+    q.StoreUnaligned(ymmf);
+    
+    nogl::Logger::Begin() << ymmf[0] << ',' << ymmf[1] << ',' << ymmf[2] << ',' << ymmf[3] << '|' << ymmf[4] << ',' << ymmf[5] << ',' << ymmf[6] << ',' << ymmf[7] << ',' << nogl::Logger::End();
   }
 
   nogl::Context ctx(480,360);
