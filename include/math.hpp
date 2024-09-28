@@ -60,7 +60,7 @@ namespace nogl
     friend VOV4;
 
     public:
-
+  
     V4(float f) { XMM<float>(f).Store(p_); }
     // `p` must be 4 floats in size.
     V4(const float p[4]) { *this = p; }
@@ -170,14 +170,14 @@ namespace nogl
     // Normalizes the vector using its 4 components, but if you only want to use the 3 components use `Normalize3()`. If you know for sure that W component is 0 then you can call this, it will be slightly faster.
     void Normalize() noexcept
     {
-      Normalize(0b1111'1111);
+      Normalize(0b1111);
     }
 
     // Please not that the w component(3rd index) is discarded during this operation.
     // If you want it then use `Normalize()`
     void Normalize3() noexcept
     {
-      Normalize(0b0111'0111);
+      Normalize(0b0111);
     }
 
     // Gets the magnitude from all 4 components, use `magnitude3()` for magnitude of only the 3. If you know for sure that W component is 0 then you can call this, it will be slightly faster.
@@ -197,7 +197,7 @@ namespace nogl
       return magnitude(0b0111'0111);
     }
 
-    private:
+    protected:
     // Remember that this is an array, and the only member, using it as the pointer is valid, and it gives the pointer of this struct!
     alignas(16) float p_[4];
   };
@@ -286,6 +286,9 @@ namespace nogl
     // Same as `Add()` for V4, refers to `v` as if it's `V4::p()`.
     // void Add(VOV4& output, const float v[4], unsigned from, unsigned to);
 
+    // Rotate each vector using the quaternion `q`.
+    void Rotate(VOV4& output, const Q4& q, unsigned from, unsigned to);
+
     // A chunk is a piece that a single Minion may process at once.
     // unsigned chunk_size(unsigned total_n) { return (n_ / (kAlign / sizeof (V4))) / total_n; }
 
@@ -308,24 +311,21 @@ namespace nogl
     std::unique_ptr<V4[]> buffer_ = nullptr;
   };
 
-
-  // Welcome to quaternions! [x,y,z,w], where w is the real(angle) part.
-  // In actuality is just a smartass normalized V4.
-  class alignas(16) Q4 : private V4
+  class Q4 : public V4
   {
-    friend V4;
     public:
-    // General multiply, because without it-it gets pretty copy intensive, memory wise.
-    // Note: of course the order of the parameters matters.
-    static __m128 Multiply(__m128 left, __m128 right);
-
-    // Magnitude of the quaternion.
-    float norm()
+    // Angle is in radians.
+    // Sets the quaternion based on the rotation representation.
+    void WithAngle(float x, float y, float z, float angle)
     {
-      return V4::magnitude();
+      float sin = __builtin_sinf(angle / 2);
+      float cos = __builtin_cosf(angle / 2);
+      p_[0] =  x * sin;
+      p_[1] =  y * sin;
+      p_[2] =  z * sin;
+      p_[3] =  cos;
     }
   };
-
 
   template <typename T>
   void FindMinMax(T& min, T& max, T a, T b, T c)

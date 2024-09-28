@@ -26,8 +26,10 @@ namespace nogl
     private:
     std::string name_;
 
+    V4 position;
+    Q4 rotation;
+
     Variant data_;
-    M4x4 matrix_;
     std::list<Node> children_;
   };
 }

@@ -53,9 +53,9 @@ namespace nogl
     }
     // Does dot product as if the YMM is 2 XMMs, and stores the result in each of those XMM's `x()`.
     // This is essentially 2 `XMM::DotProduct()` but in one shot.
-    constexpr YMM DotProduct(const YMM& other, const uint8_t x = 1, const uint8_t y = 1, const uint8_t z = 1, const uint8_t w = 1) const
+    constexpr YMM DotProduct(const YMM& other, const uint8_t mask = 0b1111) const
     {
-      return _mm256_dp_ps(data_, other.data_, (x << 4) | (y << 5) | (z << 6) | (w << 7) | 1);
+      return _mm256_dp_ps(data_, other.data_, (mask << 4) | 1);
     }
     // Does cross product as if the YMM is 2 XMMs. This is essentially 2 `XMM::CrossProduct()` but in one shot.
     YMM CrossProduct(const YMM& other) const

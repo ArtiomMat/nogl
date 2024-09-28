@@ -60,9 +60,9 @@ namespace nogl
     }
     // Returns the dot product but in another XMM, it's in the lowest component, you can then do `.x()` to get the x component where the actual dot product resides, or keep doing operations on that.
     // The `x,y,z,w` parameters specify whether to involve those respective components in the dot product, e.g if `w` is `0` the returned XMM will just have `0` as `w` no matter what.
-    constexpr XMM DotProduct(const XMM& other, const uint8_t x = 1, const uint8_t y = 1, const uint8_t z = 1, const uint8_t w = 1) const
+    constexpr XMM DotProduct(const XMM& other, const uint8_t mask = 0b1111) const
     {
-      return _mm_dp_ps(data_, other.data_, (x << 4) | (y << 5) | (z << 6) | (w << 7) | 1);
+      return _mm_dp_ps(data_, other.data_, (mask << 4) | 1);
     }
     XMM SquareRoot() const
     {
@@ -99,9 +99,9 @@ namespace nogl
     // A new *theoretical* XMM is created where it's [[0],[1],high[2],high[3]], this XMM's components are reffered to below:
     // The parameters determine to which other component each of their respective component will be equal to.
     // e.g `x` equals `3` will put the theoretical XMM's `[3]` component to `[0]` by the end of the operation.
-    constexpr XMM Shuffle(const XMM& high, uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm_shuffle_ps(data_, high.data_, _MM_SHUFFLE(w,z,y,x)); }
+    constexpr XMM Shuffle(const XMM& high, const uint8_t x, const uint8_t y, const uint8_t z, const uint8_t w) const { return _mm_shuffle_ps(data_, high.data_, _MM_SHUFFLE(w,z,y,x)); }
     // Calls other `Shuffle()` but with `high` being *this.
-    constexpr XMM Shuffle(uint8_t x, uint8_t y, uint8_t z, uint8_t w) const { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
+    constexpr XMM Shuffle(const uint8_t x, const uint8_t y, const uint8_t z, const uint8_t w) const { return _mm_shuffle_ps(data_, data_, _MM_SHUFFLE(w,z,y,x)); }
     // Stores to 128 ALIGNED 8 float array!
     void Store(float* f) const { _mm_store_ps(f, data_); }
     void StoreUnaligned(float* f) const { _mm_storeu_ps(f, data_); }
