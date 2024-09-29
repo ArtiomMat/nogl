@@ -15,8 +15,8 @@ A reminder of what I learnt:\
 - Cross compiling is a pain.
 
 # Current state
-As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no face culling yet(got work to do).\
-![Rendering mid-poly model's triangles at 17ms](screenshots/screenshot-25-09-24.png)
+As of 2024-09-29, cool colors lol, performance went down because of that but it's temporary anyway.\
+![Rendering mid-poly model's triangles at 17ms](screenshots/screenshot-29-09-24.png)
 
 # Roadmap(TODO)
 - [x] Basics.
