@@ -2,6 +2,18 @@
 Idk really if it will be a library or a standalone.\
 It is forked from OMGL, I hate OpenGL as of now, so I decided to split paths with it and replace it with NO GRAPHICS LIBRARY!
 
+# Note to future me
+Hello there, `XMM`, `YMM` and `Q4` are where you left off, `Q4` is half-baked, the design of `XMM` and `YMM` is too boilerplate and changes in one usually *require* changes in the other. You left off at implementing rotation, `VOV4::Rotate()` exists, but the whole math library is kind of not very well designed. Other than that it's pretty much is a good design, Minion-Wizard design might benefit from more small changes perhaps, but overall it's OK.\
+A reminder of what I learnt:\
+- How to parse JSONs in a very neat way.
+- How to parse glb, not very hard after JSON parsing is done, just a matter of traversing the bullshit glTF spec has.
+- How to use many SIMD stuff on x86(x64 to be exact), SSE4, AVX2, sadly no AVX512 because nothing older than 5 years seems to support it.
+- Rust isn't that bad.
+- Multi-threading is not scary, but can be a pain.
+- libstd++ isn't that bad.
+- Good foundation is key in big projects.
+- Cross compiling is a pain.
+
 # Current state
 As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no face culling yet(got work to do).\
 ![Rendering mid-poly model's triangles at 17ms](screenshots/screenshot-25-09-24.png)
@@ -44,6 +56,7 @@ As of 2024-09-25, projecting vertices and rendering triangles takes 11-20ms, no 
   - [x] Rendering vertices themselves.
   - [x] Rendering triangles, basic incremental half-spaced method.
   - [x] Advanced block based triangle rendering.
+  - [ ] Rotating with quaternions!
 - [ ] Advanced shading to prepare for next step.
   - [ ] Specular highlighting.
   - [ ] Metallic shaders.
