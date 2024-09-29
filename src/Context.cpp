@@ -3,6 +3,8 @@
 #include "Atomic.hpp"
 #include "math.hpp"
 #include "Context.hpp"
+
+#include <cstdlib>
 #include <iostream>
 
 namespace nogl
@@ -114,6 +116,9 @@ namespace nogl
     int ax=_ax,bx=_bx,cx=_cx;
     int ay=_ay,by=_by,cy=_cy;
     int min_x, min_y, max_x, max_y;
+    std::srand(ax * bx * cx);
+
+    uint8_t r = std::rand(), g = std::rand(), b = std::rand();
 
     // Finding the triangle rectangle
     FindMinMax(min_x, max_x, ax, bx, cx);
@@ -155,11 +160,12 @@ namespace nogl
       // Increment by Ii every step
       for (int x = min_x; x <= max_x; ++x, fx0 += I0, fx1 += I1, fx2 += I2)
       {
-        if (fx0 >= 0 && fx1 >= 0 && fx2 >= 0)
+        if (zdata_[(x + y * width_)] <= az && (fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
         {
-          // data_[(x + y * width_)*4 + 0] = 255;
-          data_[(x + y * width_)*4 + 1] = 255;
-          // data_[(x + y * width_)*4 + 2] = 255;
+          data_[(x + y * width_)*4 + 0] = b;
+          data_[(x + y * width_)*4 + 1] = g;
+          data_[(x + y * width_)*4 + 2] = r;
+          zdata_[(x + y * width_)] = az;
         }
       }
     }

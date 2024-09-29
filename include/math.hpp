@@ -316,14 +316,24 @@ namespace nogl
     public:
     // Angle is in radians.
     // Sets the quaternion based on the rotation representation.
-    void WithAngle(float x, float y, float z, float angle)
+    static Q4 WithAngle(float x, float y, float z, float angle)
     {
+      Q4 q4;
       float sin = __builtin_sinf(angle / 2);
       float cos = __builtin_cosf(angle / 2);
-      p_[0] =  x * sin;
-      p_[1] =  y * sin;
-      p_[2] =  z * sin;
-      p_[3] =  cos;
+      q4.p_[0] =  x * sin;
+      q4.p_[1] =  y * sin;
+      q4.p_[2] =  z * sin;
+      q4.p_[3] =  cos;
+      return q4;
+    }
+    
+    // Simple multiplication of components, in fancy terms "Hadamard Product".
+    void operator *=(const Q4& other) noexcept
+    {
+      XMM<float> a = p_;
+      XMM<float> b = other.p_;
+      (a * b).Store(p_);
     }
   };
 

@@ -57,6 +57,7 @@ int main()
   ctx.set_event_handler(EventHandler);
 
   nogl::Scene scene("./scifi.glb", ctx);
+  std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(0.5);
   // nogl::Image img("../data/test.jpg");
 
   auto minions = nogl::Wizard::SpawnMinions();
@@ -64,7 +65,7 @@ int main()
 
   char title[128];
   unsigned title_set_time = ~0;
-  unsigned avg_frame_time = 16;
+  unsigned avg_frame_time = 33;
   nogl::Clock clock(avg_frame_time);
   while (run_loop)
   {
