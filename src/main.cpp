@@ -5,6 +5,7 @@
 #include <exception>
 
 #include "nogl.hpp"
+#include "simd.hpp"
 
 static bool run_loop = true;
 
@@ -26,6 +27,9 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
 
 int main()
 {
+  nogl::AnyMM<float, __m256> x;
+  std::cout << alignof(x) << std::endl;
+  
   if (!nogl::Thread::has_simd())
   {
     nogl::Logger::Begin() << "CPU does not support required SIMD. Can't proceed." << nogl::Logger::End();
