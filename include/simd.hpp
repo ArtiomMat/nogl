@@ -19,145 +19,79 @@ namespace simd
   // ====================================================================================
   //             LOAD UNALIGNED
   // ====================================================================================
-  template<typename T, typename M>
-  inline M _mm_loadu(const T *x);
+  template<typename M>
+  inline M _mm_loadu(const void *x);
 
   template<>
-  inline __m128i _mm_loadu<int8_t, __m128i>(const int8_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
+  inline __m128i _mm_loadu<__m128i>(const void *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
   template<>
-  inline __m128i _mm_loadu<int16_t, __m128i>(const int16_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
+  inline __m128 _mm_loadu<__m128>(const void *x) { return _mm_loadu_ps(reinterpret_cast<const float*>(x)); }
   template<>
-  inline __m128i _mm_loadu<int32_t, __m128i>(const int32_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_loadu<int64_t, __m128i>(const int64_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_loadu<uint8_t, __m128i>(const uint8_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_loadu<uint16_t, __m128i>(const uint16_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_loadu<uint32_t, __m128i>(const uint32_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_loadu<uint64_t, __m128i>(const uint64_t *x) { return _mm_loadu_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128 _mm_loadu<float, __m128>(const float *x) { return _mm_loadu_ps(x); }
-  template<>
-  inline __m128d _mm_loadu<double, __m128d>(const double *x) { return _mm_loadu_pd(x); }
+  inline __m128d _mm_loadu<__m128d>(const void *x) { return _mm_loadu_pd(reinterpret_cast<const double*>(x)); }
 
   template<>
-  inline __m256i _mm_loadu<int8_t, __m256i>(const int8_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
+  inline __m256i _mm_loadu<__m256i>(const void *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
   template<>
-  inline __m256i _mm_loadu<int16_t, __m256i>(const int16_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
+  inline __m256 _mm_loadu<__m256>(const void *x) { return _mm256_loadu_ps(reinterpret_cast<const float*>(x)); }
   template<>
-  inline __m256i _mm_loadu<int32_t, __m256i>(const int32_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_loadu<int64_t, __m256i>(const int64_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_loadu<uint8_t, __m256i>(const uint8_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_loadu<uint16_t, __m256i>(const uint16_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_loadu<uint32_t, __m256i>(const uint32_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_loadu<uint64_t, __m256i>(const uint64_t *x) { return _mm256_loadu_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256 _mm_loadu<float, __m256>(const float *x) { return _mm256_loadu_ps(x); }
-  template<>
-  inline __m256d _mm_loadu<double, __m256d>(const double *x) { return _mm256_loadu_pd(x); }
+  inline __m256d _mm_loadu<__m256d>(const void *x) { return _mm256_loadu_pd(reinterpret_cast<const double*>(x)); }
   // ====================================================================================
   //             LOAD
   // ====================================================================================
-  template<typename T, typename M>
-  inline M _mm_load(const T *x);
+  template<typename M>
+  inline M _mm_load(const void *x);
 
   template<>
-  inline __m128i _mm_load<int8_t, __m128i>(const int8_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
+  inline __m128i _mm_load<__m128i>(const void *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
   template<>
-  inline __m128i _mm_load<int16_t, __m128i>(const int16_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
+  inline __m128 _mm_load<__m128>(const void *x) { return _mm_load_ps(reinterpret_cast<const float*>(x)); }
   template<>
-  inline __m128i _mm_load<int32_t, __m128i>(const int32_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_load<int64_t, __m128i>(const int64_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_load<uint8_t, __m128i>(const uint8_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_load<uint16_t, __m128i>(const uint16_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_load<uint32_t, __m128i>(const uint32_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128i _mm_load<uint64_t, __m128i>(const uint64_t *x) { return _mm_load_si128(reinterpret_cast<const __m128i *>(x)); }
-  template<>
-  inline __m128 _mm_load<float, __m128>(const float *x) { return _mm_load_ps(x); }
-  template<>
-  inline __m128d _mm_load<double, __m128d>(const double *x) { return _mm_load_pd(x); }
+  inline __m128d _mm_load<__m128d>(const void *x) { return _mm_load_pd(reinterpret_cast<const double*>(x)); }
 
   template<>
-  inline __m256i _mm_load<int8_t, __m256i>(const int8_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
+  inline __m256i _mm_load<__m256i>(const void *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
   template<>
-  inline __m256i _mm_load<int16_t, __m256i>(const int16_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
+  inline __m256 _mm_load<__m256>(const void *x) { return _mm256_load_ps(reinterpret_cast<const float*>(x)); }
   template<>
-  inline __m256i _mm_load<int32_t, __m256i>(const int32_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_load<int64_t, __m256i>(const int64_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_load<uint8_t, __m256i>(const uint8_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_load<uint16_t, __m256i>(const uint16_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_load<uint32_t, __m256i>(const uint32_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256i _mm_load<uint64_t, __m256i>(const uint64_t *x) { return _mm256_load_si256(reinterpret_cast<const __m256i *>(x)); }
-  template<>
-  inline __m256 _mm_load<float, __m256>(const float *x) { return _mm256_load_ps(x); }
-  template<>
-  inline __m256d _mm_load<double, __m256d>(const double *x) { return _mm256_load_pd(x); }
+  inline __m256d _mm_load<__m256d>(const void *x) { return _mm256_load_pd(reinterpret_cast<const double*>(x)); }
   // ====================================================================================
   //             STORE UNALIGNED
   // ====================================================================================
-  inline void _mm_storeu(__m128i m, int8_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, int16_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, int32_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, int64_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, uint8_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, uint16_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, uint32_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128i m, uint64_t *x) { return _mm_storeu_si128(reinterpret_cast<__m128i_u *>(x), m); }
-  inline void _mm_storeu(__m128 m, float *x) { return _mm_storeu_ps(x, m); }
-  inline void _mm_storeu(__m128d m, double *x) { return _mm_storeu_pd(x, m); }
+  template<typename M>
+  inline void _mm_storeu(void *x, M m);
 
-  inline void _mm_storeu(__m256i m, int8_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, int16_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, int32_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, int64_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, uint8_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, uint16_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, uint32_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256i m, uint64_t *x) { return _mm256_storeu_si256(reinterpret_cast<__m256i_u *>(x), m); }
-  inline void _mm_storeu(__m256 m, float *x) { return _mm256_storeu_ps(x, m); }
-  inline void _mm_storeu(__m256d m, double *x) { return _mm256_storeu_pd(x, m); }
+  template<>
+  inline void _mm_storeu<__m128i>(void *x, __m128i m) { return _mm_storeu_si128(reinterpret_cast<__m128i *>(x), m); }
+  template<>
+  inline void _mm_storeu<__m128>(void *x, __m128 m) { return _mm_storeu_ps(reinterpret_cast<float*>(x), m); }
+  template<>
+  inline void _mm_storeu<__m128d>(void *x, __m128d m) { return _mm_storeu_pd(reinterpret_cast<double*>(x), m); }
+
+  template<>
+  inline void _mm_storeu<__m256i>(void *x, __m256i m) { return _mm256_storeu_si256(reinterpret_cast<__m256i *>(x), m); }
+  template<>
+  inline void _mm_storeu<__m256>(void *x, __m256 m) { return _mm256_storeu_ps(reinterpret_cast<float*>(x), m); }
+  template<>
+  inline void _mm_storeu<__m256d>(void *x, __m256d m) { return _mm256_storeu_pd(reinterpret_cast<double*>(x), m); }
   // ====================================================================================
   //             STORE
   // ====================================================================================
-  inline void _mm_store(__m128i m, int8_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, int16_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, int32_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, int64_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, uint8_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, uint16_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, uint32_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128i m, uint64_t *x) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
-  inline void _mm_store(__m128 m, float *x) { return _mm_store_ps(x, m); }
-  inline void _mm_store(__m128d m, double *x) { return _mm_store_pd(x, m); }
+  template<typename M>
+  inline void _mm_store(void *x, M m);
 
-  inline void _mm_store(__m256i m, int8_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, int16_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, int32_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, int64_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, uint8_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, uint16_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, uint32_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256i m, uint64_t *x) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
-  inline void _mm_store(__m256 m, float *x) { return _mm256_store_ps(x, m); }
-  inline void _mm_store(__m256d m, double *x) { return _mm256_store_pd(x, m); }
+  template<>
+  inline void _mm_store<__m128i>(void *x, __m128i m) { return _mm_store_si128(reinterpret_cast<__m128i *>(x), m); }
+  template<>
+  inline void _mm_store<__m128>(void *x, __m128 m) { return _mm_store_ps(reinterpret_cast<float*>(x), m); }
+  template<>
+  inline void _mm_store<__m128d>(void *x, __m128d m) { return _mm_store_pd(reinterpret_cast<double*>(x), m); }
+
+  template<>
+  inline void _mm_store<__m256i>(void *x, __m256i m) { return _mm256_store_si256(reinterpret_cast<__m256i *>(x), m); }
+  template<>
+  inline void _mm_store<__m256>(void *x, __m256 m) { return _mm256_store_ps(reinterpret_cast<float*>(x), m); }
+  template<>
+  inline void _mm_store<__m256d>(void *x, __m256d m) { return _mm256_store_pd(reinterpret_cast<double*>(x), m); }
   // ====================================================================================
   //             ADD
   // ====================================================================================
@@ -326,50 +260,22 @@ namespace simd
   // ====================================================================================
   //             SETZERO
   // ====================================================================================
-  template<typename T, typename M>
+  template<typename M>
   inline M _mm_setzero();
-  
-  template<>
-  inline __m128i _mm_setzero<int8_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<int16_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<int32_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<int64_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<uint8_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<uint16_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<uint32_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128i _mm_setzero<uint64_t, __m128i>() { return _mm_setzero_si128(); }
-  template<>
-  inline __m128 _mm_setzero<float, __m128>() { return _mm_setzero_ps(); }
-  template<>
-  inline __m128d _mm_setzero<double, __m128d>() { return _mm_setzero_pd(); }
 
   template<>
-  inline __m256i _mm_setzero<int8_t, __m256i>() { return _mm256_setzero_si256(); }
+  inline __m128i _mm_setzero<__m128i>() { return _mm_setzero_si128(); }
   template<>
-  inline __m256i _mm_setzero<int16_t, __m256i>() { return _mm256_setzero_si256(); }
+  inline __m128 _mm_setzero<__m128>() { return _mm_setzero_ps(); }
   template<>
-  inline __m256i _mm_setzero<int32_t, __m256i>() { return _mm256_setzero_si256(); }
+  inline __m128d _mm_setzero<__m128d>() { return _mm_setzero_pd(); }
+
   template<>
-  inline __m256i _mm_setzero<int64_t, __m256i>() { return _mm256_setzero_si256(); }
+  inline __m256i _mm_setzero<__m256i>() { return _mm256_setzero_si256(); }
   template<>
-  inline __m256i _mm_setzero<uint8_t, __m256i>() { return _mm256_setzero_si256(); }
+  inline __m256 _mm_setzero<__m256>() { return _mm256_setzero_ps(); }
   template<>
-  inline __m256i _mm_setzero<uint16_t, __m256i>() { return _mm256_setzero_si256(); }
-  template<>
-  inline __m256i _mm_setzero<uint32_t, __m256i>() { return _mm256_setzero_si256(); }
-  template<>
-  inline __m256i _mm_setzero<uint64_t, __m256i>() { return _mm256_setzero_si256(); }
-  template<>
-  inline __m256 _mm_setzero<float, __m256>() { return _mm256_setzero_ps(); }
-  template<>
-  inline __m256d _mm_setzero<double, __m256d>() { return _mm256_setzero_pd(); }
+  inline __m256d _mm_setzero<__m256d>() { return _mm256_setzero_pd(); }
   // ====================================================================================
   //             BLEND
   // ====================================================================================
@@ -434,61 +340,19 @@ namespace simd
   // ====================================================================================
   //             BROADCAST FOR 256 BITS
   // ====================================================================================
-  template<typename T, typename M>
-  inline M _mm_broadcast(const T* x);
+  template<typename M>
+  inline M _mm_broadcast(const void* x);
 
   template<>
-  inline __m256i _mm_broadcast(const int8_t *x)
+  inline __m256i _mm_broadcast(const void *x)
   {
     __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
     return _mm256_broadcastsi128_si256(m);
   }
   template<>
-  inline __m256i _mm_broadcast(const int16_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
+  inline __m256 _mm_broadcast(const void* x) { return _mm256_broadcast_ps(reinterpret_cast<const __m128*>(x)); }
   template<>
-  inline __m256i _mm_broadcast(const int32_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
-  template<>
-  inline __m256i _mm_broadcast(const int64_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
-  template<>
-  inline __m256i _mm_broadcast(const uint8_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
-  template<>
-  inline __m256i _mm_broadcast(const uint16_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
-  template<>
-  inline __m256i _mm_broadcast(const uint32_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
-  template<>
-  inline __m256i _mm_broadcast(const uint64_t *x)
-  {
-    __m128i m = _mm_loadu_si128(reinterpret_cast<const __m128i_u*>(x));
-    return _mm256_broadcastsi128_si256(m);
-  }
-  template<>
-  inline __m256 _mm_broadcast(const float* x) { return _mm256_broadcast_ps(reinterpret_cast<const __m128*>(x)); }
-  template<>
-  inline __m256d _mm_broadcast(const double* x) { return _mm256_broadcast_pd(reinterpret_cast<const __m128d*>(x)); }
+  inline __m256d _mm_broadcast(const void* x) { return _mm256_broadcast_pd(reinterpret_cast<const __m128d*>(x)); }
   // ====================================================================================
   //             anyxany
   // ====================================================================================
@@ -505,18 +369,18 @@ namespace simd
     {
       if (aligned)
       {
-        data_ = _mm_load<T, M>(x);
+        data_ = _mm_load<M>(x);
       }
       else
       {
-        data_ = _mm_loadu<T, M>(x);
+        data_ = _mm_loadu<M>(x);
       }
     }
     // Sets all components as `x`.
     anyxany(T x) { data_ = _mm_set1<T, M>(x); }
 
     // Sets all components to their type's `0` equivalent(i.e for float `0.0f`, for integers just `0`).
-    void setzero() { data_ = _mm_setzero<T, M>(); }
+    void setzero() { data_ = _mm_setzero<M>(); }
 
     // Stores into an array of this type, the array is the length of what is specified after `x` in the type name(e.g for `float32x4` the array must be 4 floats in length).
     // `aligned` specifies if the array is aligned to the type's size, if not aligned, it COULD incur slight overhead on modern CPUs.
@@ -524,11 +388,11 @@ namespace simd
     {
       if (aligned)
       {
-        _mm_store(data_, x);
+        _mm_store<M>(x, data_);
       }
       else
       {
-        _mm_storeu(data_, x);
+        _mm_storeu<M>(x, data_);
       }
     }
 
@@ -549,7 +413,7 @@ namespace simd
     // Gives the negative equivalent.
     anyxany operator -() const
     {
-      M zero = _mm_setzero<T, M>();
+      M zero = _mm_setzero<M>();
       return _mm_sub<T, M>(zero, data_);
     }
 
