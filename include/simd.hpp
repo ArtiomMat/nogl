@@ -380,7 +380,7 @@ namespace simd
     anyxany() = default;
     // Loads an array of this type, the array is the length of what is specified after `x` in the type name(e.g for `float32x4` the array must be 4 floats in length).
     // `aligned` specifies if the array is aligned to the type's size, if not aligned, it COULD incur slight overhead on modern CPUs.
-    anyxany(const T* x, const bool aligned = true)
+    constexpr anyxany(const T* x, const bool aligned = true)
     {
       if (aligned)
       {
@@ -393,6 +393,7 @@ namespace simd
     }
     // Sets all components as `x`.
     anyxany(T x) { data = _mm_set1<T, M>(x); }
+    // Copies data from the intrinsic typed `m`.
     anyxany(M m) { data = m; }
 
     // Sets all components to their type's `0` equivalent(i.e for float `0.0f`, for integers just `0`).
@@ -400,7 +401,7 @@ namespace simd
 
     // Stores into an array of this type, the array is the length of what is specified after `x` in the type name(e.g for `float32x4` the array must be 4 floats in length).
     // `aligned` specifies if the array is aligned to the type's size, if not aligned, it COULD incur slight overhead on modern CPUs.
-    void store(T* x, const bool aligned = true) const
+    constexpr void store(T* x, const bool aligned = true) const
     {
       if (aligned)
       {
@@ -412,6 +413,8 @@ namespace simd
       }
     }
 
+    // TODO: Improve doc
+    // Blending is like inserting but it doesn't actually take one element from the `other`, rather it takes the corresponding element from `other` specified by whether the bits are `1`(copy) or `0`(ignore). Note that LSB is the first element, MSB is the last element.
     anyxany blend(const anyxany& other, const int mask) const { return _mm_blend(data, other.data, mask); }
 
     anyxany operator +(const anyxany& other) const { return _mm_add<T, M>(data, other.data); }
