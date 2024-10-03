@@ -353,6 +353,21 @@ namespace simd
   inline __m256 _mm_broadcast(const void* x) { return _mm256_broadcast_ps(reinterpret_cast<const __m128*>(x)); }
   template<>
   inline __m256d _mm_broadcast(const void* x) { return _mm256_broadcast_pd(reinterpret_cast<const __m128d*>(x)); }
+
+
+  template<typename M, typename M2>
+  inline M _mm_broadcast(M2 x);
+
+  template<>
+  inline __m256i _mm_broadcast(__m128i x)
+  {
+    return _mm256_broadcastsi128_si256(x);
+  }
+  template<>
+  inline __m256 _mm_broadcast(__m128 x) { return _mm256_broadcast_f32x4(x); }
+  template<>
+  inline __m256d _mm_broadcast(__m128d x) { return _mm256_broadcast_f64x2(x); }
+  
   // ====================================================================================
   //             anyxany
   // ====================================================================================
@@ -369,18 +384,19 @@ namespace simd
     {
       if (aligned)
       {
-        data_ = _mm_load<M>(x);
+        data = _mm_load<M>(x);
       }
       else
       {
-        data_ = _mm_loadu<M>(x);
+        data = _mm_loadu<M>(x);
       }
     }
     // Sets all components as `x`.
-    anyxany(T x) { data_ = _mm_set1<T, M>(x); }
+    anyxany(T x) { data = _mm_set1<T, M>(x); }
+    anyxany(M m) { data = m; }
 
     // Sets all components to their type's `0` equivalent(i.e for float `0.0f`, for integers just `0`).
-    void setzero() { data_ = _mm_setzero<M>(); }
+    void setzero() { data = _mm_setzero<M>(); }
 
     // Stores into an array of this type, the array is the length of what is specified after `x` in the type name(e.g for `float32x4` the array must be 4 floats in length).
     // `aligned` specifies if the array is aligned to the type's size, if not aligned, it COULD incur slight overhead on modern CPUs.
@@ -388,68 +404,88 @@ namespace simd
     {
       if (aligned)
       {
-        _mm_store<M>(x, data_);
+        _mm_store<M>(x, data);
       }
       else
       {
-        _mm_storeu<M>(x, data_);
+        _mm_storeu<M>(x, data);
       }
     }
 
-    anyxany blend(const anyxany& other, const int mask) const { return _mm_blend(data_, other.data_, mask); }
+    anyxany blend(const anyxany& other, const int mask) const { return _mm_blend(data, other.data, mask); }
 
-    anyxany operator +(const anyxany& other) const { return _mm_add<T, M>(data_, other.data_); }
-    void operator +=(const anyxany& other) { data_ =  _mm_add<T, M>(data_, other.data_); }
+    anyxany operator +(const anyxany& other) const { return _mm_add<T, M>(data, other.data); }
+    void operator +=(const anyxany& other) { data =  _mm_add<T, M>(data, other.data); }
 
-    anyxany operator -(const anyxany& other) const { return _mm_sub<T, M>(data_, other.data_); }
-    void operator -=(const anyxany& other) { data_ =  _mm_sub<T, M>(data_, other.data_); }
+    anyxany operator -(const anyxany& other) const { return _mm_sub<T, M>(data, other.data); }
+    void operator -=(const anyxany& other) { data =  _mm_sub<T, M>(data, other.data); }
 
-    anyxany operator *(const anyxany& other) const { return _mm_mul<T, M>(data_, other.data_); }
-    void operator *=(const anyxany& other) { data_ =  _mm_mul<T, M>(data_, other.data_); }
+    anyxany operator *(const anyxany& other) const { return _mm_mul<T, M>(data, other.data); }
+    void operator *=(const anyxany& other) { data =  _mm_mul<T, M>(data, other.data); }
 
-    anyxany operator /(const anyxany& other) const { return _mm_div<T, M>(data_, other.data_); }
-    void operator /=(const anyxany& other) { data_ =  _mm_div<T, M>(data_, other.data_); }
+    anyxany operator /(const anyxany& other) const { return _mm_div<T, M>(data, other.data); }
+    void operator /=(const anyxany& other) { data =  _mm_div<T, M>(data, other.data); }
 
     // Gives the negative equivalent.
     anyxany operator -() const
     {
       M zero = _mm_setzero<M>();
-      return _mm_sub<T, M>(zero, data_);
+      return _mm_sub<T, M>(zero, data);
     }
 
-    protected:
-    anyxany(M m) { data_ = m; }
-    M data_;
+    M data;
+  };
+
+  // This class exists seperate anyxany_256 from the 128 variant. This allows for not confusing anyxany_256 with anyxany, for the broadcast constructor.
+  template<typename T, typename M>
+  class anyxany_128 : public anyxany<T, M>
+  {
+    static_assert(sizeof (M) == 16, "Size of M must be 128 bits.");
+    public:
+
+    using anyxany<T, M>::anyxany;
+  };
+
+  template<typename T, typename M>
+  class anyxany_256 : public anyxany<T, M>
+  {
+    static_assert(sizeof (M) == 32, "Size of M must be 256 bits.");
+    
+    public:
+    using anyxany<T, M>::anyxany;
+
+    template <typename M2>
+    anyxany_256(const anyxany_128<T, M2>& x){ this->data = _mm_broadcast<M, M2>(x.data); }
   };
 
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wignored-attributes"
 
-  using int8x16 = anyxany<int8_t, __m128i>;
-  using int16x8 = anyxany<int8_t, __m128i>;
-  using int32x4 = anyxany<int32_t, __m128i>;
-  using int64x2 = anyxany<int8_t, __m128i>;
+  // 128 bits
 
-  using uint8x16 = anyxany<uint8_t, __m128i>;
-  using uint16x8 = anyxany<uint8_t, __m128i>;
-  using uint32x4 = anyxany<uint32_t, __m128i>;
-  using uint64x2 = anyxany<uint8_t, __m128i>;
-  
-  using int8x32 = anyxany<int8_t, __m256i>;
-  using int16x16 = anyxany<int8_t, __m256i>;
-  using int32x8 = anyxany<int32_t, __m256i>;
-  using int64x4 = anyxany<int8_t, __m256i>;
+  using int8x16 = anyxany_128<int8_t, __m128i>;
+  using int16x8 = anyxany_128<int8_t, __m128i>;
+  using int32x4 = anyxany_128<int32_t, __m128i>;
+  using int64x2 = anyxany_128<int8_t, __m128i>;
+  using uint8x16 = anyxany_128<uint8_t, __m128i>;
+  using uint16x8 = anyxany_128<uint8_t, __m128i>;
+  using uint32x4 = anyxany_128<uint32_t, __m128i>;
+  using uint64x2 = anyxany_128<uint8_t, __m128i>;
+  using float32x4 = anyxany_128<float, __m128>;
+  using float64x2 = anyxany_128<double, __m128>;
 
-  using uint8x32 = anyxany<uint8_t, __m256i>;
-  using uint16x16 = anyxany<uint8_t, __m256i>;
-  using uint32x8 = anyxany<uint32_t, __m256i>;
-  using uint64x4 = anyxany<uint8_t, __m256i>;
+  // 256 bits
 
-  using float32x4 = anyxany<float, __m128>;
-  using float64x2 = anyxany<double, __m128>;
-
-  using float32x8 = anyxany<float, __m256>;
-  using float64x4 = anyxany<double, __m256>;
+  using int8x32 = anyxany_256<int8_t, __m256i>;
+  using int16x16 = anyxany_256<int8_t, __m256i>;
+  using int32x8 = anyxany_256<int32_t, __m256i>;
+  using int64x4 = anyxany_256<int8_t, __m256i>;
+  using uint8x32 = anyxany_256<uint8_t, __m256i>;
+  using uint16x16 = anyxany_256<uint8_t, __m256i>;
+  using uint32x8 = anyxany_256<uint32_t, __m256i>;
+  using uint64x4 = anyxany_256<uint8_t, __m256i>;
+  using float32x8 = anyxany_256<float, __m256>;
+  using float64x4 = anyxany_256<double, __m256>;
 
   #pragma GCC diagnostic pop
 }
