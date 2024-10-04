@@ -279,34 +279,34 @@ namespace simd
   // ====================================================================================
   //             BLEND
   // ====================================================================================
-  template<typename T, typename M>
-  inline M _mm_blend(M a, M b, const int imm);
+  // template<typename T, typename M, int imm>
+  // inline M _mm_blend(M a, M b);
   
-  template<>
-  inline __m128i _mm_blend<int16_t, __m128i>(__m128i a, __m128i b, const int imm) { return _mm_blend_epi16(a, b, imm); }
-  template<>
-  inline __m128i _mm_blend<int32_t, __m128i>(__m128i a, __m128i b, const int imm) { return _mm_blend_epi32(a, b, imm); }
-  template<>
-  inline __m128i _mm_blend<uint16_t, __m128i>(__m128i a, __m128i b, const int imm) { return _mm_blend_epi16(a, b, imm); }
-  template<>
-  inline __m128i _mm_blend<uint32_t, __m128i>(__m128i a, __m128i b, const int imm) { return _mm_blend_epi32(a, b, imm); }
-  template<>
-  inline __m128 _mm_blend<float, __m128>(__m128 a, __m128 b, const int imm) { return _mm_blend_ps(a, b, imm); }
-  template<>
-  inline __m128d _mm_blend<double, __m128d>(__m128d a, __m128d b, const int imm) { return _mm_blend_pd(a, b, imm); }
+  // template<>
+  // inline __m128i _mm_blend<int16_t, __m128i>(__m128i a, __m128i b) { return _mm_blend_epi16(a, b, imm); }
+  // template<>
+  // inline __m128i _mm_blend<int32_t, __m128i>(__m128i a, __m128i b) { return _mm_blend_epi32(a, b, imm); }
+  // template<>
+  // inline __m128i _mm_blend<uint16_t, __m128i>(__m128i a, __m128i b) { return _mm_blend_epi16(a, b, imm); }
+  // template<>
+  // inline __m128i _mm_blend<uint32_t, __m128i>(__m128i a, __m128i b) { return _mm_blend_epi32(a, b, imm); }
+  // template<>
+  // inline __m128 _mm_blend<float, __m128>(__m128 a, __m128 b) { return _mm_blend_ps(a, b, imm); }
+  // template<>
+  // inline __m128d _mm_blend<double, __m128d>(__m128d a, __m128d b) { return _mm_blend_pd(a, b, imm); }
 
-  template<>
-  inline __m256i _mm_blend<int16_t, __m256i>(__m256i a, __m256i b, const int imm) { return _mm256_blend_epi16(a, b, imm); }
-  template<>
-  inline __m256i _mm_blend<int32_t, __m256i>(__m256i a, __m256i b, const int imm) { return _mm256_blend_epi32(a, b, imm); }
-  template<>
-  inline __m256i _mm_blend<uint16_t, __m256i>(__m256i a, __m256i b, const int imm) { return _mm256_blend_epi16(a, b, imm); }
-  template<>
-  inline __m256i _mm_blend<uint32_t, __m256i>(__m256i a, __m256i b, const int imm) { return _mm256_blend_epi32(a, b, imm); }
-  template<>
-  inline __m256 _mm_blend<float, __m256>(__m256 a, __m256 b, const int imm) { return _mm256_blend_ps(a, b, imm); }
-  template<>
-  inline __m256d _mm_blend<double, __m256d>(__m256d a, __m256d b, const int imm) { return _mm256_blend_pd(a, b, imm); }
+  // template<>
+  // inline __m256i _mm_blend<int16_t, __m256i>(__m256i a, __m256i b) { return _mm256_blend_epi16(a, b, imm); }
+  // template<>
+  // inline __m256i _mm_blend<int32_t, __m256i>(__m256i a, __m256i b) { return _mm256_blend_epi32(a, b, imm); }
+  // template<>
+  // inline __m256i _mm_blend<uint16_t, __m256i>(__m256i a, __m256i b) { return _mm256_blend_epi16(a, b, imm); }
+  // template<>
+  // inline __m256i _mm_blend<uint32_t, __m256i>(__m256i a, __m256i b) { return _mm256_blend_epi32(a, b, imm); }
+  // template<>
+  // inline __m256 _mm_blend<float, __m256>(__m256 a, __m256 b) { return _mm256_blend_ps(a, b, imm); }
+  // template<>
+  // inline __m256d _mm_blend<double, __m256d>(__m256d a, __m256d b) { return _mm256_blend_pd(a, b, imm); }
   // ====================================================================================
   //             SHUFFLE
   // ====================================================================================
@@ -367,7 +367,19 @@ namespace simd
   inline __m256 _mm_broadcast(__m128 x) { return _mm256_broadcast_f32x4(x); }
   template<>
   inline __m256d _mm_broadcast(__m128d x) { return _mm256_broadcast_f64x2(x); }
-  
+  // ====================================================================================
+  //             DOT PRODUCT
+  // ====================================================================================
+  // template<typename M>
+  // inline M _mm_dp(M a, M b, const int mask);
+
+  // template<>
+  // inline __m128 _mm_dp<__m128>(__m128 a, __m128 b, const int mask) { return _mm_dp_ps(a, b, mask); }
+  // template<>
+  // inline __m128d _mm_dp<__m128d>(__m128d a, __m128d b, const int mask) { return _mm_dp_pd(a, b, mask); }
+
+  // template<>
+  // inline __m256 _mm_dp<__m256>(__m256 a, __m256 b, const int mask) { return _mm256_dp_ps(a, b, mask); }
   // ====================================================================================
   //             anyxany
   // ====================================================================================
@@ -399,6 +411,31 @@ namespace simd
     // Sets all components to their type's `0` equivalent(i.e for float `0.0f`, for integers just `0`).
     void setzero() { data = _mm_setzero<M>(); }
 
+    // Each 128 bit lane is considered seperate. only available for `float` types.
+    // `mask` dictates which components to consider in the dot product, where LSB is the first comp.
+    // `result_mask` dictates which components in the return value contain the dot product, where LSB is the first comp.
+    template<int mask = 0b1111, int result_mask = 0b1>
+    constexpr anyxany dotp(const anyxany& other) const;
+    
+    // Performs a cross product, currently only availabe `float32` `x4`/`x8` types, but it's a more complex op because not usually built-in.
+    // Considers each 128 bit lane seperately, and stores results in said lanes.
+    // The 4th component is always 0 by the end of this operation.
+    anyxany crossp(const anyxany& other) const
+    {
+      // Setup the subtracted values
+      M left = _mm_mul(
+        _mm_shuffle(this->data, this->data, _MM_SHUFFLE(3,0,2,1)),
+        _mm_shuffle(other.data, other.data, _MM_SHUFFLE(3,1,0,2))
+      );
+      // Setup the subtracting values
+      M right = _mm_mul(
+        _mm_shuffle(this->data, this->data, _MM_SHUFFLE(3,1,0,2)),
+        _mm_shuffle(other.data, other.data, _MM_SHUFFLE(3,0,2,1))
+      );
+
+      return _mm_sub(left, right);
+    }
+
     // Stores into an array of this type, the array is the length of what is specified after `x` in the type name(e.g for `float32x4` the array must be 4 floats in length).
     // `aligned` specifies if the array is aligned to the type's size, if not aligned, it COULD incur slight overhead on modern CPUs.
     constexpr void store(T* x, const bool aligned = true) const
@@ -415,7 +452,7 @@ namespace simd
 
     // TODO: Improve doc
     // Blending is like inserting but it doesn't actually take one element from the `other`, rather it takes the corresponding element from `other` specified by whether the bits are `1`(copy) or `0`(ignore). Note that LSB is the first element, MSB is the last element.
-    anyxany blend(const anyxany& other, const int mask) const { return _mm_blend(data, other.data, mask); }
+    // anyxany blend(const anyxany& other, const int mask) const { return _mm_blend<T, M>(data, other.data, mask); }
 
     anyxany operator +(const anyxany& other) const { return _mm_add<T, M>(data, other.data); }
     void operator +=(const anyxany& other) { data =  _mm_add<T, M>(data, other.data); }
@@ -429,6 +466,8 @@ namespace simd
     anyxany operator /(const anyxany& other) const { return _mm_div<T, M>(data, other.data); }
     void operator /=(const anyxany& other) { data =  _mm_div<T, M>(data, other.data); }
 
+    void operator =(const anyxany other) { data = other.data; }
+
     // Gives the negative equivalent.
     anyxany operator -() const
     {
@@ -439,6 +478,13 @@ namespace simd
     M data;
   };
 
+
+  template<int mask, int result_mask>
+  constexpr anyxany<float, __m128> anyxany<float, __m128>::dotp<mask, result_mask>(const anyxany& other) const
+  {
+
+  }
+
   // This class exists seperate anyxany_256 from the 128 variant. This allows for not confusing anyxany_256 with anyxany, for the broadcast constructor.
   template<typename T, typename M>
   class anyxany_128 : public anyxany<T, M>
@@ -447,6 +493,8 @@ namespace simd
     public:
 
     using anyxany<T, M>::anyxany;
+
+    anyxany_128(const anyxany<T, M>& other) { this->data = other.data; }
   };
 
   template<typename T, typename M>
