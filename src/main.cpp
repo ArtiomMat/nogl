@@ -5,7 +5,7 @@
 #include <exception>
 
 #include "nogl.hpp"
-#include "simd.hpp"
+// #include "simd.hpp"
 
 static bool run_loop = true;
 
@@ -36,29 +36,29 @@ int main()
   // nogl::V4 v(1, 2, 3);
   // nogl::Q4 q;
   // v *= q;
-  {
-    // float ymmf[8];
-    // nogl::XMM<float> q1(32,4,41,3.3f), p1(3,15.3,2,1);
-    // nogl::YMM<float> q = q1, p = p1;
+  // {
+  //   // float ymmf[8];
+  //   // nogl::XMM<float> q1(32,4,41,3.3f), p1(3,15.3,2,1);
+  //   // nogl::YMM<float> q = q1, p = p1;
 
-    // q = q.QMultiply(p); // -577.4,113.49,525.2,-235.9
-    // q.StoreUnaligned(ymmf);
-    float ymmf[8];
-    nogl::XMM<float> q1(1,0,0,0), p1(.5f,.5f,.5f,.5f);
-    nogl::YMM<float> q = q1, p = p1;
+  //   // q = q.QMultiply(p); // -577.4,113.49,525.2,-235.9
+  //   // q.StoreUnaligned(ymmf);
+  //   float ymmf[8];
+  //   nogl::XMM<float> q1(1,0,0,0), p1(.5f,.5f,.5f,.5f);
+  //   nogl::YMM<float> q = q1, p = p1;
 
-    q = q.QVSandwich(p);
-    q.StoreUnaligned(ymmf);
+  //   q = q.QVSandwich(p);
+  //   q.StoreUnaligned(ymmf);
     
-    nogl::Logger::Begin() << ymmf[0] << ',' << ymmf[1] << ',' << ymmf[2] << ',' << ymmf[3] << '|' << ymmf[4] << ',' << ymmf[5] << ',' << ymmf[6] << ',' << ymmf[7] << ',' << nogl::Logger::End();
-  }
+  //   nogl::Logger::Begin() << ymmf[0] << ',' << ymmf[1] << ',' << ymmf[2] << ',' << ymmf[3] << '|' << ymmf[4] << ',' << ymmf[5] << ',' << ymmf[6] << ',' << ymmf[7] << ',' << nogl::Logger::End();
+  // }
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
   nogl::Scene scene("./scifi.glb", ctx);
-  std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(0.5);
+  // std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(0.5);
   // nogl::Image img("../data/test.jpg");
 
   auto minions = nogl::Wizard::SpawnMinions();

@@ -11,14 +11,14 @@ namespace nogl
 {
   void Context::Clear() noexcept
   {
-    YMM<uint8_t> loaded_clear_color(clear_color_c256_);
+    __m256i loaded_clear_color = _mm256_load_si256(reinterpret_cast<const __m256i*>(clear_color_c256_));
     
     uint8_t* end = data() + (width() * height()) * 4;
 
     for (uint8_t* ptr = data(); ptr < end; ptr+=sizeof(__m256i))
     {
       // Unaligned store because as of now I am unsure how to properly ensure alignment of data.
-      loaded_clear_color.Store(ptr);
+      _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(ptr), loaded_clear_color);
       // This is apparently an AVX512 ;-;
       // _mm256_storeu_epi32((void*)ptr, loaded_clear_color);
     }
@@ -36,15 +36,14 @@ namespace nogl
 
   void Context::ClearZ() noexcept
   {
-    YMM<float> set;
-    set.ZeroOut();
+    __m256 zero = _mm256_setzero_ps();
     
     float* end = zdata() + (width() * height());
 
     for (float* ptr = zdata(); ptr < end; ptr+=sizeof(__m256))
     {
       // It's aligned for sure!
-      set.Store(ptr);
+      _mm256_store_ps(ptr, zero);
     }
   }
 
@@ -160,12 +159,12 @@ namespace nogl
       // Increment by Ii every step
       for (int x = min_x; x <= max_x; ++x, fx0 += I0, fx1 += I1, fx2 += I2)
       {
-        if (zdata_[(x + y * width_)] <= az && (fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
+        if ((fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
         {
           data_[(x + y * width_)*4 + 0] = b;
           data_[(x + y * width_)*4 + 1] = g;
           data_[(x + y * width_)*4 + 2] = r;
-          zdata_[(x + y * width_)] = az;
+          // zdata_[(x + y * width_)] = az;
         }
       }
     }

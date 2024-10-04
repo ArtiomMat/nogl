@@ -5,15 +5,17 @@ namespace nogl
   void V4::Normalize(int mask) noexcept
   {
     // Load the vector to begin calculating the inverse magnitude
-    XMM<float> vec_128(p_);
+    __m128 vec_128 = _mm_load_ps(p_);
     
-    XMM<float> inv_mag_128 = vec_128.DotProduct(vec_128, mask).ISquareRoot();
+    __m128 inv_mag_128 = _mm_dp_ps(vec_128, vec_128, mask | 0xFF);
+    inv_mag_128 = _mm_rsqrt_ps(inv_mag_128);
 
     // Reload it into the register but this time for all its components.
-    inv_mag_128 = inv_mag_128.Shuffle(0,0,0,0);
+    inv_mag_128 = _mm_shuffle_ps(inv_mag_128, inv_mag_128, _MM_SHUFFLE(0,0,0,0));
     // Finally the moment we were all waiting for
-    vec_128 *= inv_mag_128;
-    vec_128.Store(p_);
+    vec_128 = _mm_mul_ps(vec_128, inv_mag_128);
+    // vec_128.Store(p_);
+    _mm_store_ps(p_, vec_128);
   }
 
   void VOV4::Reallocate(unsigned n)
@@ -36,15 +38,15 @@ namespace nogl
       V4* out_ptr = output.buffer_.get() + vec;
       
       // Load the 2 vectors into the register
-      YMM<float> ab(in_ptr->p_);
+      __m256 ab = _mm256_load_ps(in_ptr->p_);
 
       // Load the w components all over the 2 parts of the register
-      XMM<float> a = in_ptr[0].p_[3];
-      XMM<float> b = in_ptr[1].p_[3];
-      YMM<float> w(a,b);
+      __m128 a = _mm_load1_ps(in_ptr[0].p_ + 3);
+      __m128 b = _mm_load1_ps(in_ptr[1].p_ + 3);
+      __m256 w = _mm256_set_m128(b, a);
 
-      ab /= w;
-      ab.Store(out_ptr->p_);
+      ab = _mm256_div_ps(ab, w);
+      _mm256_store_ps(out_ptr->p_, ab);
     }
   }
   
@@ -57,8 +59,7 @@ namespace nogl
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      YMM<float> res;
-      res.ZeroOut();
+      __m256 res = _mm256_setzero_ps();
 
       for (unsigned i = 0; i < 4; ++i)
       {
@@ -67,19 +68,18 @@ namespace nogl
         // __m256 cols = reinterpret_cast<__m256>(
         //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(col))
         // );
-        YMM<float> cols;
-        cols.Broadcast4Floats(m.p_[i]);
+        __m256 cols = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(m.p_[i]));
 
         // a is the i-th components COPIED all over from in_ptr[0] and b is same but for in_ptr[1], example [X1,X1,X1,X1 , X0,X0,X0,X0]
-        XMM<float> a(in_ptr[0].p_[i]);
-        XMM<float> b(in_ptr[1].p_[i]);
-        YMM<float> ab(a,b);
+        __m128 a = _mm_load1_ps(in_ptr[0].p_ + i);
+        __m128 b = _mm_load1_ps(in_ptr[1].p_ + i);
+        __m256 ab = _mm256_set_m128(b, a);
 
-        ab *= cols;
-        res += ab;
+        ab = _mm256_mul_ps(ab, cols);
+        res = _mm256_add_ps(res, ab);
       }
 
-      res.Store(out_ptr->p_);
+      _mm256_store_ps(out_ptr->p_, res);
     }
   }
 
@@ -90,29 +90,28 @@ namespace nogl
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      YMM<float> ab(in_ptr->p_);
+      __m256 ab = _mm256_load_ps(in_ptr->p_);
 
-      YMM<float> cd;
-      cd.Broadcast4Floats(v.p_);
+      __m256 v_256 = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(v.p_));
 
-      ab += cd;
-      ab.Store(out_ptr->p_);
+      ab = _mm256_add_ps(ab, v_256);
+      _mm256_store_ps(out_ptr->p_, ab);
     }
   }
 
   void VOV4::Rotate(VOV4& output, const Q4& q, unsigned from, unsigned to)
   {
-    YMM<float> q256;
-    q256.Broadcast4Floats(q.p_);
+    __m256 q_256 = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(q.p_));
     for (unsigned vec = from; vec < to; vec += (kAlign / sizeof(V4)))
     {
       const V4* in_ptr = buffer_.get() + vec;
       V4* out_ptr = output.buffer_.get() + vec;
 
-      YMM<float> ab(in_ptr->p_);
+      __m256 ab = _mm256_load_ps(in_ptr->p_);
 
-      ab = ab.QVSandwich(q256);
-      ab.Store(out_ptr->p_);
+      // TODO: ab = ab.QVSandwich(q_256);
+
+      _mm256_store_ps(out_ptr->p_, ab);
     }
   }
 }

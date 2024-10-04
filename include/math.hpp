@@ -3,8 +3,8 @@
 
 #include "Exception.hpp"
 
-#include "XMM.hpp"
-#include "YMM.hpp"
+// #include "XMM.hpp"
+// #include "YMM.hpp"
 
 // Various intel intrinsics for SIMD instructions, both AVX, and SSE
 #include <immintrin.h>
@@ -26,10 +26,9 @@ namespace nogl
     public:
     M4x4()
     {
-      YMM<float> zero;
-      zero.ZeroOut();
-      zero.Store(p_[0]);
-      zero.Store(p_[2]);
+      __m256 zero = _mm256_setzero_ps();
+      _mm256_store_ps(p_[0], zero);
+      _mm256_store_ps(p_[2], zero);
     }
 
     // While the construction is intuitive, the array is just a flattened array of the matrix,
@@ -55,19 +54,19 @@ namespace nogl
   };
 
   // Meant to be a RAM stored version of XMM, but also specialized for vector math.
-  class alignas(XMM<float>) V4
+  class alignas(__m128) V4
   {
     friend VOV4;
 
     public:
   
-    V4(float f) { XMM<float>(f).Store(p_); }
+    V4(const float f) { _mm_store_ps(p_, _mm_set1_ps(f)); }
     // `p` must be 4 floats in size.
     V4(const float p[4]) { *this = p; }
-    V4(const V4& other) { XMM<float>(other.p_).Store(p_); }
-    V4(float x, float y, float z)
+    V4(const V4& other) { _mm_store_ps(p_, _mm_load_ps(other.p_)); }
+    V4(const float x, const float y, const float z)
     {
-      XMM<float>(x, y, z, 0).Store(p_);
+      _mm_store_ps(p_, _mm_set_ps(0, z, y, x));
     }
 
     V4() = default;
@@ -79,58 +78,55 @@ namespace nogl
     
     void operator =(const float p[4]) noexcept
     {
-      XMM<float> xmm;
-      xmm.LoadUnaligned(p);
-      xmm.Store(p_);
+      _mm_store_ps(p_, _mm_loadu_ps(p));
     }
     
     // Simple multiplication of components, in fancy terms "Hadamard Product".
     void operator *=(const V4& other) noexcept
     {
-      XMM<float> a = p_;
-      XMM<float> b = other.p_;
-      (a * b).Store(p_);
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(other.p_);
+      _mm_store_ps(p_, _mm_mul_ps(a, b));
     }
     // Multiplying by quaternion, which in other words rotates the vector.
     void operator *=(const Q4& other) noexcept;
     void operator /=(const V4& other) noexcept
     {
-      XMM<float> a = p_;
-      XMM<float> b = other.p_;
-      (a / b).Store(p_);
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(other.p_);
+      _mm_store_ps(p_, _mm_div_ps(a, b));
     }
     void operator +=(const V4& other) noexcept
     {
-      XMM<float> a = p_;
-      XMM<float> b = other.p_;
-      (a + b).Store(p_);
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(other.p_);
+      _mm_store_ps(p_, _mm_add_ps(a, b));
     }
     void operator -=(const V4& other) noexcept
     {
-      XMM<float> a = p_;
-      XMM<float> b = other.p_;
-      (a - b).Store(p_);
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(other.p_);
+      _mm_store_ps(p_, _mm_sub_ps(a, b));
     }
 
     void operator *=(const M4x4& m) noexcept
     {
-      XMM<float> res;
-      res.ZeroOut();
+      __m128 res = _mm_setzero_ps();
       
       for (unsigned i = 0; i < 4; ++i)
       {
         // Load the i-th component into all SSE components
-        XMM<float> comp128(p_[i]);
+        __m128 comp128 = _mm_set1_ps(p_[i]);
         // Now load the matrix column
-        XMM<float> col(m.p_[i]);
+        __m128 col = _mm_load_ps(m.p_[i]);
         // Multiply the i-th component by the matrix column.
         // Equivalent to by-hand, since it's the component multiplied by each column.
         // X*[A,C] + Y*[B,D] = [AX,AC] + [BY,DY] = [AX+BY,CX+DY]
-        comp128 *= col;
-        res += comp128;
+        comp128 = _mm_mul_ps(comp128, col);
+        res = _mm_add_ps(res, comp128);
       }
 
-      res.Store(p_);
+      _mm_store_ps(p_, res);
     }
 
     float sum() const noexcept
@@ -144,15 +140,16 @@ namespace nogl
 
     void Negate() noexcept
     {
-      (-XMM<float>(p_)).Store(p_);
+      __m128 vec_128 = _mm_sub_ps(_mm_setzero_ps(), _mm_load_ps(p_));
+      _mm_store_ps(p_, vec_128);
     }
     
     // Returns dot product. Note that this takes the W component into account.
     float DotProduct(const V4& o) const
     {
-      XMM<float> a(p_);
-      XMM<float> b(o.p_);
-      return a.DotProduct(b).x();
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(o.p_);
+      return _mm_cvtss_f32(_mm_dp_ps(a, b, 0b1111'0001));
     }
 
     // In this context, `this` is the vector, `o` is right vector, so `this`x`o`. The result is put in `this`.
@@ -160,9 +157,22 @@ namespace nogl
     // W component is in `this` is left untouched.
     void CrossProduct(const V4& o)
     {
-      XMM<float> a(p_);
-      XMM<float> b(o.p_);
-      a.CrossProduct(b).Store(p_);
+      __m128 a = _mm_load_ps(p_);
+      __m128 b = _mm_load_ps(o.p_);
+      // We use the 3 per-component formulas, in order.
+
+      // Setup the subtracted values
+      __m128 left = _mm_mul_ps(
+        _mm_shuffle_ps(a,a, _MM_SHUFFLE(3,0,2,1)),
+        _mm_shuffle_ps(b,b, _MM_SHUFFLE(3,1,0,2))
+      );
+      // Setup the subtracting values
+      __m128 right = _mm_mul_ps(
+        _mm_shuffle_ps(a,a, _MM_SHUFFLE(3,1,0,2)),
+        _mm_shuffle_ps(b,b, _MM_SHUFFLE(3,0,2,1))
+      );
+      // Now do the subtraction and store it back
+      _mm_store_ps(p_, _mm_sub_ps(left, right));
     }
 
     void Normalize(int mask) noexcept;
@@ -207,7 +217,7 @@ namespace nogl
   {
     public:
 
-    static constexpr unsigned kAlign = sizeof(YMM<float>); // Using the 256-bit AVX/SSE SIMD
+    static constexpr unsigned kAlign = sizeof(__m256); // Using the 256-bit AVX/SSE SIMD
 
     // n is the number of the vectors.
     VOV4(unsigned n = 0)
@@ -233,10 +243,10 @@ namespace nogl
     // Set every single vector, and every one of its components to `f`.
     void operator =(float f) noexcept
     {
-      YMM<float> filler = f;
+      __m256 filler = _mm256_set1_ps(f);
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        filler.Store(ptr->p_);
+        _mm256_store_ps(ptr->p_, filler);
       }
     }
     // Assume f is the size of `4*n()`, so it contains all the vectors necessary flattened into an array.
@@ -244,20 +254,15 @@ namespace nogl
     {
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        YMM<float>(f).Store(ptr->p_);
+        _mm256_store_ps(ptr->p_, _mm256_load_ps(f));
       }
     }
     void operator =(const V4& v) noexcept
     {
-      // __m128 v128 = _mm_load_ps(v.p_);
-      // __m256 v256 = reinterpret_cast<__m256>(
-      //   _mm256_broadcastsi128_si256(reinterpret_cast<__m128i>(v128))
-      // );
-      YMM<float> v256;
-      v256.Broadcast4Floats(v.p_);
+      __m256 v_256 = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(v.p_));
       for (V4* ptr = begin(); ptr < end(); ptr += (kAlign / sizeof(V4)))
       {
-        v256.Store(ptr->p_);
+        _mm256_store_ps(ptr->p_, v_256);
       }
     }
     // Copies vectors from `other` to `this`, the number of vectors is whoever has a smaller `n`.
@@ -265,7 +270,10 @@ namespace nogl
     {
       for (unsigned off = 0; off < std::min(n_, other.n_); off += (kAlign / sizeof (V4)))
       {
-        YMM<float>(other.buffer_[off].p_).Store(buffer_[off].p_);
+        _mm256_store_ps(
+          buffer_[off].p_,
+          _mm256_load_ps(other.buffer_[off].p_)
+        );
       }
     }
 
@@ -329,12 +337,12 @@ namespace nogl
     }
     
     // Simple multiplication of components, in fancy terms "Hadamard Product".
-    void operator *=(const Q4& other) noexcept
-    {
-      XMM<float> a = p_;
-      XMM<float> b = other.p_;
-      (a * b).Store(p_);
-    }
+    // void operator *=(const V4& other) noexcept
+    // {
+    //   __m128 a = _mm_load_ps(p_);
+    //   __m128 b = _mm_load_ps(other.p_);
+    //   _mm_store_ps(p_, _mm_mul_ps(a, b));
+    // }
   };
 
   template <typename T>
