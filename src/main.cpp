@@ -25,7 +25,7 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
   }
 }
 
-int main()
+int main(int args_n, const char** args)
 {
   if (!nogl::Thread::has_simd())
   {
@@ -33,32 +33,17 @@ int main()
     return 1;
   }
 
-  // nogl::V4 v(1, 2, 3);
-  // nogl::Q4 q;
-  // v *= q;
-  // {
-  //   // float ymmf[8];
-  //   // nogl::XMM<float> q1(32,4,41,3.3f), p1(3,15.3,2,1);
-  //   // nogl::YMM<float> q = q1, p = p1;
-
-  //   // q = q.QMultiply(p); // -577.4,113.49,525.2,-235.9
-  //   // q.StoreUnaligned(ymmf);
-  //   float ymmf[8];
-  //   nogl::XMM<float> q1(1,0,0,0), p1(.5f,.5f,.5f,.5f);
-  //   nogl::YMM<float> q = q1, p = p1;
-
-  //   q = q.QVSandwich(p);
-  //   q.StoreUnaligned(ymmf);
-    
-  //   nogl::Logger::Begin() << ymmf[0] << ',' << ymmf[1] << ',' << ymmf[2] << ',' << ymmf[3] << '|' << ymmf[4] << ',' << ymmf[5] << ',' << ymmf[6] << ',' << ymmf[7] << ',' << nogl::Logger::End();
-  // }
+  if (args_n > 1 && !strcmp(args[1], "test"))
+  {
+    nogl::Test();
+  }
 
   nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
   nogl::Scene scene("./scifi.glb", ctx);
-  // std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(0.5);
+  std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(3.141/3);
   // nogl::Image img("../data/test.jpg");
 
   auto minions = nogl::Wizard::SpawnMinions();
@@ -99,7 +84,7 @@ int main()
           vertices_projected[tri[1]][0], vertices_projected[tri[1]][1], vertices_projected[tri[1]][2],
           vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2]);
       // }
-    }
+    };
     ctx.Refresh();
     avg_frame_time = (avg_frame_time + nogl::Clock::EndMeasure()) / 2;
     

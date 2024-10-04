@@ -90,6 +90,8 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 nogl
 ```
+The `CMAKE_BUILD_TYPE` define can be set to `Release` or `Debug`, with `Debug` there is also the
+testing feature, where you can run `nogl` with `test` as the second argument argument to do tests.
 
 # Making on Linux for Windows
 use `cmake` with the `toolchains/unix-win32.cmake` toolchain. In a nutshell:

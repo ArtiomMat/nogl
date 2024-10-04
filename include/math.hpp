@@ -3,9 +3,6 @@
 
 #include "Exception.hpp"
 
-// #include "XMM.hpp"
-// #include "YMM.hpp"
-
 // Various intel intrinsics for SIMD instructions, both AVX, and SSE
 #include <immintrin.h>
 
@@ -14,6 +11,17 @@
 
 namespace nogl
 {
+  // Various complex operations that intel intrinsics don't cover:
+
+  // Cross product, `left` x `right`.
+  __m128 _mm_cp_ps(const __m128 left, const __m128 right);
+  // Bulk equivalent of `_mm_cp_ps()` on the 2-128 bit lanes in `left` and `right`.
+  __m256 _mm256_cp_ps(const __m256 left, const __m256 right);
+  // THE quaternion multiplication, `left` * `right`.
+  __m128 _mm_quatmul_ps(const __m128 left, const __m128 right);
+  // Bulk equivalent of `_mm_quatmul_ps()` on the 2-128 bit lanes in `left` and `right`.
+  __m256 _mm256_quatmul_ps(const __m256 left, const __m256 right);
+
   class VOV4;
   class V4;
   class Q4;

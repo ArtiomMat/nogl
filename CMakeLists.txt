@@ -25,7 +25,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_compile_options(${PROJECT_NAME} PRIVATE 
   -Wall -Wextra -msse4 -mavx2 -ggdb
-  $<$<CONFIG:Release>:-O3 -march=native -mtune=native -flto=auto>
+  $<$<CONFIG:Release>:-O3 -march=native -mtune=native -flto=auto -DNDEBUG>
   $<$<CONFIG:Debug>:-ggdb>
   ${PLATFORM_FLAGS})
 

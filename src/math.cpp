@@ -6,8 +6,8 @@ namespace nogl
   {
     // Load the vector to begin calculating the inverse magnitude
     __m128 vec_128 = _mm_load_ps(p_);
-    
-    __m128 inv_mag_128 = _mm_dp_ps(vec_128, vec_128, mask | 0xFF);
+    // TODO: integrate mask using templates and shit.
+    __m128 inv_mag_128 = _mm_dp_ps(vec_128, vec_128, 0xFF);
     inv_mag_128 = _mm_rsqrt_ps(inv_mag_128);
 
     // Reload it into the register but this time for all its components.
@@ -113,5 +113,46 @@ namespace nogl
 
       _mm256_store_ps(out_ptr->p_, ab);
     }
+  }
+  
+  __m128 _mm_cp_ps(const __m128 left, const __m128 right)
+  {
+    // Setup the subtracted values
+    __m128 sub_left = _mm_mul_ps(
+      _mm_shuffle_ps(left,left, _MM_SHUFFLE(3,0,2,1)),
+      _mm_shuffle_ps(right,right, _MM_SHUFFLE(3,1,0,2))
+    );
+    // Setup the subtracting values
+    __m128 sub_right = _mm_mul_ps(
+      _mm_shuffle_ps(left,left, _MM_SHUFFLE(3,1,0,2)),
+      _mm_shuffle_ps(right,right, _MM_SHUFFLE(3,0,2,1))
+    );
+    // Now do the subtraction and store it back
+    return _mm_sub_ps(sub_left, sub_right);
+  }
+
+  __m128 _mm_quatmul_ps(const __m128 left, const __m128 right)
+  {
+    // Scalar part (left[3]*right[3] - dot3(left, right))
+    __m128 s_part = _mm_mul_ps(left, right);
+    s_part = _mm_sub_ps(
+      s_part,
+      _mm_dp_ps(left, right, 0b111'1000)
+    );
+
+    // Vector part (left[3]*vec3(right) + right[3]*vec3(left) + cross(left, right))
+    __m128 tmp, v_part;
+    // left[3]*vec3(right)
+    v_part = _mm_shuffle_ps(left, left, _MM_SHUFFLE(3,3,3,3));
+    v_part = _mm_mul_ps(v_part, right);
+    // right[3]*vec3(left)
+    tmp = _mm_shuffle_ps(right, right, _MM_SHUFFLE(3,3,3,3));
+    tmp = _mm_mul_ps(tmp, left);
+    v_part = _mm_add_ps(v_part, tmp);
+    // cross(left, right)
+    v_part = _mm_add_ps(v_part, _mm_cp_ps(left, right));
+
+    // Blend scalar and vector part
+    return _mm_blend_ps(v_part, s_part, 0b1000);
   }
 }

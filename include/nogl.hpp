@@ -22,3 +22,8 @@
 
 // Need 64 bit system...
 static_assert(sizeof(void*) == 8);
+
+namespace nogl
+{
+  void Test();
+}

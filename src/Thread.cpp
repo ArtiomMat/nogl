@@ -15,4 +15,15 @@ namespace nogl
   {
     return __builtin_cpu_supports("avx2") && __builtin_cpu_supports("sse4.1");
   }
+
+  uint32_t Thread::random_num(uint32_t u, uint32_t v) {
+    v = 36969*(v & 65535) + (v >> 16);
+    u = 18000*(u & 65535) + (u >> 16);
+    return (v << 16) + (u & 65535);
+  }
+
+  uint32_t Thread::random_num() {
+    static thread_local uint32_t u = 0, v = 0;
+    return random_num(u, v);
+  }
 }
