@@ -24,7 +24,7 @@ namespace nogl
     __m128 s_part = _mm_mul_ps(left, right);
     s_part = _mm_sub_ps(
       s_part,
-      _mm_dp_ps(left, right, 0b111'1000)
+      _mm_dp_ps(left, right, 0b0111'1000)
     );
 
     // Vector part (left[3]*vec3(right) + right[3]*vec3(left) + cross(left, right))
@@ -48,7 +48,7 @@ namespace nogl
     // Scalar part (left[3]*0 - dot3(left, right))
     __m128 s_part = _mm_sub_ps(
       _mm_setzero_ps(),
-      _mm_dp_ps(left, right, 0b111'1000)
+      _mm_dp_ps(left, right, 0b0111'1000)
     );
 
     // Vector part (left[3]*vec3(right) + 0*vec3(left) + cross(left, right))
@@ -85,7 +85,7 @@ namespace nogl
     __m256 s_part = _mm256_mul_ps(left, right);
     s_part = _mm256_sub_ps(
       s_part,
-      _mm256_dp_ps(left, right, 0b111'1000)
+      _mm256_dp_ps(left, right, 0b0111'1000)
     );
 
     // Vector part (left[3]*vec3(right) + right[3]*vec3(left) + cross(left, right))
@@ -109,7 +109,7 @@ namespace nogl
     // Scalar part (left[3]*0 - dot3(left, right))
     __m256 s_part = _mm256_sub_ps(
       _mm256_setzero_ps(),
-      _mm256_dp_ps(left, right, 0b111'1000)
+      _mm256_dp_ps(left, right, 0b0111'1000)
     );
 
     // Vector part (left[3]*vec3(right) + 0*vec3(left) + cross(left, right))

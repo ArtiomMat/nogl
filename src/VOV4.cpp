@@ -67,7 +67,7 @@ namespace nogl
     }
   }
 
-  void VOV4::Add(VOV4& output, const V4& v, unsigned from, unsigned to)
+  void VOV4::Subtract(VOV4& output, const V4& v, unsigned from, unsigned to)
   {
     for (unsigned vec = from; vec < to; vec += (kAlign / sizeof(V4)))
     {
@@ -78,7 +78,7 @@ namespace nogl
 
       __m256 v_256 = _mm256_broadcast_ps(reinterpret_cast<const __m128*>(v.p_));
 
-      ab = _mm256_add_ps(ab, v_256);
+      ab = _mm256_sub_ps(ab, v_256);
       _mm256_store_ps(out_ptr->p_, ab);
     }
   }
@@ -103,8 +103,10 @@ namespace nogl
       __m256 ab = _mm256_load_ps(in_ptr->p_);
 
       // Sandwiching operation
-      ab = _mm256_quatvecmul_ps(q_256, ab);
-      ab = _mm256_quatmul_ps(ab, qc_256);
+      __m256 ab_tag = _mm256_quatvecmul_ps(q_256, ab);
+      ab_tag = _mm256_quatmul_ps(ab, qc_256);
+
+      ab = _mm256_blend_ps(ab_tag, ab, 0b1000'1000);
 
       _mm256_store_ps(out_ptr->p_, ab);
     }

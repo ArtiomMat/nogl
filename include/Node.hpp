@@ -20,17 +20,17 @@ namespace nogl
     friend class Scene;
 
     public:
+    V4 position;
+    Q4 rotation;
+
     using Variant = std::variant<V4, Mesh*, Camera*>;
 
     Node() = default;
 
-    const Variant& data() { return data_; }
+    const Variant& data() const { return data_; }
 
     private:
     std::string name_;
-
-    V4 position;
-    Q4 rotation;
 
     Variant data_;
     std::list<Node> children_;

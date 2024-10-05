@@ -114,9 +114,6 @@ namespace nogl
     int ax=_ax,bx=_bx,cx=_cx;
     int ay=_ay,by=_by,cy=_cy;
     int min_x, min_y, max_x, max_y;
-    
-    uint32_t rng = Thread::GenRandom32(((ax*bx+cx)>>2)*0xAFa123, ((ax*bx+cx)>>2)*0x33a323);
-    uint8_t r = rng, g = rng >> 8, b = rng >> 16;
 
     // Finding the triangle rectangle
     FindMinMax(min_x, max_x, ax, bx, cx);
@@ -161,11 +158,9 @@ namespace nogl
         // std::cout << az << std::endl;
         if (az <= zdata_[x + y * width_] && (fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
         {
-          data_[(x + y * width_)*4 + 0] = b;
-          data_[(x + y * width_)*4 + 1] = g;
-          data_[(x + y * width_)*4 + 2] = r;
-
-          zdata_[x + y * width_] = az;
+          data_[(x + y * width_)*4 + 0] = (1 - az) * 255;
+          data_[(x + y * width_)*4 + 1] = (1 - az) * 255;
+          data_[(x + y * width_)*4 + 2] = (1 - az) * 255;
         }
       }
     }

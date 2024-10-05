@@ -2,7 +2,7 @@
 
 namespace nogl
 {
-  Q4 Q4::WithAngle(float x, float y, float z, float angle)
+  Q4 Q4::Rotational(float x, float y, float z, float angle)
   {
     Q4 q4;
     float sin = __builtin_sinf(angle / 2);

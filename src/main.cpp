@@ -42,9 +42,14 @@ int main(int args_n, const char** args)
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  nogl::Scene scene("../data/cube2.glb", ctx);
-  std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(3.141/5);
+  nogl::Scene scene("./scifi.glb", ctx);
+
+  auto* cam_node = scene.main_camera_node;
+  auto* cam = std::get<nogl::Camera*>(scene.main_camera_node->data());
+  cam->set_yfov(3.141/5);
   // nogl::Image img("../data/test.jpg");
+
+  nogl::Q4 rot = nogl::Q4::Rotational(1,1,0,0.01f);
 
   auto minions = nogl::Wizard::SpawnMinions();
   nogl::Wizard::scene = &scene;
@@ -62,6 +67,35 @@ int main(int args_n, const char** args)
     ctx.Clear();
     ctx.ClearZ();
     // ctx.PutImage(img, 0, 0);
+
+    if (ctx.IsKeyDown('W'))
+    {
+      cam_node->position[2] -= 0.01f;
+    }
+    if (ctx.IsKeyDown('S'))
+    {
+      cam_node->position[2] += 0.01f;
+    }
+    if (ctx.IsKeyDown('D'))
+    {
+      cam_node->position[0] += 0.01f;
+    }
+    if (ctx.IsKeyDown('A'))
+    {
+      cam_node->position[0] -= 0.01f;
+    }
+    if (ctx.IsKeyDown(nogl::kSpaceKey))
+    {
+      cam_node->position[1] -= 0.01f;
+    }
+    if (ctx.IsKeyDown(nogl::kCtrlKey))
+    {
+      cam_node->position[1] += 0.01f;
+    }
+    if (ctx.IsKeyDown(nogl::kRightKey))
+    {
+      cam_node->rotation *= rot;
+    }
     
     nogl::Wizard::WaitDone();
 

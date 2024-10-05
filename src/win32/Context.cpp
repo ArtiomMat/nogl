@@ -147,6 +147,50 @@ namespace nogl
     }
   }
 
+  static char ConvertKey(int k)
+  {
+    switch (k)
+    {
+      case VK_BACK:
+      return kBackKey;
+      case VK_RETURN:
+      return kEnterKey;
+      case VK_SPACE:
+      return kSpaceKey;
+      case VK_TAB:
+      return kTabKey;
+      case VK_ESCAPE:
+      return kEscKey;
+      case VK_MENU:
+      return kAltKey;
+      case VK_CONTROL:
+      return kCtrlKey;
+      case VK_SHIFT:
+      return kShiftKey;
+      case VK_CAPITAL:
+      return kCapsKey;
+
+      case VK_LEFT:
+      return kLeftKey;
+      case VK_UP:
+      return kUpKey;
+      case VK_RIGHT:
+      return kRightKey;
+      case VK_DOWN:
+      return kDownKey;
+
+      default:
+      if (k <= 255 && k >= 0)
+      {
+        return k;
+      }
+      else
+      {
+        return 0;
+      }
+    }
+  }
+
   void Context::HandleEvent() noexcept
   {
     if (event_.type != Event::Type::kNone)
@@ -179,8 +223,25 @@ namespace nogl
         break;
 
         case WM_KEYDOWN:
-        event_.type = Event::Type::kPress;
-        HandleEvent();
+        case WM_KEYUP:
+        {
+          unsigned char key = ConvertKey(msg_.wParam);
+
+          if (msg_.message == WM_KEYDOWN)
+          {
+            event_.type = Event::Type::kPress;
+            key_states_[key/8] |= 1 << (key%8);
+          }
+          else
+          {
+            event_.type = Event::Type::kRelease;
+            key_states_[key/8] &= ~(1 << (key%8));
+          }
+
+          event_.press.code = msg_.wParam;
+          
+          HandleEvent();
+        }
         break;
 
         default:

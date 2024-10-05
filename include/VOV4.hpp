@@ -84,10 +84,10 @@ namespace nogl
     // Divides each vector by its own W component, stores results in `output`(can be `*this`).
     void DivideByW(VOV4& output, unsigned from, unsigned to);
 
-    // Adds all vectors with `v`, stores results in `output`(can be `*this`).
+    // Subtracts all vectors with `v`, stores results in `output`(can be `*this`).
     // From `from` up to `to`(exclusive).
     // Huge note: The address in bytes of `from` & `to` must be aligned to `kAlign`.
-    void Add(VOV4& output, const V4& v, unsigned from, unsigned to);
+    void Subtract(VOV4& output, const V4& v, unsigned from, unsigned to);
     // Same as `Add()` for V4, refers to `v` as if it's `V4::p()`.
     // void Add(VOV4& output, const float v[4], unsigned from, unsigned to);
 

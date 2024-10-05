@@ -15,6 +15,31 @@
 
 namespace nogl
 {
+  enum KeyCode
+  {
+    kEnterKey = -127,
+    kSpaceKey,
+    kBackKey,
+    kCapsKey,
+    kTabKey,
+    kAltKey,
+    kSuperKey,
+    kCtrlKey,
+    kShiftKey,
+    kEscKey,
+    
+    kDownKey,
+    kUpKey,
+    kLeftKey,
+    kRightKey,
+
+    kLeftMouse,
+    kMiddleMouse,
+    kRightMouse,
+    kUpScroll,
+    kDownScroll,
+  };
+
   class Context
   {
     public:
@@ -36,7 +61,7 @@ namespace nogl
       {
         struct
         {
-          int code;
+          char code;
         } press, release;
         struct
         {
@@ -84,6 +109,9 @@ namespace nogl
     inline unsigned width() const { return width_; }
     inline unsigned height() const { return height_; }
 
+    // Check if a key is currently down.
+    bool IsKeyDown(unsigned char code) { return key_states_[code/8] & (1 << (code%8)); }
+
     void PutImage(const Image& i, int x, int y);
     // Float may be in any range, however:
     // 0,0 <= x,y <= w-1.0f,h-1.0f are considered in bounds.
@@ -97,6 +125,9 @@ namespace nogl
     private:
     // Essentially has 4 copies in BGRX format. Cached.
     alignas(__m256i) uint8_t clear_color_c256_[32];
+
+    // Each bit corresponds to a key index, 1=down, 0=up.
+    uint8_t key_states_[256 / 8] = {0};
 
     #ifdef _WIN32
       HWND hwnd_ = nullptr;

@@ -298,6 +298,7 @@ namespace nogl
 
       nodes_.push_back(Node());
       auto& node = nodes_.back();
+      node.rotation = Q4::Rotational(0, 1, 0, 0);
       node.data_ = &camera;
 
       main_camera_node = &node;

@@ -95,7 +95,8 @@ namespace nogl
         break;
       }
       
-      if (Wizard::scene != nullptr && Wizard::scene->main_camera_node != nullptr)
+      auto* cam = Wizard::scene->main_camera_node;
+      if (Wizard::scene != nullptr && cam != nullptr)
       {
         for (auto& mesh : Wizard::scene->meshes_)
         {
@@ -123,9 +124,17 @@ namespace nogl
             to = from + chunk_size;
           }
 
+          // Move first according to the camera
+          in_vov.Subtract(out_vov, cam->position, from, to);
+
+          // Logger::Begin() << out_vov[0][0] << ',' << out_vov[0][1] << ',' << out_vov[0][2] << ',' << out_vov[0][3] << Logger::End();
+          out_vov.Rotate(out_vov, cam->rotation, from, to);
+          // Logger::Begin() << out_vov[0][0] << ',' << out_vov[0][1] << ',' << out_vov[0][2] << ',' << out_vov[0][3] << Logger::End();
+          // exit(0);
+
           // Now for multiplication
-          const M4x4& matrix = std::get<Camera*>(Wizard::scene->main_camera_node->data())->matrix();
-          in_vov.Multiply(out_vov, matrix, from, to);
+          const M4x4& matrix = std::get<Camera*>(cam->data())->matrix();
+          out_vov.Multiply(out_vov, matrix, from, to);
           out_vov.DivideByW(out_vov, from, to);
         }
       }
