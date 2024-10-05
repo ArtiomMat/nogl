@@ -292,8 +292,8 @@ namespace nogl
     {
       cameras_.push_back(Camera());
       auto& camera = cameras_.back();
-      camera.zfar_ = 100.0f;
-      camera.znear_ = 0.05f;
+      camera.zfar_ = 10.0f;
+      camera.znear_ = 0.01f;
       camera.yfov_ = 1.39626f; // 80 degrees
 
       nodes_.push_back(Node());

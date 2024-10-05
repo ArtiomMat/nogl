@@ -126,9 +126,8 @@ namespace nogl
 
           // Move first according to the camera
           in_vov.Subtract(out_vov, cam->position, from, to);
-
-          // Logger::Begin() << out_vov[0][0] << ',' << out_vov[0][1] << ',' << out_vov[0][2] << ',' << out_vov[0][3] << Logger::End();
           out_vov.Rotate(out_vov, cam->rotation, from, to);
+
           // Logger::Begin() << out_vov[0][0] << ',' << out_vov[0][1] << ',' << out_vov[0][2] << ',' << out_vov[0][3] << Logger::End();
           // exit(0);
 
@@ -136,6 +135,7 @@ namespace nogl
           const M4x4& matrix = std::get<Camera*>(cam->data())->matrix();
           out_vov.Multiply(out_vov, matrix, from, to);
           out_vov.DivideByW(out_vov, from, to);
+          // Logger::Begin() << out_vov[from][0] << ',' << out_vov[from][1] << ',' << out_vov[from][2] << ',' << out_vov[from][3] << Logger::End();
         }
       }
 

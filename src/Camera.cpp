@@ -12,7 +12,7 @@ namespace nogl
     float m[] = {
       (width_/2) / (tanf(yfov_ / 2) * a), 0, -width_/2, 0,
       0, (height_/2) / tanf(yfov_ / 2), -height_/2, 0,
-      0, 0, - (znear_ + zfar_) / (zfar_ - znear_), - (2 * zfar_ * znear_) / (zfar_ - znear_),
+      0, 0, - (zfar_ + znear_) / (zfar_ - znear_), - (2 * zfar_ * znear_) / (zfar_ - znear_),
       0, 0, -1, 0,
     };
     matrix_ = m;

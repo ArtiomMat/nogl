@@ -9,7 +9,7 @@
 
 static bool run_loop = true;
 
-static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
+static void EventHandler(nogl::Context& ctx, const nogl::Context::Event& e)
 {
   switch (e.type)
   {
@@ -17,7 +17,11 @@ static void EventHandler(nogl::Context&, const nogl::Context::Event& e)
     run_loop = false;
     break;
 
-    case nogl::Context::Event::Type::kPress:
+    // case nogl::Context::Event::Type::kPress:
+    // break;
+
+    case nogl::Context::Event::Type::kMouseMove:
+    nogl::Logger::Begin() << ctx.zdata()[e.mouse_move.x + e.mouse_move.y * ctx.width()] << nogl::Logger::End();
     break;
 
     default:
@@ -38,7 +42,7 @@ int main(int args_n, const char** args)
     nogl::Test();
   }
 
-  nogl::Context ctx(480*2,360*2);
+  nogl::Context ctx(480,360);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
@@ -49,7 +53,10 @@ int main(int args_n, const char** args)
   cam->set_yfov(3.141/5);
   // nogl::Image img("../data/test.jpg");
 
-  nogl::Q4 rot = nogl::Q4::Rotational(1,1,0,0.01f);
+  nogl::Q4 rot = nogl::Q4::Rotational(0,1,0,0.01f);
+  nogl::Q4 minus_rot = nogl::Q4::Rotational(0,1,0,-0.01f);
+  nogl::Q4 yrot = nogl::Q4::Rotational(1,0,0,0.01f);
+  nogl::Q4 yminus_rot = nogl::Q4::Rotational(1,0,0,-0.01f);
 
   auto minions = nogl::Wizard::SpawnMinions();
   nogl::Wizard::scene = &scene;
@@ -68,33 +75,45 @@ int main(int args_n, const char** args)
     ctx.ClearZ();
     // ctx.PutImage(img, 0, 0);
 
-    if (ctx.IsKeyDown('W'))
+    if (ctx.IsPressed('W'))
     {
       cam_node->position[2] -= 0.01f;
     }
-    if (ctx.IsKeyDown('S'))
+    if (ctx.IsPressed('S'))
     {
       cam_node->position[2] += 0.01f;
     }
-    if (ctx.IsKeyDown('D'))
+    if (ctx.IsPressed('D'))
     {
       cam_node->position[0] += 0.01f;
     }
-    if (ctx.IsKeyDown('A'))
+    if (ctx.IsPressed('A'))
     {
       cam_node->position[0] -= 0.01f;
     }
-    if (ctx.IsKeyDown(nogl::kSpaceKey))
+    if (ctx.IsPressed(nogl::kSpaceKey))
     {
       cam_node->position[1] -= 0.01f;
     }
-    if (ctx.IsKeyDown(nogl::kCtrlKey))
+    if (ctx.IsPressed(nogl::kCtrlKey))
     {
       cam_node->position[1] += 0.01f;
     }
-    if (ctx.IsKeyDown(nogl::kRightKey))
+    if (ctx.IsPressed(nogl::kRightKey))
     {
       cam_node->rotation *= rot;
+    }
+    if (ctx.IsPressed(nogl::kLeftKey))
+    {
+      cam_node->rotation *= minus_rot;
+    }
+    if (ctx.IsPressed(nogl::kUpKey))
+    {
+      cam_node->rotation *= yrot;
+    }
+    if (ctx.IsPressed(nogl::kDownKey))
+    {
+      cam_node->rotation *= yminus_rot;
     }
     
     nogl::Wizard::WaitDone();
@@ -114,10 +133,14 @@ int main(int args_n, const char** args)
       // ctx.data()[(x + y * ctx.width()) * 4 + 1] = 255;
       // if (scene.meshes()[0].normals()[tri[0]].DotProduct((const float[]) {0,0,1,0}) > 0)
       // {
+      nogl::V4 dst(scene.meshes()[0].vertices()[tri[0]]);
+      dst -= cam_node->position;
         ctx.PutTriangle(
           vertices_projected[tri[0]][0], vertices_projected[tri[0]][1], vertices_projected[tri[0]][2],
           vertices_projected[tri[1]][0], vertices_projected[tri[1]][1], vertices_projected[tri[1]][2],
-          vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2]);
+          vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2],
+          dst.magnitude3() / 1.f
+          );
       // }
     };
     ctx.Refresh();

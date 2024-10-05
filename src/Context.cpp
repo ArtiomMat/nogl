@@ -108,9 +108,16 @@ namespace nogl
   void Context::PutTriangle(
     float _ax, float _ay, float az,
     float _bx, float _by, float bz,
-    float _cx, float _cy, float cz
+    float _cx, float _cy, float cz,
+    float dst
   )
   {
+    float zsum = az + bz + cz;
+    if (az >= 1.0f || az <= 0.0f)
+    {
+      return;
+    }
+
     int ax=_ax,bx=_bx,cx=_cx;
     int ay=_ay,by=_by,cy=_cy;
     int min_x, min_y, max_x, max_y;
@@ -158,9 +165,10 @@ namespace nogl
         // std::cout << az << std::endl;
         if (az <= zdata_[x + y * width_] && (fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
         {
-          data_[(x + y * width_)*4 + 0] = (1 - az) * 255;
-          data_[(x + y * width_)*4 + 1] = (1 - az) * 255;
-          data_[(x + y * width_)*4 + 2] = (1 - az) * 255;
+          data_[(x + y * width_)*4 + 0] = (1 - dst) * 255;
+          data_[(x + y * width_)*4 + 1] = (1 - dst) * 255;
+          data_[(x + y * width_)*4 + 2] = (1 - dst) * 255;
+          zdata_[x + y * width_] = az;
         }
       }
     }

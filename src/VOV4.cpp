@@ -104,7 +104,7 @@ namespace nogl
 
       // Sandwiching operation
       __m256 ab_tag = _mm256_quatvecmul_ps(q_256, ab);
-      ab_tag = _mm256_quatmul_ps(ab, qc_256);
+      ab_tag = _mm256_quatmul_ps(ab_tag, qc_256);
 
       ab = _mm256_blend_ps(ab_tag, ab, 0b1000'1000);
 

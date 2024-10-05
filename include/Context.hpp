@@ -66,7 +66,7 @@ namespace nogl
         struct
         {
           int x, y;
-        } move;
+        } mouse_move;
       };
     };
 
@@ -110,7 +110,7 @@ namespace nogl
     inline unsigned height() const { return height_; }
 
     // Check if a key is currently down.
-    bool IsKeyDown(unsigned char code) { return key_states_[code/8] & (1 << (code%8)); }
+    bool IsPressed(unsigned char code) const { return key_states_[code/8] & (1 << (code%8)); }
 
     void PutImage(const Image& i, int x, int y);
     // Float may be in any range, however:
@@ -119,7 +119,8 @@ namespace nogl
     void PutTriangle(
       float ax, float ay, float az,
       float bx, float by, float bz,
-      float cx, float cy, float cz
+      float cx, float cy, float cz,
+      float dst = 1
     );
 
     private:

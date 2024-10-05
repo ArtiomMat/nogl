@@ -3,6 +3,7 @@
 
 // To define GLenum and all the stuff we need
 #include "windows.hpp"
+#include "windowsx.h"
 #include "Context.hpp"
 #include "Mutex.hpp"
 #include "Logger.hpp"
@@ -222,25 +223,37 @@ namespace nogl
         HandleEvent();
         break;
 
+        case WM_MOUSEMOVE:
+        event_.type = Event::Type::kMouseMove;
+        event_.mouse_move.x = GET_X_LPARAM(msg_.lParam); 
+        event_.mouse_move.y = GET_Y_LPARAM(msg_.lParam);
+        HandleEvent();
+        break;
+
         case WM_KEYDOWN:
         case WM_KEYUP:
         {
           unsigned char key = ConvertKey(msg_.wParam);
+          bool handle = false;
 
-          if (msg_.message == WM_KEYDOWN)
+          if (msg_.message == WM_KEYDOWN && !IsPressed(key))
           {
             event_.type = Event::Type::kPress;
             key_states_[key/8] |= 1 << (key%8);
+            handle = true;
           }
-          else
+          else if (msg_.message == WM_KEYUP && IsPressed(key))
           {
             event_.type = Event::Type::kRelease;
             key_states_[key/8] &= ~(1 << (key%8));
+            handle = true;
           }
 
-          event_.press.code = msg_.wParam;
-          
-          HandleEvent();
+          if (handle)
+          {
+            event_.press.code = msg_.wParam;
+            HandleEvent();
+          }
         }
         break;
 
