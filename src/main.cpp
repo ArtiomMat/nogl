@@ -38,12 +38,12 @@ int main(int args_n, const char** args)
     nogl::Test();
   }
 
-  nogl::Context ctx(480,360);
+  nogl::Context ctx(480*2,360*2);
   ctx.set_clear_color(32, 32, 32);
   ctx.set_event_handler(EventHandler);
 
-  nogl::Scene scene("./scifi.glb", ctx);
-  std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(3.141/3);
+  nogl::Scene scene("../data/cube2.glb", ctx);
+  std::get<nogl::Camera*>(scene.main_camera_node->data())->set_yfov(3.141/5);
   // nogl::Image img("../data/test.jpg");
 
   auto minions = nogl::Wizard::SpawnMinions();
@@ -60,6 +60,7 @@ int main(int args_n, const char** args)
 
     ctx.HandleEvents();
     ctx.Clear();
+    ctx.ClearZ();
     // ctx.PutImage(img, 0, 0);
     
     nogl::Wizard::WaitDone();

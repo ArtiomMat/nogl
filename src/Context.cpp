@@ -1,5 +1,3 @@
-#include <immintrin.h>
-
 #include "Atomic.hpp"
 #include "math.hpp"
 #include "Context.hpp"
@@ -16,7 +14,7 @@ namespace nogl
     
     uint8_t* end = data() + (width() * height()) * 4;
 
-    for (uint8_t* ptr = data(); ptr < end; ptr+=sizeof(__m256i))
+    for (uint8_t* ptr = data(); ptr < end; ptr+=sizeof(__m256i)/sizeof(uint8_t))
     {
       // Unaligned store because as of now I am unsure how to properly ensure alignment of data.
       _mm256_storeu_si256(reinterpret_cast<__m256i_u*>(ptr), loaded_clear_color);
@@ -37,11 +35,11 @@ namespace nogl
 
   void Context::ClearZ() noexcept
   {
-    __m256 zero = _mm256_setzero_ps();
+    __m256 zero = _mm256_set1_ps(1.0f);
     
     float* end = zdata() + (width() * height());
 
-    for (float* ptr = zdata(); ptr < end; ptr+=sizeof(__m256))
+    for (float* ptr = zdata(); ptr < end; ptr+=sizeof(__m256)/sizeof(float))
     {
       // It's aligned for sure!
       _mm256_store_ps(ptr, zero);
@@ -117,7 +115,7 @@ namespace nogl
     int ay=_ay,by=_by,cy=_cy;
     int min_x, min_y, max_x, max_y;
     
-    uint32_t rng = Thread::random_num(ax*bx+cx, cx*ax+bx);
+    uint32_t rng = Thread::GenRandom32(((ax*bx+cx)>>2)*0xAFa123, ((ax*bx+cx)>>2)*0x33a323);
     uint8_t r = rng, g = rng >> 8, b = rng >> 16;
 
     // Finding the triangle rectangle
@@ -160,12 +158,14 @@ namespace nogl
       // Increment by Ii every step
       for (int x = min_x; x <= max_x; ++x, fx0 += I0, fx1 += I1, fx2 += I2)
       {
-        if (az >= zdata_[(x + y * width_)] && (fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
+        // std::cout << az << std::endl;
+        if (az <= zdata_[x + y * width_] && (fx0 >= 0 && fx1 >= 0 && fx2 >= 0))
         {
           data_[(x + y * width_)*4 + 0] = b;
           data_[(x + y * width_)*4 + 1] = g;
           data_[(x + y * width_)*4 + 2] = r;
-          zdata_[(x + y * width_)] = az;
+
+          zdata_[x + y * width_] = az;
         }
       }
     }

@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "math.hpp"
+#include "VOV4.hpp"
 
 namespace nogl
 {

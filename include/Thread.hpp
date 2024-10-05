@@ -84,9 +84,9 @@ namespace nogl
     static bool has_simd();
 
     // Generates a random number using internal seeds
-    static uint32_t random_num();
+    static uint32_t GenRandom32();
     // Generates a random number 2 seeds you provide.
-    static uint32_t random_num(uint32_t u, uint32_t v);
+    static uint32_t GenRandom32(uint32_t u, uint32_t v);
 
     static unsigned index() { return index_; }
 

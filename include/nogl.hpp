@@ -15,6 +15,10 @@
 #include "Scene.hpp"
 
 #include "math.hpp"
+#include "Q4.hpp"
+#include "V4.hpp"
+#include "VOV4.hpp"
+#include "M4x4.hpp"
 
 #ifndef __x86_64__
   #error Need x86_64 architecture.

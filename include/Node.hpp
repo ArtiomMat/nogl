@@ -6,6 +6,9 @@
 
 #include "Camera.hpp"
 #include "Mesh.hpp"
+
+#include "Q4.hpp"
+#include "V4.hpp"
 #include "math.hpp"
 
 namespace nogl
