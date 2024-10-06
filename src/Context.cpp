@@ -112,7 +112,7 @@ namespace nogl
     float dst
   )
   {
-    float zsum = az + bz + cz;
+    // float zsum = az + bz + cz;
     if (az >= 1.0f || az <= 0.0f)
     {
       return;

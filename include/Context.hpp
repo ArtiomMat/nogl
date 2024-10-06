@@ -6,92 +6,31 @@
   #error Not yet
 #endif
 
-#include <immintrin.h>
 #include <memory>
 #include <cstdint>
 
 #include "Image.hpp"
 #include "Exception.hpp"
+#include "Input.hpp"
 
 namespace nogl
 {
-  enum KeyCode
-  {
-    kEnterKey = -127,
-    kSpaceKey,
-    kBackKey,
-    kCapsKey,
-    kTabKey,
-    kAltKey,
-    kSuperKey,
-    kCtrlKey,
-    kShiftKey,
-    kEscKey,
-    
-    kDownKey,
-    kUpKey,
-    kLeftKey,
-    kRightKey,
-
-    kLeftMouse,
-    kMiddleMouse,
-    kRightMouse,
-    kUpScroll,
-    kDownScroll,
-  };
 
   class Context
   {
     public:
 
-    struct Event
-    {
-      enum class Type : uint8_t
-      {
-        kNone,
-
-        kClose,
-        // Includes mouse keys
-        kPress, kRelease,
-        kMouseMove, // Moving the mouse
-      };
-
-      Type type;
-      union
-      {
-        struct
-        {
-          char code;
-        } press, release;
-        struct
-        {
-          int x, y;
-        } mouse_move;
-      };
-    };
-
-    using EventHandlerCallback = void (*) (Context&, const Event&);
-
     // To use the `Context` you still need to call `MakeCurrent()`.
     // Can throw a `SystemException`, with a code from the system.
     Context(unsigned width, unsigned height);
     ~Context();
-
-    static void DefaultEventHandler(Context&, const Event&);
-
     // Accepts ASCII string
     void set_title(const char* str);
 
     // Draws the `data` on the screen. Success gives true.
     bool Refresh() const noexcept;
     // Handles queued up input and pipes to `event_handler`.
-    void HandleEvents() noexcept;
-
-    // `nullptr` allowed, means that `DefaultEventHandler()` will be used.
-    inline void set_event_handler(EventHandlerCallback cb) noexcept
-    {
-      event_handler_ = (cb == nullptr ? DefaultEventHandler : cb);
-    }
+    void PipeInput() noexcept;
 
     // Clear the screen with the clear color.
     void Clear() noexcept;
@@ -141,16 +80,12 @@ namespace nogl
     #endif
 
     unsigned width_, height_;
-    Event event_;
     // See `data()`.
     uint8_t* data_;
     // See `zdata()`.
     std::unique_ptr<float[]> zdata_;
 
-    // Cannot logically be `nullptr`.
-    void (*event_handler_) (Context&, const Event&) = DefaultEventHandler;
-
     // Handles the event variable after it is written.
-    void HandleEvent() noexcept;
+    void HandleKey(Input::Info& ii, char key, bool pressed);
   };
 }

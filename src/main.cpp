@@ -9,19 +9,28 @@
 
 static bool run_loop = true;
 
-static void EventHandler(nogl::Context& ctx, const nogl::Context::Event& e)
+static void InputHandler(const nogl::Input::Info& ii)
 {
-  switch (e.type)
+  static int x, y;
+  static nogl::Context* ctx;
+
+  switch (ii.type)
   {
-    case nogl::Context::Event::Type::kClose:
+    case nogl::Input::Type::kClose:
     run_loop = false;
     break;
 
-    // case nogl::Context::Event::Type::kPress:
-    // break;
+    case nogl::Input::Type::kPress:
+    if (ii.press.code == nogl::Input::kLeftMouse)
+    {
+      nogl::Logger::Begin() << ctx->zdata()[x + y * ctx->width()] << nogl::Logger::End();
+    }
+    break;
 
-    case nogl::Context::Event::Type::kMouseMove:
-    nogl::Logger::Begin() << ctx.zdata()[e.mouse_move.x + e.mouse_move.y * ctx.width()] << nogl::Logger::End();
+    case nogl::Input::Type::kMouseMove:
+    x = ii.mouse_move.x;
+    y = ii.mouse_move.y;
+    ctx = ii.mouse_move.context;
     break;
 
     default:
@@ -42,9 +51,10 @@ int main(int args_n, const char** args)
     nogl::Test();
   }
 
-  nogl::Context ctx(480,360);
+  nogl::Input::set_handler(InputHandler);
+
+  nogl::Context ctx(320,200);
   ctx.set_clear_color(32, 32, 32);
-  ctx.set_event_handler(EventHandler);
 
   nogl::Scene scene("./scifi.glb", ctx);
 
@@ -53,10 +63,10 @@ int main(int args_n, const char** args)
   cam->set_yfov(3.141/5);
   // nogl::Image img("../data/test.jpg");
 
-  nogl::Q4 rot = nogl::Q4::Rotational(0,1,0,0.01f);
-  nogl::Q4 minus_rot = nogl::Q4::Rotational(0,1,0,-0.01f);
-  nogl::Q4 yrot = nogl::Q4::Rotational(1,0,0,0.01f);
-  nogl::Q4 yminus_rot = nogl::Q4::Rotational(1,0,0,-0.01f);
+  nogl::Q4 yrot = nogl::Q4::Rotational(0,1,0,0.03f);
+  nogl::Q4 xrot = nogl::Q4::Rotational(1,0,0,0.03f);
+  nogl::Q4 yrot_c = yrot.conjugate();
+  nogl::Q4 xrot_c = xrot.conjugate();
 
   auto minions = nogl::Wizard::SpawnMinions();
   nogl::Wizard::scene = &scene;
@@ -70,7 +80,7 @@ int main(int args_n, const char** args)
     nogl::Clock::BeginMeasure();
     nogl::Wizard::RingBegin();
 
-    ctx.HandleEvents();
+    ctx.PipeInput();
     ctx.Clear();
     ctx.ClearZ();
     // ctx.PutImage(img, 0, 0);
@@ -91,29 +101,29 @@ int main(int args_n, const char** args)
     {
       cam_node->position[0] -= 0.01f;
     }
-    if (ctx.IsPressed(nogl::kSpaceKey))
+    if (ctx.IsPressed(nogl::Input::kSpaceKey))
     {
       cam_node->position[1] -= 0.01f;
     }
-    if (ctx.IsPressed(nogl::kCtrlKey))
+    if (ctx.IsPressed(nogl::Input::kCtrlKey))
     {
       cam_node->position[1] += 0.01f;
     }
-    if (ctx.IsPressed(nogl::kRightKey))
+    if (ctx.IsPressed(nogl::Input::kRightKey))
     {
-      cam_node->rotation *= rot;
+      yrot.MultiplyToOther(cam_node->rotation);
     }
-    if (ctx.IsPressed(nogl::kLeftKey))
+    if (ctx.IsPressed(nogl::Input::kLeftKey))
     {
-      cam_node->rotation *= minus_rot;
+      yrot_c.MultiplyToOther(cam_node->rotation);
     }
-    if (ctx.IsPressed(nogl::kUpKey))
+    if (ctx.IsPressed(nogl::Input::kUpKey))
     {
-      cam_node->rotation *= yrot;
+      xrot.MultiplyToOther(cam_node->rotation);
     }
-    if (ctx.IsPressed(nogl::kDownKey))
+    if (ctx.IsPressed(nogl::Input::kDownKey))
     {
-      cam_node->rotation *= yminus_rot;
+      xrot_c.MultiplyToOther(cam_node->rotation);
     }
     
     nogl::Wizard::WaitDone();
@@ -139,8 +149,8 @@ int main(int args_n, const char** args)
           vertices_projected[tri[0]][0], vertices_projected[tri[0]][1], vertices_projected[tri[0]][2],
           vertices_projected[tri[1]][0], vertices_projected[tri[1]][1], vertices_projected[tri[1]][2],
           vertices_projected[tri[2]][0], vertices_projected[tri[2]][1], vertices_projected[tri[2]][2],
-          dst.magnitude3() / 1.f
-          );
+          dst.magnitude3() / 2.f
+        );
       // }
     };
     ctx.Refresh();

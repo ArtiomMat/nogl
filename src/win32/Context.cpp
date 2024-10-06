@@ -1,12 +1,11 @@
 #include <cstdio>
 
-
-// To define GLenum and all the stuff we need
 #include "windows.hpp"
 #include "windowsx.h"
 #include "Context.hpp"
 #include "Mutex.hpp"
 #include "Logger.hpp"
+#include "Input.hpp"
 
 #include <iostream>
 #include <new>
@@ -17,7 +16,7 @@ namespace nogl
   static uint8_t contexts_n = 0;
   static Mutex contexts_n_mutex;
 
-  constexpr wchar_t kClassName[] = L"NOGL CLASS";
+  const wchar_t kClassName[] = L"NOGL CLASS";
   constexpr DWORD kStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 
   Context::Context(unsigned _width, unsigned _height) : width_(_width), height_(_height)
@@ -134,54 +133,41 @@ namespace nogl
     contexts_n_mutex.Unlock();
   }
 
-  void Context::DefaultEventHandler(Context&, const Context::Event& e)
-  {
-    switch (e.type)
-    {
-      case Context::Event::Type::kClose:
-      Logger::Begin() << "Close event, exitting..." << Logger::End();
-      exit(0);
-      break;
-
-      default:
-      break;
-    }
-  }
 
   static char ConvertKey(int k)
   {
     switch (k)
     {
       case VK_BACK:
-      return kBackKey;
+      return Input::kBackKey;
       case VK_RETURN:
-      return kEnterKey;
+      return Input::kEnterKey;
       case VK_SPACE:
-      return kSpaceKey;
+      return Input::kSpaceKey;
       case VK_TAB:
-      return kTabKey;
+      return Input::kTabKey;
       case VK_ESCAPE:
-      return kEscKey;
+      return Input::kEscKey;
       case VK_MENU:
-      return kAltKey;
+      return Input::kAltKey;
       case VK_CONTROL:
-      return kCtrlKey;
+      return Input::kCtrlKey;
       case VK_SHIFT:
-      return kShiftKey;
+      return Input::kShiftKey;
       case VK_CAPITAL:
-      return kCapsKey;
+      return Input::kCapsKey;
 
       case VK_LEFT:
-      return kLeftKey;
+      return Input::kLeftKey;
       case VK_UP:
-      return kUpKey;
+      return Input::kUpKey;
       case VK_RIGHT:
-      return kRightKey;
+      return Input::kRightKey;
       case VK_DOWN:
-      return kDownKey;
+      return Input::kDownKey;
 
       default:
-      if (k <= 255 && k >= 0)
+      if (k <= 127 && k >= -128)
       {
         return k;
       }
@@ -192,16 +178,32 @@ namespace nogl
     }
   }
 
-  void Context::HandleEvent() noexcept
+  void Context::HandleKey(Input::Info& ii, char key, bool pressed)
   {
-    if (event_.type != Event::Type::kNone)
+    if (pressed)
     {
-      event_handler_(*this, event_);
+      // Already have the state as pressed? Then duplicate press event.
+      if (IsPressed(key))
+      {
+        return;
+      }
+
+      ii.type = Input::Type::kPress;
+      key_states_[key/8] |= 1 << (key%8);
     }
+    else // !pressed
+    {
+      ii.type = Input::Type::kRelease;
+      key_states_[key/8] &= ~(1 << (key%8));
+    }
+
+    ii.press.code = key;
+    Input::handler()(ii);
   }
-  void Context::HandleEvents() noexcept
+
+  void Context::PipeInput() noexcept
   {
-    event_.type = Event::Type::kNone;
+    Input::Info ii;
 
     // We handle the events we want to handle here because wndProc is an external
     // function and has no direct way for knowing the context itself.
@@ -214,47 +216,43 @@ namespace nogl
         case WM_SYSCOMMAND:
         if (msg_.wParam == SC_CLOSE)
         {
-          event_.type = Event::Type::kClose;
-          HandleEvent();
+          ii.type = Input::Type::kClose;
+          Input::handler()(ii);
         }
         break;
         case WM_CLOSE:
-        event_.type = Event::Type::kClose;
-        HandleEvent();
+        ii.type = Input::Type::kClose;
+        Input::handler()(ii);
         break;
 
         case WM_MOUSEMOVE:
-        event_.type = Event::Type::kMouseMove;
-        event_.mouse_move.x = GET_X_LPARAM(msg_.lParam); 
-        event_.mouse_move.y = GET_Y_LPARAM(msg_.lParam);
-        HandleEvent();
+        ii.type = Input::Type::kMouseMove;
+        ii.mouse_move.x = GET_X_LPARAM(msg_.lParam); 
+        ii.mouse_move.y = GET_Y_LPARAM(msg_.lParam);
+        ii.mouse_move.context = this;
+        Input::handler()(ii);
         break;
 
         case WM_KEYDOWN:
         case WM_KEYUP:
         {
           unsigned char key = ConvertKey(msg_.wParam);
-          bool handle = false;
-
-          if (msg_.message == WM_KEYDOWN && !IsPressed(key))
-          {
-            event_.type = Event::Type::kPress;
-            key_states_[key/8] |= 1 << (key%8);
-            handle = true;
-          }
-          else if (msg_.message == WM_KEYUP && IsPressed(key))
-          {
-            event_.type = Event::Type::kRelease;
-            key_states_[key/8] &= ~(1 << (key%8));
-            handle = true;
-          }
-
-          if (handle)
-          {
-            event_.press.code = msg_.wParam;
-            HandleEvent();
-          }
+          HandleKey(ii, key, msg_.message == WM_KEYDOWN);
         }
+        break;
+
+        case WM_LBUTTONDOWN:
+        HandleKey(ii, Input::kLeftMouse, true);
+        break;
+        case WM_LBUTTONUP:
+        HandleKey(ii, Input::kLeftMouse, false);
+        break;
+
+        case WM_RBUTTONDOWN:
+        HandleKey(ii, Input::kRightMouse, true);
+        break;
+        case WM_RBUTTONUP:
+        HandleKey(ii, Input::kRightMouse, false);
         break;
 
         default:

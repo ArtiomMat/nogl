@@ -17,7 +17,6 @@ namespace nogl
     V4(const float f) { _mm_store_ps(p_, _mm_set1_ps(f)); }
     // `p` must be 4 floats in size.
     V4(const float p[4]) { *this = p; }
-    V4(const V4& other) { _mm_store_ps(p_, _mm_load_ps(other.p_)); }
     V4(const float x, const float y, const float z, const float w = 0)
     {
       _mm_store_ps(p_, _mm_set_ps(w, z, y, x));
